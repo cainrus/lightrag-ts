@@ -6,6 +6,8 @@
 //   fail             stderr: "boom", exit 3
 //   limit            stderr: the CLI's session-limit text, exit 1
 //   hang             never answers
+//   bytes            stdout: the raw bytes of hex $FAKE_CLAUDE_HEX (exit 0)
+//   bytes-fail       stderr: the same bytes, exit 2
 //   describe         --describe-model prints {"provider","model"}
 // A file named by $FAKE_CLAUDE_REPLIES (JSON: md5 of stdin -> reply) wins over the default reply.
 import { createHash } from 'node:crypto';
@@ -30,7 +32,11 @@ if (mode === 'limit') {
   process.stderr.write("claude -p failed (rc=1): You've hit your session limit · resets 11pm\n");
   process.exit(1);
 }
-if (mode === 'hang') setInterval(() => {}, 1000);
+if (mode === 'bytes') process.stdout.write(Buffer.from(process.env.FAKE_CLAUDE_HEX ?? '', 'hex'));
+else if (mode === 'bytes-fail') {
+  process.stderr.write(Buffer.from(process.env.FAKE_CLAUDE_HEX ?? '', 'hex'));
+  process.exitCode = 2;
+} else if (mode === 'hang') setInterval(() => {}, 1000);
 else {
   const table = process.env.FAKE_CLAUDE_REPLIES;
   const replies = table && existsSync(table) ? (JSON.parse(readFileSync(table, 'utf8')) as Record<string, string>) : {};

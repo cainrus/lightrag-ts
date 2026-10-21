@@ -2,7 +2,7 @@
 // vault wires LightRAG today (port-only: upstream has no such binding). Two
 // Python pieces are mirrored: `_claude_call.claude_complete_async` (spawn the
 // bridge with `--profile --timeout --model`, prompt on stdin from a file,
-// stripped stdout, `claude-complete failed (rc=N): ...` on a non-zero exit)
+// stdout decoded with errors="ignore" and stripped, `claude-complete failed (rc=N): ...` on a non-zero exit)
 // and `vault_rag_core._anthropic_complete_str` (system prompt and history
 // folded into one prompt string, LightRAG's extra keyword arguments dropped).
 // The cache keys LightRAG writes do not depend on this function: they hash the
@@ -75,6 +75,25 @@ export function resolveClaudeCompleteBin(cfg: ClaudeCompleteConfig = {}): string
   return bin;
 }
 
+const REAL_FFFD = Buffer.from([0xef, 0xbf, 0xbd]);
+
+/**
+ * bytes.decode(errors="ignore"): undecodable bytes are dropped. TextDecoder
+ * replaces each maximal invalid subpart (the same subparts Python's decoder
+ * rejects) with U+FFFD; a U+FFFD the bytes really spell (EF BF BD) is kept by
+ * cutting the buffer there first: a valid sequence never ends an invalid one.
+ */
+export function decodeIgnore(buf: Buffer): string {
+  const parts: string[] = [];
+  let from = 0;
+  for (let at = buf.indexOf(REAL_FFFD); at >= 0; at = buf.indexOf(REAL_FFFD, from)) {
+    parts.push(buf.subarray(from, at).toString('utf8').replaceAll('\uFFFD', ''));
+    from = at + 3;
+  }
+  parts.push(buf.subarray(from).toString('utf8').replaceAll('\uFFFD', ''));
+  return parts.join('\uFFFD');
+}
+
 /** _claude_call._fail: the first 500 code points of stderr (else stdout), stripped. */
 function failMessage(rc: number | null, stdout: string, stderr: string): string {
   const text = Array.from(pyStrip(stderr) || pyStrip(stdout)).slice(0, 500).join('') || '<no error output>';
@@ -119,13 +138,14 @@ export async function claude_complete(prompt: string, cfg: ClaudeCompleteConfig 
         child.on('close', (code) => {
           clearTimeout(timer);
           if (timedOut) {
-            const e = new Error(`claude-complete timed out after ${timeout + grace}s`);
+            // asyncio.wait_for's TimeoutError, re-raised bare: str(e) is '', and so is LightRAG's error_msg
+            const e = new Error('');
             e.name = 'TimeoutError';
             reject(e);
             return;
           }
-          const stdout = Buffer.concat(out).toString('utf8');
-          const stderr = Buffer.concat(err).toString('utf8');
+          const stdout = decodeIgnore(Buffer.concat(out));
+          const stderr = decodeIgnore(Buffer.concat(err));
           if (code !== 0) reject(new ClaudeCompleteError(failMessage(code, stdout, stderr), code));
           else resolve(pyStrip(stdout));
         });
@@ -160,7 +180,9 @@ export function foldClaudePrompt(prompt: string, systemPrompt?: string | null, h
  */
 export function makeClaudeCompleteLlm(cfg: ClaudeCompleteConfig = {}) {
   return async (prompt: string, opts: Record<string, unknown> = {}): Promise<string> => {
-    const timeout = opts.timeout === undefined || opts.timeout === null ? (cfg.timeout ?? CLAUDE_COMPLETE_DEFAULT_TIMEOUT) : Math.trunc(Number(opts.timeout));
+    // kwargs.pop("timeout", 180) then int(timeout): an explicit None fails in int()
+    if (opts.timeout === null) throw new TypeError("int() argument must be a string, a bytes-like object or a real number, not 'NoneType'");
+    const timeout = opts.timeout === undefined ? (cfg.timeout ?? CLAUDE_COMPLETE_DEFAULT_TIMEOUT) : Math.trunc(Number(opts.timeout));
     const full = foldClaudePrompt(prompt, opts.system_prompt as string | null | undefined, opts.history_messages as Record<string, unknown>[] | null | undefined);
     return claude_complete(full, { ...cfg, timeout });
   };

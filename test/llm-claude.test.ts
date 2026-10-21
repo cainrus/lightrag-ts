@@ -76,6 +76,34 @@ test('a hung bridge is killed after timeout + grace', async () => {
   assert.ok(Date.now() - t0 < 5000);
 });
 
+// b'  ok \xff\xfe caf\xc3\xa9 \xe2\x82 x \xef\xbf\xbd \xf0\x9f\x98 end\n'.decode(errors="ignore").strip(), from python3
+const BROKEN_HEX = Buffer.from('  ok \xff\xfe caf\xc3\xa9 \xe2\x82 x \xef\xbf\xbd \xf0\x9f\x98 end\n', 'latin1').toString('hex');
+const BROKEN_PY = 'ok  café  x \ufffd  end';
+
+test('B5f-4: undecodable bytes are dropped, as Python errors="ignore"; a real U+FFFD stays', async () => {
+  const env = { ...process.env, FAKE_CLAUDE_MODE: 'bytes', FAKE_CLAUDE_HEX: BROKEN_HEX };
+  assert.equal(await claude_complete('p', { bin: FAKE, env }), BROKEN_PY);
+  const err = await claude_complete('p', { bin: FAKE, env: { ...env, FAKE_CLAUDE_MODE: 'bytes-fail' } }).catch((e: unknown) => e);
+  assert.ok(err instanceof ClaudeCompleteError);
+  assert.equal(err.message, `claude-complete failed (rc=2): ${BROKEN_PY}`);
+});
+
+test('B5f-4: a timeout carries an empty message, as asyncio.TimeoutError', async () => {
+  const e = await claude_complete('p', { bin: FAKE, timeout: 0, grace_sec: 0.2, env: { ...process.env, FAKE_CLAUDE_MODE: 'hang' } }).catch((x: unknown) => x);
+  assert.ok(e instanceof Error);
+  assert.equal(e.name, 'TimeoutError');
+  assert.equal(e.message, '');
+  assert.equal(String(e), 'TimeoutError');
+});
+
+test('B5f-4: timeout=None fails as int(None) does; a missing timeout is 180', async () => {
+  const llm = makeClaudeCompleteLlm({ bin: FAKE });
+  await assert.rejects(llm('p', { timeout: null }), { name: 'TypeError', message: "int() argument must be a string, a bytes-like object or a real number, not 'NoneType'" });
+  const log = join(tmp, 'timeout.jsonl');
+  await makeClaudeCompleteLlm({ bin: FAKE, env: { ...process.env, FAKE_CLAUDE_LOG: log } })('p');
+  assert.deepEqual(readLog(log)[0]!.argv.slice(2, 4), ['--timeout', '180']);
+});
+
 test('model null leaves --model out; --describe-model asks the bridge', async () => {
   const log = join(tmp, 'nomodel.jsonl');
   await claude_complete('p', { bin: FAKE, model: null, profile: 'work', timeout: 7, env: { ...process.env, FAKE_CLAUDE_LOG: log } });

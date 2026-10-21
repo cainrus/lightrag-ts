@@ -524,8 +524,11 @@ Deliberate differences:
 - Not ported: Azure, Langfuse, `token_tracker` beyond `add_usage`, the other
   bindings (ollama, gemini, bedrock, ...).
 - The claude bridge is found through `CLAUDE_COMPLETE_BIN` or `PATH`
-  (`claude-complete.ts`), not the fixed `~/dotfiles/...` path; its output is
-  decoded with replacement characters where Python drops undecodable bytes.
+  (`claude-complete.ts`), not the fixed `~/dotfiles/...` path. As in
+  `_claude_call`: its output drops undecodable bytes (`errors="ignore"`, a
+  real U+FFFD stays), a killed run is a `TimeoutError` with an empty message
+  (so a document's `error_msg` is empty, as upstream's `str(e)`), and an
+  explicit `timeout: null` fails with `int(None)`'s TypeError.
 
 The CLI (`src/cli.ts`, bin `lightrag-ts`) reads upstream's server variable
 names, only those its commands need. Where it parts from the server:
