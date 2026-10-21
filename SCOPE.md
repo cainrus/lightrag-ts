@@ -26,14 +26,15 @@ and the same input must produce the same LLM calls (hence the same cache keys).
 | `base.py` | `src/base.ts` | B1 ✓ storage contracts, B3 ✓ QueryParam and results | |
 | `lightrag.py` | `src/lightrag.ts` | B4 ✓ | the `LightRAG` class: config, storages, pipeline and doc status, delete with rebuild, queries, editing entry points; async API only |
 | `utils_graph.py` | `src/utils_graph.ts` | B4 ✓ | delete / edit / create / merge entities and relations |
-| `llm/openai.py` (subset) | `src/llm/` | B5 | OpenAI-compatible completion + embeddings |
+| `llm/openai.py` (subset) | `src/llm/openai.ts` | B5 ✓ | OpenAI-compatible completion + embeddings, `EmbeddingFunc` from `utils.py` |
 
 Port-only modules: `src/internal/json_stream.ts` (streaming JSON: vdb files
 outgrow V8's max string length), `src/internal/py_json.ts` (`json.dump`
 byte format, atomic temp+rename writes), `src/internal/numpy.ts` (numpy's
 pairwise float32 sum, so normalized matrices match bit for bit),
 `src/internal/html5_entities.ts` (CPython's `html.unescape` tables),
-`src/store.ts` (read-only store view).
+`src/store.ts` (read-only store view), `src/llm/claude.ts` (the vault's LLM
+function over the `claude-complete` bridge), `src/cli.ts` (the command line).
 
 ## Storages (B1): what "compatible" means here
 
@@ -457,6 +458,86 @@ Numbers:
   match. In the store replay above the 48 aquery_llm queries also equal
   upstream's LightRAG, bypass and the unknown mode in the synthetic scenario.
 
+## LLM adapters and CLI (B5): what "compatible" means here
+
+`src/llm/openai.ts` is `llm/openai.py`'s `openai_complete_if_cache`,
+`openai_complete`, `gpt_4o(_mini)_complete` and `openai_embed` (plus
+`utils.EmbeddingFunc` as `makeEmbeddingFunc`) over `fetch`. The `openai`
+package is not used: upstream's behaviour lives as much in the SDK (body
+serialization, its own retries, error classes, SSE parsing, `parse()` for
+structured output) as in openai.py, and the SDK's JS twin differs from the
+Python one in exactly those places; porting the part upstream exercises was
+smaller than pinning a second SDK's behaviour to the first.
+
+Checked against recordings, not live services:
+`tools/upstream/openai_requests.py` runs upstream's functions (openai 2.36,
+tenacity 9.1) against a local recording server, 18 scenarios
+(`test/fixtures/openai-requests.json`): plain, system + history + extra
+parameters, keyword extraction (`parse()`'s JSON schema, `stream: false`, the
+pydantic re-dump of the answer), streaming with and without `<think>`,
+reasoning-only answers, `\uXXXX` decoding, 429 `insufficient_quota`, 400,
+500 then success, `retry-after-ms` / `retry-after`, `x-should-retry: false`,
+an empty answer, a dropped connection, and embeddings (base64 and float,
+dimensions, tiktoken truncation, query / document prefixes, quota). In
+`test/llm-openai.test.ts` every request body is byte-identical, the retry
+waits are the same list (SDK: 0.5 s doubling with its jitter or the server's
+retry-after; tenacity: 4 s, 4 s), results and error classes / messages /
+`status_code` / `code` / `type` equal.
+
+`src/llm/claude.ts` is not upstream: it is the vault's LLM function
+(`vault_rag_core._anthropic_complete_str` over `_claude_call`) in TS. The
+bridge gets the same argv (`--profile home --timeout 180 --model haiku`) and
+the same stdin (system prompt stripped, `[role] content` per history message,
+the prompt, joined by blank lines): `tools/upstream/claude_prompts.py` runs
+the Python function against `test/fixtures/fake-claude-complete.ts`, 6 calls
+(`test/fixtures/claude-prompts.json`), and `test/llm-claude.test.ts` replays
+them. The LLM cache keys LightRAG writes do not depend on either function:
+they hash the prompt pieces before the call.
+
+`classifyProviderError` reads the vault's three stops: `billing`
+(`insufficient_quota` by the error's own `type`, its `code` telling
+`credit_balance_exhausted` from `project_spend_limit_exceeded`; the vault had
+to unwrap tenacity's RetryError to see it), `session_limit` (the bridge's
+"hit your session limit"), `network`. What to do about them (pause markers,
+cooldowns) stays with the caller; the CLI exits 3 / 4 / 5.
+
+Deliberate differences:
+
+- **RetryError** carries the last error: `last_attempt` is the error itself
+  and the message is `RetryError[<class>: <message>]` (upstream prints the
+  future: `RetryError[<Future at 0x... raised RateLimitError>]`), so a log
+  line names the reason.
+- **Headers**: `Authorization`, `Accept`, `Content-Type`, upstream's
+  `User-Agent` (`LightRAG/0291`), `x-stainless-retry-count` and
+  `x-stainless-read-timeout`; not the SDK's platform telemetry
+  (`X-Stainless-Lang`, `-OS`, `-Arch`, `-Runtime`, ...).
+- **Timeouts**: the request timeout covers the whole non-streaming call
+  (httpx's read timeout is per chunk); a stream has none once headers arrive.
+  Any `fetch` failure is an `APIConnectionError` (httpx tells more kinds apart,
+  all of which the SDK maps to the same two classes).
+- **EmbeddingFunc** injects `max_token_size` whenever it is set (upstream
+  only when the function's signature names it; JS cannot ask). Vectors come
+  back as `Float32Array` rows.
+- A keyword answer that fails validation raises `ValidationError` with a
+  shorter message than pydantic's; `LengthFinishReasonError` prints the usage
+  as JSON.
+- Not ported: Azure, Langfuse, `token_tracker` beyond `add_usage`, the other
+  bindings (ollama, gemini, bedrock, ...).
+- The claude bridge is found through `CLAUDE_COMPLETE_BIN` or `PATH`
+  (`claude-complete.ts`), not the fixed `~/dotfiles/...` path; its output is
+  decoded with replacement characters where Python drops undecodable bytes.
+
+The CLI (`src/cli.ts`, bin `lightrag-ts`) reads upstream's server variable
+names, only those its commands need. Where it parts from the server:
+`LLM_BINDING` defaults to `openai` (upstream: `ollama`, not ported) and
+`LLM_MODEL` to `gpt-4o-mini` (`haiku` for `claude-complete`); the server's
+OpenAI embedding wrapper does not hand `max_token_size` to `openai_embed`, so
+it never truncates, while the CLI does, as the vault does
+(`EMBEDDING_TOKEN_LIMIT`, default 8192, also LightRAG's
+`embedding_token_limit`, which only gates a warning). `test/cli.test.ts`
+runs insert / status / query (the repeat answered from the LLM cache) /
+delete against a fake server and the fake bridge, and both stops.
+
 ## Not ported
 
 - `kg/` backends other than the defaults: postgres, neo4j, mongo, milvus,
@@ -466,8 +547,9 @@ Numbers:
   with upstream's default storages without its server.
 - `LightRAG`'s sync wrappers (`insert`, `query`, ...) and `aexport_data`
   (pandas / Excel export).
-- `api/` (FastAPI server, web UI, Ollama emulation), `evaluation/`, `tools/`,
-  `rerank.py`, LLM bindings other than OpenAI-compatible.
+- `api/` (FastAPI server, web UI, Ollama emulation; `src/cli.ts` covers
+  insert / query / delete / status), `evaluation/`, `tools/`, `rerank.py`,
+  LLM bindings other than OpenAI-compatible (and Azure within it).
 - Deprecated code under `kg/deprecated/`.
 
 ## Known parity hazards
