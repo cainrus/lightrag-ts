@@ -168,13 +168,31 @@ lightrag-hku 1.4.16 on CPython 3.12.1):
   files byte-identical: GraphML 78.6 MB, vdb_entities 33.5 MB and
   vdb_relationships 46.6 MB (dim 8), entity/relation chunk lists 12.5/20.2 MB,
   LLM cache 341 MB with 2053 stand-in summaries; 62962 status lines equal.
-  Upstream 1686 s, TS 749 s, both one merge at a time.
+  Upstream 1686 s, TS 516 s, both one merge at a time.
+- Summary cache entries: of the replay's 3389 summary calls, 1336 were
+  answered by distinct entries of the store's 5334 (TS rebuilt the prompt
+  upstream sent months earlier, byte for byte) and 2053 went to the stand-in.
+  Every stand-in prompt names an entity or relation the store has summaries
+  for (2053/2053): upstream summarized it too, at a different graph state. The
+  replay's document order is not the historical one (two documents in flight,
+  re-ingests, failed documents), and once a stand-in text replaces a real
+  summary in the graph, every later summary of that name misses as well.
 - First 500 documents: TS at its default concurrency equals upstream run
   sequentially, file for file (the cache compared as a map). Upstream's own
   concurrent run against its sequential one: GraphML bytes differ (order),
   0 of 6923 nodes and 0 of 7934 edges differ in attributes. Of the 99 LLM
   summaries these documents needed, 93 came from the store's own cache
   entries and 6 from the stand-in.
+- Onto the store's own graph (107 MB GraphML, its chunk lists and document
+  indexes): 200 processed documents merged a second time - existing nodes
+  with real `<SEP>`-joined descriptions, full chunk lists, FIFO caps -
+  138 LLM merges, all files byte-identical, TS sequential and concurrent;
+  and the one not-processed document whose chunks are all stored.
+- KEEP with caps 3/2 and two file paths, 500 documents: byte-identical (the
+  caps keep every list under the summary threshold; test/merge.test.ts covers
+  KEEP with summaries).
+- Extraction re-checked on the 21.10 snapshot (18640 cache entries): no miss
+  on the 6590 chunks with entries, 6628/6628 chunks equal.
 
 ## Not ported
 
