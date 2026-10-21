@@ -1,0 +1,1444 @@
+{
+ "upstream": "lightrag-hku 1.4.16, openai 2.36.0, tenacity 9.1.4",
+ "base_url": "<server>",
+ "scenarios": [
+  {
+   "name": "complete-basic",
+   "fn": "complete",
+   "args": {
+    "model": "gpt-4o-mini",
+    "prompt": "Hello \"world\" ünïcode ☃\nline2",
+    "system_prompt": "You are \\ a system\t",
+    "history_messages": [
+     {
+      "role": "user",
+      "content": "q1"
+     },
+     {
+      "role": "assistant",
+      "content": "a1"
+     }
+    ],
+    "kwargs": {
+     "max_tokens": 4096,
+     "temperature": 0.2,
+     "hashing_kv": null
+    }
+   },
+   "responses": [
+    {
+     "body": "{\"id\": \"chatcmpl-1\", \"object\": \"chat.completion\", \"created\": 1760000000, \"model\": \"gpt-4o-mini\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \"Answer \\u2713\"}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 3, \"completion_tokens\": 2, \"total_tokens\": 5}}"
+    }
+   ],
+   "result": {
+    "text": "Answer ✓"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "256"
+     },
+     "body": "{\"messages\":[{\"role\":\"system\",\"content\":\"You are \\\\ a system\\t\"},{\"role\":\"user\",\"content\":\"q1\"},{\"role\":\"assistant\",\"content\":\"a1\"},{\"role\":\"user\",\"content\":\"Hello \\\"world\\\" ünïcode ☃\\nline2\"}],\"model\":\"gpt-4o-mini\",\"max_tokens\":4096,\"temperature\":0.2}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "complete-minimal-timeout",
+   "fn": "complete",
+   "args": {
+    "model": "m1",
+    "prompt": "p",
+    "api_key": "sk-explicit",
+    "timeout": 30,
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "body": "{\"id\": \"chatcmpl-1\", \"object\": \"chat.completion\", \"created\": 1760000000, \"model\": \"gpt-4o-mini\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \"x\"}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 3, \"completion_tokens\": 2, \"total_tokens\": 5}}"
+    }
+   ],
+   "result": {
+    "text": "x"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-explicit",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "30",
+      "content-length": "57"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"p\"}],\"model\":\"m1\"}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "complete-keywords",
+   "fn": "complete",
+   "args": {
+    "model": "gpt-4o-mini",
+    "prompt": "kw?",
+    "keyword_extraction": true,
+    "stream": true,
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "body": "{\"id\": \"chatcmpl-1\", \"object\": \"chat.completion\", \"created\": 1760000000, \"model\": \"gpt-4o-mini\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \" {\\\"low_level_keywords\\\": [\\\"b\\\"], \\\"high_level_keywords\\\": [\\\"\\u0422\\u0435\\u043c\\u0430\\\", \\\"a\\\"]} \"}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 3, \"completion_tokens\": 2, \"total_tokens\": 5}}"
+    }
+   ],
+   "result": {
+    "text": "{\"high_level_keywords\":[\"Тема\",\"a\"],\"low_level_keywords\":[\"b\"]}"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-helper-method": "chat.completions.parse",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "542"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"kw?\"}],\"model\":\"gpt-4o-mini\",\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"schema\":{\"properties\":{\"high_level_keywords\":{\"items\":{\"type\":\"string\"},\"title\":\"High Level Keywords\",\"type\":\"array\"},\"low_level_keywords\":{\"items\":{\"type\":\"string\"},\"title\":\"Low Level Keywords\",\"type\":\"array\"}},\"required\":[\"high_level_keywords\",\"low_level_keywords\"],\"title\":\"GPTKeywordExtractionFormat\",\"type\":\"object\",\"additionalProperties\":false},\"name\":\"GPTKeywordExtractionFormat\",\"strict\":true}},\"stream\":false}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "complete-stream",
+   "fn": "complete",
+   "args": {
+    "model": "gpt-4o-mini",
+    "prompt": "s",
+    "stream": true,
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "sse": [
+      "{\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": []}",
+      "{\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"\", \"role\": \"assistant\"}, \"finish_reason\": null}]}",
+      "{\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"Hel\"}, \"finish_reason\": null}]}",
+      "{\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"lo \\\\u00e9\"}, \"finish_reason\": null}]}",
+      "{\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": null}]}",
+      "{\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [], \"usage\": {\"prompt_tokens\": 1, \"completion_tokens\": 2, \"total_tokens\": 3}}",
+      "[DONE]"
+     ]
+    }
+   ],
+   "result": {
+    "stream": [
+     "Hel",
+     "lo é"
+    ]
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "80"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"s\"}],\"model\":\"gpt-4o-mini\",\"stream\":true}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "complete-stream-cot",
+   "fn": "complete",
+   "args": {
+    "model": "r1",
+    "prompt": "s",
+    "stream": true,
+    "enable_cot": true,
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "sse": [
+      "{\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {\"reasoning_content\": \"think \"}, \"finish_reason\": null}]}",
+      "{\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {\"reasoning_content\": \"more\"}, \"finish_reason\": null}]}",
+      "{\"id\": \"c\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {\"content\": \"done\"}, \"finish_reason\": null}]}",
+      "[DONE]"
+     ]
+    }
+   ],
+   "result": {
+    "stream": [
+     "<think>",
+     "think ",
+     "more",
+     "</think>",
+     "done"
+    ]
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "71"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"s\"}],\"model\":\"r1\",\"stream\":true}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "complete-cot",
+   "fn": "complete",
+   "args": {
+    "model": "r1",
+    "prompt": "c",
+    "enable_cot": true,
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "body": "{\"id\": \"chatcmpl-1\", \"object\": \"chat.completion\", \"created\": 1760000000, \"model\": \"gpt-4o-mini\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \"\", \"reasoning_content\": \"why \\\\u0041\"}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 3, \"completion_tokens\": 2, \"total_tokens\": 5}}"
+    }
+   ],
+   "result": {
+    "text": "<think>why A</think>"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "57"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"c\"}],\"model\":\"r1\"}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "complete-unicode-escape",
+   "fn": "complete",
+   "args": {
+    "model": "m",
+    "prompt": "u",
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "body": "{\"id\": \"chatcmpl-1\", \"object\": \"chat.completion\", \"created\": 1760000000, \"model\": \"gpt-4o-mini\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \"caf\\\\u00e9 and \\\\u263a\"}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 3, \"completion_tokens\": 2, \"total_tokens\": 5}}"
+    }
+   ],
+   "result": {
+    "text": "café and ☺"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"u\"}],\"model\":\"m\"}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "complete-quota",
+   "fn": "complete",
+   "args": {
+    "model": "m",
+    "prompt": "q",
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "status": 429,
+     "body": "{\"error\": {\"message\": \"You exceeded your current quota, please check your plan and billing details.\", \"type\": \"insufficient_quota\", \"param\": null, \"code\": \"insufficient_quota\"}}",
+     "headers": {
+      "x-request-id": "req_1"
+     }
+    }
+   ],
+   "error": {
+    "class": "RetryError",
+    "message": "RetryError[<Future at 0x10a313cb0 state=finished raised RateLimitError>]",
+    "last": {
+     "class": "RateLimitError",
+     "message": "Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}"
+    },
+    "status_code": 429,
+    "code": "insufficient_quota",
+    "type": "insufficient_quota",
+    "param": null,
+    "request_id": "req_1"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"q\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "1",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"q\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "2",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"q\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"q\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "1",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"q\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "2",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"q\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"q\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "1",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"q\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "2",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"q\"}],\"model\":\"m\"}"
+    }
+   ],
+   "sleeps": [
+    0.4375,
+    0.875,
+    4.0,
+    0.4375,
+    0.875,
+    4.0,
+    0.4375,
+    0.875
+   ]
+  },
+  {
+   "name": "complete-bad-request",
+   "fn": "complete",
+   "args": {
+    "model": "m",
+    "prompt": "b",
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "status": 400,
+     "body": "{\"error\": {\"message\": \"Invalid 'messages'\", \"type\": \"invalid_request_error\", \"param\": \"messages\", \"code\": null}}"
+    }
+   ],
+   "error": {
+    "class": "BadRequestError",
+    "message": "Error code: 400 - {'error': {'message': \"Invalid 'messages'\", 'type': 'invalid_request_error', 'param': 'messages', 'code': None}}",
+    "status_code": 400,
+    "code": null,
+    "type": "invalid_request_error",
+    "param": "messages",
+    "request_id": null
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"b\"}],\"model\":\"m\"}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "complete-500-then-ok",
+   "fn": "complete",
+   "args": {
+    "model": "m",
+    "prompt": "r",
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "status": 500,
+     "body": "upstream exploded"
+    },
+    {
+     "body": "{\"id\": \"chatcmpl-1\", \"object\": \"chat.completion\", \"created\": 1760000000, \"model\": \"gpt-4o-mini\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \"ok\"}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 3, \"completion_tokens\": 2, \"total_tokens\": 5}}"
+    }
+   ],
+   "result": {
+    "text": "ok"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"r\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "1",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"r\"}],\"model\":\"m\"}"
+    }
+   ],
+   "sleeps": [
+    0.4375
+   ]
+  },
+  {
+   "name": "complete-retry-after",
+   "fn": "complete",
+   "args": {
+    "model": "m",
+    "prompt": "r",
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "status": 429,
+     "body": "{}",
+     "headers": {
+      "retry-after-ms": "250"
+     }
+    },
+    {
+     "status": 429,
+     "body": "{}",
+     "headers": {
+      "retry-after": "2"
+     }
+    },
+    {
+     "body": "{\"id\": \"chatcmpl-1\", \"object\": \"chat.completion\", \"created\": 1760000000, \"model\": \"gpt-4o-mini\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \"ok\"}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 3, \"completion_tokens\": 2, \"total_tokens\": 5}}"
+    }
+   ],
+   "result": {
+    "text": "ok"
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"r\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "1",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"r\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "2",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"r\"}],\"model\":\"m\"}"
+    }
+   ],
+   "sleeps": [
+    0.25,
+    2.0
+   ]
+  },
+  {
+   "name": "complete-no-retry-header",
+   "fn": "complete",
+   "args": {
+    "model": "m",
+    "prompt": "r",
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "status": 503,
+     "body": "{}",
+     "headers": {
+      "x-should-retry": "false"
+     }
+    }
+   ],
+   "error": {
+    "class": "InternalServerError",
+    "message": "Error code: 503 - {}",
+    "status_code": 503,
+    "code": null,
+    "type": null,
+    "param": null,
+    "request_id": null
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"r\"}],\"model\":\"m\"}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "complete-empty",
+   "fn": "complete",
+   "args": {
+    "model": "m",
+    "prompt": "e",
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "body": "{\"id\": \"chatcmpl-1\", \"object\": \"chat.completion\", \"created\": 1760000000, \"model\": \"gpt-4o-mini\", \"choices\": [{\"index\": 0, \"message\": {\"role\": \"assistant\", \"content\": \"  \"}, \"finish_reason\": \"stop\"}], \"usage\": {\"prompt_tokens\": 3, \"completion_tokens\": 2, \"total_tokens\": 5}}"
+    }
+   ],
+   "error": {
+    "class": "RetryError",
+    "message": "RetryError[<Future at 0x10a311220 state=finished raised InvalidResponseError>]",
+    "last": {
+     "class": "InvalidResponseError",
+     "message": "Received empty content from OpenAI API"
+    }
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"e\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"e\"}],\"model\":\"m\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/chat/completions",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "56"
+     },
+     "body": "{\"messages\":[{\"role\":\"user\",\"content\":\"e\"}],\"model\":\"m\"}"
+    }
+   ],
+   "sleeps": [
+    4.0,
+    4.0
+   ]
+  },
+  {
+   "name": "complete-connection",
+   "fn": "complete",
+   "args": {
+    "model": "m",
+    "prompt": "c",
+    "kwargs": {}
+   },
+   "responses": [
+    {
+     "close": true
+    }
+   ],
+   "error": {
+    "class": "RetryError",
+    "message": "RetryError[<Future at 0x10a305d90 state=finished raised APIConnectionError>]",
+    "last": {
+     "class": "APIConnectionError",
+     "message": "Connection error."
+    },
+    "code": null,
+    "type": null,
+    "param": null
+   },
+   "requests": 9,
+   "sleeps": [
+    0.4375,
+    0.875,
+    4.0,
+    0.4375,
+    0.875,
+    4.0,
+    0.4375,
+    0.875
+   ]
+  },
+  {
+   "name": "embed-vault",
+   "fn": "embed",
+   "args": {
+    "texts": [
+     "alpha",
+     "ünï ☃",
+     ""
+    ],
+    "model": "text-embedding-3-large",
+    "embedding_dim": 4,
+    "max_token_size": 8192
+   },
+   "responses": [
+    {
+     "body": "{\"object\": \"list\", \"data\": [{\"object\": \"embedding\", \"index\": 0, \"embedding\": \"zczMPc3MTL6amZk+d8wrMg==\"}, {\"object\": \"embedding\", \"index\": 1, \"embedding\": \"AADAPwAAIEAAAGDAAAAAAA==\"}, {\"object\": \"embedding\", \"index\": 2, \"embedding\": \"AAAAAAAAAAAAAAAAAACAPw==\"}], \"model\": \"text-embedding-3-large\", \"usage\": {\"prompt_tokens\": 4, \"total_tokens\": 4}}"
+    }
+   ],
+   "result": {
+    "vectors": [
+     [
+      0.10000000149011612,
+      -0.20000000298023224,
+      0.30000001192092896,
+      9.99999993922529e-09
+     ],
+     [
+      1.5,
+      2.5,
+      -3.5,
+      0.0
+     ],
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ]
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "109"
+     },
+     "body": "{\"input\":[\"alpha\",\"ünï ☃\",\"\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "embed-truncate-prefix",
+   "fn": "embed",
+   "args": {
+    "texts": [
+     "one two three four five six seven eight nine ten",
+     "short"
+    ],
+    "model": "text-embedding-3-small",
+    "max_token_size": 5,
+    "context": "query",
+    "query_prefix": "search_query: ",
+    "document_prefix": "doc: ",
+    "api_key": "sk-explicit"
+   },
+   "responses": [
+    {
+     "body": "{\"object\": \"list\", \"data\": [{\"object\": \"embedding\", \"index\": 0, \"embedding\": \"AACAPwAAAEA=\"}, {\"object\": \"embedding\", \"index\": 1, \"embedding\": \"AABAQAAAgEA=\"}], \"model\": \"text-embedding-3-large\", \"usage\": {\"prompt_tokens\": 4, \"total_tokens\": 4}}"
+    }
+   ],
+   "result": {
+    "vectors": [
+     [
+      1.0,
+      2.0
+     ],
+     [
+      3.0,
+      4.0
+     ]
+    ]
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-explicit",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "117"
+     },
+     "body": "{\"input\":[\"search_query: one two\",\"search_query: short\"],\"model\":\"text-embedding-3-small\",\"encoding_format\":\"base64\"}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "embed-float",
+   "fn": "embed",
+   "args": {
+    "texts": [
+     "x"
+    ],
+    "model": "text-embedding-3-small",
+    "context": "document",
+    "document_prefix": "doc: "
+   },
+   "responses": [
+    {
+     "body": "{\"object\": \"list\", \"data\": [{\"object\": \"embedding\", \"index\": 0, \"embedding\": [0.25, 0.5]}], \"model\": \"text-embedding-3-large\", \"usage\": {\"prompt_tokens\": 4, \"total_tokens\": 4}}"
+    }
+   ],
+   "use_base64": false,
+   "result": {
+    "vectors": [
+     [
+      0.25,
+      0.5
+     ]
+    ]
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "79"
+     },
+     "body": "{\"input\":[\"doc: x\"],\"model\":\"text-embedding-3-small\",\"encoding_format\":\"float\"}"
+    }
+   ],
+   "sleeps": []
+  },
+  {
+   "name": "embed-quota",
+   "fn": "embed",
+   "args": {
+    "texts": [
+     "x"
+    ],
+    "model": "text-embedding-3-large",
+    "embedding_dim": 4
+   },
+   "responses": [
+    {
+     "status": 429,
+     "body": "{\"error\": {\"message\": \"You exceeded your current quota, please check your plan and billing details.\", \"type\": \"insufficient_quota\", \"param\": null, \"code\": \"insufficient_quota\"}}"
+    }
+   ],
+   "error": {
+    "class": "RetryError",
+    "message": "RetryError[<Future at 0x10a26f0e0 state=finished raised RateLimitError>]",
+    "last": {
+     "class": "RateLimitError",
+     "message": "Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}"
+    },
+    "status_code": 429,
+    "code": "insufficient_quota",
+    "type": "insufficient_quota",
+    "param": null,
+    "request_id": null
+   },
+   "requests": [
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "90"
+     },
+     "body": "{\"input\":[\"x\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "1",
+      "x-stainless-read-timeout": "600",
+      "content-length": "90"
+     },
+     "body": "{\"input\":[\"x\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "2",
+      "x-stainless-read-timeout": "600",
+      "content-length": "90"
+     },
+     "body": "{\"input\":[\"x\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "90"
+     },
+     "body": "{\"input\":[\"x\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "1",
+      "x-stainless-read-timeout": "600",
+      "content-length": "90"
+     },
+     "body": "{\"input\":[\"x\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "2",
+      "x-stainless-read-timeout": "600",
+      "content-length": "90"
+     },
+     "body": "{\"input\":[\"x\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "0",
+      "x-stainless-read-timeout": "600",
+      "content-length": "90"
+     },
+     "body": "{\"input\":[\"x\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "1",
+      "x-stainless-read-timeout": "600",
+      "content-length": "90"
+     },
+     "body": "{\"input\":[\"x\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    },
+    {
+     "method": "POST",
+     "path": "/v1/embeddings",
+     "headers": {
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer sk-test-env-key",
+      "accept": "application/json",
+      "content-type": "application/json",
+      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) LightRAG/0291",
+      "x-stainless-lang": "python",
+      "x-stainless-package-version": "2.36.0",
+      "x-stainless-os": "MacOS",
+      "x-stainless-arch": "arm64",
+      "x-stainless-runtime": "CPython",
+      "x-stainless-runtime-version": "3.12.1",
+      "x-stainless-async": "async:asyncio",
+      "x-stainless-retry-count": "2",
+      "x-stainless-read-timeout": "600",
+      "content-length": "90"
+     },
+     "body": "{\"input\":[\"x\"],\"model\":\"text-embedding-3-large\",\"dimensions\":4,\"encoding_format\":\"base64\"}"
+    }
+   ],
+   "sleeps": [
+    0.4375,
+    0.875,
+    4.0,
+    0.4375,
+    0.875,
+    4.0,
+    0.4375,
+    0.875
+   ]
+  }
+ ]
+}

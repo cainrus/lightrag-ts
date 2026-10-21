@@ -279,20 +279,22 @@ function pyJsonString(s: string, ensureAscii = false): string {
 
 /**
  * Python `json.dumps(obj, ensure_ascii=...)` (default False here, upstream's
- * prompt path) for JSON-shaped values: `", "` / `": "` separators, Python's
+ * prompt path) for JSON-shaped values: `", "` / `": "` separators (`compact`:
+ * `","` / `":"`, what httpx sends as a request body), Python's
  * string escaping, floats in repr form (NaN / Infinity as json spells them).
  * JS cannot tell 1.0 from 1, so an integral float prints as an int ("1",
  * Python "1.0"). `undefined` prints as null.
  */
-export function pyJsonDumps(v: unknown, opts: { ensureAscii?: boolean } = {}): string {
+export function pyJsonDumps(v: unknown, opts: { ensureAscii?: boolean; compact?: boolean } = {}): string {
   const ascii = opts?.ensureAscii === true;
+  const [comma, colon] = opts?.compact === true ? [',', ':'] : [', ', ': '];
   const dump = (x: unknown): string => {
     if (x === null || x === undefined) return 'null';
     if (typeof x === 'string') return pyJsonString(x, ascii);
     if (typeof x === 'boolean') return x ? 'true' : 'false';
     if (typeof x === 'number') return Number.isInteger(x) ? BigInt(x).toString() : pyFloatRepr(x);
-    if (Array.isArray(x)) return '[' + x.map(dump).join(', ') + ']';
-    if (typeof x === 'object') return '{' + Object.entries(x).map(([k, y]) => `${pyJsonString(k, ascii)}: ${dump(y)}`).join(', ') + '}';
+    if (Array.isArray(x)) return '[' + x.map(dump).join(comma) + ']';
+    if (typeof x === 'object') return '{' + Object.entries(x).map(([k, y]) => `${pyJsonString(k, ascii)}${colon}${dump(y)}`).join(comma) + '}';
     throw new Error(`pyJsonDumps: unsupported ${typeof x}`);
   };
   return dump(v);

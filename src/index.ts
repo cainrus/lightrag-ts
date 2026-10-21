@@ -59,3 +59,32 @@ export {
   getRelationInfo,
   utilsGraphHooks,
 } from './utils_graph.ts';
+export {
+  APIConnectionError,
+  APIError,
+  APIStatusError,
+  APITimeoutError,
+  create_openai_async_client,
+  gpt_4o_complete,
+  gpt_4o_mini_complete,
+  InvalidResponseError,
+  makeEmbeddingFunc,
+  openai_complete,
+  openai_complete_if_cache,
+  openai_embed,
+  openai_embed_func,
+  OpenAIError,
+  RateLimitError,
+  RetryError,
+  unwrapRetryError,
+} from './llm/openai.ts';
+export type { EmbeddingFunc as OpenAIEmbeddingFunc, OpenAIClientConfigs, OpenAICompleteOptions, OpenAIEmbedOptions } from './llm/openai.ts';
+export {
+  ClaudeCompleteError,
+  claude_complete,
+  classifyProviderError,
+  describeClaudeModel,
+  foldClaudePrompt,
+  makeClaudeCompleteLlm,
+} from './llm/claude.ts';
+export type { ClaudeCompleteConfig, ProviderStop } from './llm/claude.ts';

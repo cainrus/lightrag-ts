@@ -1,0 +1,166 @@
+{
+ "source": "vault_rag_core._anthropic_complete_str",
+ "calls": [
+  {
+   "name": "plain",
+   "prompt": "Extract entities from: Alice met Bob.",
+   "kwargs": {},
+   "mode": "reply",
+   "result": "reply:6786029edef34b8f26f736c82939ddc9",
+   "bridge": [
+    {
+     "argv": [
+      "--profile",
+      "home",
+      "--timeout",
+      "180",
+      "--model",
+      "haiku"
+     ],
+     "stdin": "Extract entities from: Alice met Bob."
+    }
+   ]
+  },
+  {
+   "name": "system-history-lightrag-kwargs",
+   "prompt": "---Role---\nAnswer.\n\n",
+   "kwargs": {
+    "system_prompt": "  You are a helpful assistant. ☃\n",
+    "history_messages": [
+     {
+      "role": "user",
+      "content": "first"
+     },
+     {
+      "role": "assistant",
+      "content": "second\nline"
+     },
+     {
+      "content": "no role"
+     },
+     {
+      "role": "system"
+     }
+    ],
+    "hashing_kv": null,
+    "keyword_extraction": true,
+    "enable_cot": true,
+    "stream": true,
+    "max_tokens": 4096,
+    "temperature": 0.0,
+    "top_p": 1,
+    "top_k": 40,
+    "stop_sequences": [
+     "x"
+    ]
+   },
+   "mode": "reply",
+   "result": "reply:71fb62daba38f71f8d99dba6fbacf3a7",
+   "bridge": [
+    {
+     "argv": [
+      "--profile",
+      "home",
+      "--timeout",
+      "180",
+      "--model",
+      "haiku"
+     ],
+     "stdin": "You are a helpful assistant. ☃\n\n[user] first\n\n[assistant] second\nline\n\n[user] no role\n\n[system] \n\n---Role---\nAnswer.\n\n"
+    }
+   ]
+  },
+  {
+   "name": "empty-system-timeout",
+   "prompt": "p",
+   "kwargs": {
+    "system_prompt": "",
+    "history_messages": [],
+    "timeout": 42.7
+   },
+   "mode": "reply",
+   "result": "reply:83878c91171338902e0fe0fb97a8c47a",
+   "bridge": [
+    {
+     "argv": [
+      "--profile",
+      "home",
+      "--timeout",
+      "42",
+      "--model",
+      "haiku"
+     ],
+     "stdin": "p"
+    }
+   ]
+  },
+  {
+   "name": "unicode",
+   "prompt": "Тест «кавычки» — émoji 🎉 \t tab",
+   "kwargs": {
+    "system_prompt": "\tsys\t"
+   },
+   "mode": "reply",
+   "result": "reply:74f01ec91285a491cf738ec34dcf86fa",
+   "bridge": [
+    {
+     "argv": [
+      "--profile",
+      "home",
+      "--timeout",
+      "180",
+      "--model",
+      "haiku"
+     ],
+     "stdin": "sys\n\nТест «кавычки» — émoji 🎉 \t tab"
+    }
+   ]
+  },
+  {
+   "name": "fail",
+   "prompt": "p",
+   "kwargs": {},
+   "mode": "fail",
+   "error": {
+    "class": "RuntimeError",
+    "message": "claude-complete failed (rc=3): boom"
+   },
+   "bridge": [
+    {
+     "argv": [
+      "--profile",
+      "home",
+      "--timeout",
+      "180",
+      "--model",
+      "haiku"
+     ],
+     "stdin": "p"
+    }
+   ]
+  },
+  {
+   "name": "limit",
+   "prompt": "p",
+   "kwargs": {},
+   "mode": "limit",
+   "error": {
+    "class": "RuntimeError",
+    "message": "claude-complete failed (rc=1): claude -p failed (rc=1): You've hit your session limit · resets 11pm"
+   },
+   "bridge": [
+    {
+     "argv": [
+      "--profile",
+      "home",
+      "--timeout",
+      "180",
+      "--model",
+      "haiku"
+     ],
+     "stdin": "p"
+    }
+   ]
+  }
+ ]
+}
