@@ -14,8 +14,8 @@
    "sha256": "619c61597f7a3f68c48588df5027be4246f67372eba280af93c52fd936804b68"
   },
   "ws/kv_store_full_docs.json": {
-   "bytes": 16990,
-   "sha256": "aebd3562e2d9d63238115bb9d646aba13d7c625d5a79b8dac97cd4d58fb5947a"
+   "bytes": 17185,
+   "sha256": "8074376984db32dfca96b802b61d5ddf63afa2ae416c9ca891024c5a6e306986"
   },
   "ws/kv_store_full_entities.json": {
    "bytes": 4203,
@@ -26,20 +26,20 @@
    "sha256": "6b1f9311f24976d6ca80c8f60040e7862f7d53cd775dc802d73a241e0fe36b77"
   },
   "ws/kv_store_llm_response_cache.json": {
-   "bytes": 2536764,
-   "sha256": "d8649ec3896058235c77842d1066bd489e4b25ab956e0cf69b16ef3665871a4d"
+   "bytes": 2601032,
+   "sha256": "6b797553656e2710e9368629897999d544520e4d866e61a73dd1b0861b3d039a"
   },
   "ws/kv_store_relation_chunks.json": {
    "bytes": 14853,
    "sha256": "6c2b0173ebd6c499b3bdd3e0a57a0dbb717b1dd9dfbffa9c1a5456d20260d8f3"
   },
   "ws/kv_store_text_chunks.json": {
-   "bytes": 43415,
-   "sha256": "a2d0e51a7e5c10ed7808219ef4645fa2f55009e5f98e51a68520697c2e36b2c7"
+   "bytes": 44318,
+   "sha256": "66fdae7674f26732c73a8df8e52e2216b7fe7eb1e9cb7be26eb62df18a0a5160"
   },
   "ws/vdb_chunks.json": {
-   "bytes": 32266,
-   "sha256": "f0e1bb2b13f6030d4dbd6e985ad19761edc8bf89055eaf08c1893fc8a0539bbf"
+   "bytes": 32781,
+   "sha256": "9daa1be9c8bb0122ab9e39a407c597d7b50e51c62896213244b518a6c49fbe2c"
   },
   "ws/vdb_entities.json": {
    "bytes": 9373,
@@ -394,6 +394,18 @@
    "history": "6f9503db8867c86cef99c27ca3747a7b34de4881937ca8a481583eebda3d75bc"
   },
   {
+   "op": "custom_chunks",
+   "error": null,
+   "result": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "custom_chunks",
+   "error": null,
+   "result": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
    "op": "query",
    "error": null,
    "result": "03ef142a07078e6a242b4b025aa695a84331d6761256f4091523a65c6800ad3a",
@@ -474,7 +486,19 @@
   {
    "op": "query",
    "error": null,
-   "result": "e6b5bb4bac17ede75db6a333facafe7ab52855630661e10666a879a0eae641e5",
+   "result": "86673a9e621ffb2aa3fed4b5db8b73d34e989892f4f28c0568b1dc12170500fd",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "docs_by_track",
+   "error": null,
+   "result": "ae8d748db0145dd252512eb298857aaf5eff1b27239b0dbc99d3d72e182b14f4",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "docs_by_ids",
+   "error": null,
+   "result": "a333002e34580c8c51c575832d83354be785bb180adfebb9cc063021fb4d70f2",
    "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
   {

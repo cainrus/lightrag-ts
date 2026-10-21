@@ -198,6 +198,15 @@ export async function runSpecTs(spec: PipelineSpec, o: RunOptions = {}): Promise
         case 'relation_info':
           r = await rag.get_relation_info(a.src, a.tgt, a.include_vector_data ?? false);
           break;
+        case 'custom_chunks':
+          r = await rag.ainsert_custom_chunks(a.full_text, a.text_chunks, a.doc_id ?? null);
+          break;
+        case 'docs_by_track':
+          r = await rag.aget_docs_by_track_id(a.track_id);
+          break;
+        case 'docs_by_ids':
+          r = await rag.aget_docs_by_ids(a.ids);
+          break;
         case 'counts':
           r = await rag.get_processing_status();
           break;
@@ -383,7 +392,11 @@ export function syntheticSpec(workingDir: string, extra: Partial<PipelineSpec> =
       },
       { op: 'delete', doc_id: computeDocId(docs[0]!), delete_llm_cache: true },
       { op: 'insert', docs: [docs[1]!, docs[12]!, docs[13]!], file_paths: [paths[1]!, paths[12]!, paths[13]!], track_id: 'track-7' },
+      { op: 'custom_chunks', full_text: 'Custom text. Globex meets Paris.', text_chunks: ['Custom text.', 'Globex meets Paris.'], doc_id: 'custom-chunks-doc' },
+      { op: 'custom_chunks', full_text: 'Custom text. Globex meets Paris.', text_chunks: ['Custom text.'], doc_id: 'custom-chunks-doc' },
       ...queries('end'),
+      { op: 'docs_by_track', track_id: 'track-2' },
+      { op: 'docs_by_ids', ids: ['custom-b', 'doc-missing', computeDocId(docs[2]!)] },
       { op: 'counts' },
     ],
     ...extra,

@@ -332,6 +332,12 @@ async def run(spec, out_path):
                     r = await rag.get_entity_info(step["name"], step.get("include_vector_data", False))
                 elif op == "relation_info":
                     r = await rag.get_relation_info(step["src"], step["tgt"], step.get("include_vector_data", False))
+                elif op == "custom_chunks":
+                    r = await rag.ainsert_custom_chunks(step["full_text"], step["text_chunks"], step.get("doc_id"))
+                elif op == "docs_by_track":
+                    r = await rag.aget_docs_by_track_id(step["track_id"])
+                elif op == "docs_by_ids":
+                    r = await rag.aget_docs_by_ids(step["ids"])
                 elif op == "counts":
                     r = await rag.get_processing_status()
                 else:
