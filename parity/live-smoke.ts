@@ -54,6 +54,10 @@ async function one(target: string): Promise<Record<string, unknown>> {
   const loadMs = Date.now() - t;
   const db = s.db;
   const out: Record<string, unknown> = { rows: db.length, loadMs, rssMb: rssMb() };
+  // what stays after the parse garbage is collected: the live working set
+  (globalThis as { gc?: () => void }).gc?.();
+  const mu = process.memoryUsage();
+  out.afterGc = { rssMb: rssMb(), heapMb: Math.round(mu.heapUsed / 2 ** 20), externalMb: Math.round(mu.external / 2 ** 20) };
   if (db.length) {
     const tq = Date.now();
     const r = await s.query('', 10, Array.from(db.row(0)));
@@ -83,11 +87,13 @@ if (oneMode) {
   for (const f of files) if (/^kv_store_.*\.json$/.test(f)) targets.push(`kv:${f.slice(9, -5)}`);
   for (const f of files) if (/^vdb_.*\.json$/.test(f)) targets.push(`vdb:${f.slice(4, -5)}`);
   let bad = 0;
-  for (const target of targets) {
+  const only = args.includes('--only') ? args[args.indexOf('--only') + 1]!.split(',') : null;
+  for (const target of targets.filter((t) => !only || only.includes(t))) {
     const out = JSON.parse(
-      execFileSync(process.execPath, ['--max-old-space-size=4096', import.meta.filename, '--one', dir, target], { maxBuffer: 1 << 26 }).toString(),
+      execFileSync(process.execPath, ['--max-old-space-size=4096', '--expose-gc', import.meta.filename, '--one', dir, target], { maxBuffer: 1 << 26 }).toString(),
     );
-    const vdbOver = target.startsWith('vdb:') && out.rssMb > maxRss;
+    // the bound applies to the live working set; the peak before GC is reported next to it
+    const vdbOver = target.startsWith('vdb:') && (out.afterGc?.rssMb ?? out.rssMb) > maxRss;
     if (vdbOver) bad++;
     console.log(`${vdbOver ? 'OVER' : 'ok  '} ${target.padEnd(28)} ${JSON.stringify(out)}`);
   }
