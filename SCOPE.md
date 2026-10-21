@@ -87,6 +87,17 @@ entries. Checked three ways:
   through upstream and TS; query vectors are stored chunk vectors (no live
   embedding call), the LLM is a stub or the cached answer.
 
+On the live vault store (21.10.2026: 77 keywords + 49 query entries): every
+key recomputed (49/49 through the chained path, 3 of them via upstream's
+"empty keywords -> the query is the ll keyword" branch); on its copy, 77
+queries x 5 modes x {context, full} = 770 probes, 768 identical. The other 2
+are one local-mode query whose entity search has an exact score tie
+(0.6364680528640747 on both sides): nano-vectordb ranks with `np.argsort`,
+which is not stable, so the order of tied records is numpy's, not reproducible
+here (ties keep storage order in TS). With float32 query vectors (what an
+embedding binding returns) scores agree to one float32 ulp (6e-8 measured), so
+a near-tie can flip the same way.
+
 Query cache keys hash the parameters, not the prompt (`compute_args_hash` over
 mode, query, response_type, top_k, ..., joined keywords, user_prompt,
 enable_rerank), so `str()` of None / bool / float matters: `computeArgsHashPy`
