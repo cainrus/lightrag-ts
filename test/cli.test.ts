@@ -194,6 +194,15 @@ test('B5f-1: a file is stored under its path relative to the current directory, 
   assert.deepEqual(paths, ['daily/a.md', 'notes/a.md']);
 });
 
+test('B5f-1: a file outside the current directory is stored as ../<path>', async () => {
+  const root = join(tmp, 'vault3');
+  mkdirSync(join(root, 'inner'), { recursive: true });
+  writeFileSync(join(root, 'x.md'), 'Alice is outside.\n');
+  const r = await run(['insert', '../x.md'], envFor(join(tmp, 'outside')), '', join(root, 'inner'));
+  assert.equal(r.code, EXIT.ok, r.err);
+  assert.deepEqual(Object.values((JSON.parse(r.out) as Inserted).documents).map((d) => d.file_path), ['../x.md']);
+});
+
 test('B5f-1: --file-path per input, in order, as --id; a count mismatch is a usage error', async () => {
   const root = join(tmp, 'vault2');
   mkdirSync(root, { recursive: true });

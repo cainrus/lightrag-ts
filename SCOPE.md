@@ -554,8 +554,10 @@ follows the vault (`vault-rag-ingest.py`), the CLI's one real caller:
   (The server's wrapper never truncates.)
 - **Document paths.** An inserted file is stored under its path relative to
   the current directory (the vault passes the path relative to the vault), so
-  `notes/a.md` and `daily/a.md` stay two paths; `--file-path`, given once per
-  input like `--id`, overrides it. Stdin is `unknown_source`, as upstream.
+  `notes/a.md` and `daily/a.md` stay two paths; a file outside the current
+  directory keeps its relative form, `../x.md` (run the CLI from the vault root,
+  or pass `--file-path`). `--file-path`, given once per input like `--id`,
+  overrides it. Stdin is `unknown_source`, as upstream.
 - **Credentials.** `OPENAI_API_KEY` / `OPENAI_API_BASE` are read from the
   environment the CLI is given (`main(argv, { env })`), not from
   `process.env`: the adapters take a port-only `env` option for the client

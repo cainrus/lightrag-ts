@@ -91,6 +91,7 @@ re-ingesting anything.
 
 ```sh
 lightrag-ts insert notes/*.md          # stored as notes/<name>.md; stdin: ... | lightrag-ts insert --file-path note.md
+lightrag-ts insert ../x.md             # paths are relative to the current directory: stored as ../x.md
 lightrag-ts query "What did I decide about X?" --mode mix
 lightrag-ts delete --doc-id doc-0123... [--delete-llm-cache]
 lightrag-ts status                     # documents by status, graph and vector counts
