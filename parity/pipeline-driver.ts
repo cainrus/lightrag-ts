@@ -120,7 +120,8 @@ export type RunOptions = {
   /**
    * Delay every LLM and embedding answer by 0..maxMs, chosen per call from
    * md5(seed + input): concurrent calls then finish out of call order, the
-   * way a real provider's latency makes them, and the same on every run.
+   * way a real provider's latency makes them. The delays are fixed per input;
+   * the order calls finish in is not (timers and scheduling decide it).
    */
   jitter?: { seed: string; maxMs: number; onCall?: (kind: 'llm' | 'embed', event: 'start' | 'end', key: string) => void };
   /** wrap the rag right after construction (cache-hit recording, persistence stubs) */

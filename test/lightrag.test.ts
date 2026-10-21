@@ -26,6 +26,16 @@ import {
 const FIXTURE = JSON.parse(readFileSync(new URL('./fixtures/pipeline-synthetic.json', import.meta.url), 'utf8')) as FixtureDigest;
 const tmp = () => mkdtempSync(join(tmpdir(), 'lightrag-b4-'));
 
+/** Pairs of calls that end in the other order than they started (a call key may repeat: matched first-in, first-out). */
+function completionInversions(started: string[], ended: string[]): number {
+  const pos = new Map<string, number[]>();
+  started.forEach((k, i) => pos.set(k, [...(pos.get(k) ?? []), i]));
+  const at = ended.map((k) => pos.get(k)!.shift()!);
+  let n = 0;
+  for (let i = 0; i < at.length; i++) for (let j = i + 1; j < at.length; j++) if (at[i]! > at[j]!) n++;
+  return n;
+}
+
 function assertDigest(dir: string, records: Awaited<ReturnType<typeof runSpecTs>>): void {
   const got = fixtureDigest(dir, records);
   assert.equal(got.steps.length, FIXTURE.steps.length);
@@ -71,7 +81,10 @@ describe('LightRAG pipeline vs upstream (synthetic scenario)', () => {
       const records = await runSpecTs(syntheticSpec(dir), {
         jitter: { seed: 'b4f', maxMs: 4, onCall: (kind, ev, key) => (ev === 'start' ? started : ended).push(`${kind}:${key}`) },
       });
-      assert.notDeepEqual(ended, started, 'the delays must reorder completions, or this test checks nothing');
+      // pairs of calls that finish in the other order than they started: 114-136 of 526 calls
+      // over 8 runs (21.10.2026); a handful would leave this test checking almost nothing
+      const inv = completionInversions(started, ended);
+      assert.ok(inv >= 50, `the delays must reorder completions, or this test checks nothing (${inv} pairs out of order)`);
       const digest = fixtureDigest(dir, records);
       for (const [f, d] of Object.entries(digest.files)) {
         if (f.endsWith('kv_store_llm_response_cache.json')) continue;

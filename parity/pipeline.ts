@@ -33,6 +33,7 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { mkdtempSync } from 'node:fs';
 import { forEachJsonKv, kvStorePath } from '../src/kg/json_kv_impl.ts';
+import { readGraphml } from '../src/kg/networkx_impl.ts';
 import { writeJsonPy } from '../src/internal/py_json.ts';
 import { NameSpace } from '../src/namespace.ts';
 import { isDeepStrictEqual } from 'node:util';
@@ -188,7 +189,16 @@ if (cmd === 'synthetic') {
   writeFileSync(specFile, JSON.stringify(syntheticSpec(seqDir)));
   runPy(specFile, join(WORK, 'py.jsonl'));
   const seqRecords = readStepRecords(join(WORK, 'py.jsonl'));
-  const summary: { run: number; files: number; differ: string[]; resultDiffs: number }[] = [];
+  // nodes / edges present in both graphs whose attributes differ (descriptions, summaries, ...)
+  const graphDiffs = (a: string, b: string) => {
+    const name = dirDiffs(a, b).map(([n]) => n).find((n) => n.endsWith('.graphml'))!;
+    const x = readGraphml(join(a, name));
+    const y = readGraphml(join(b, name));
+    const nodes = [...x.nodes].filter(([id, at]) => y.nodes.has(id) && !isDeepStrictEqual(at, y.nodes.get(id))).length;
+    const edges = [...x.edges].filter(([k, e]) => y.edges.has(k) && !isDeepStrictEqual(e.attrs, y.edges.get(k)!.attrs)).length;
+    return { nodes, nodesOf: x.nodes.size, edges, edgesOf: x.edges.size };
+  };
+  const summary: { run: number; files: number; differ: string[]; resultDiffs: number; graph: ReturnType<typeof graphDiffs> }[] = [];
   for (let k = 0; k < runs; k++) {
     const dir = join(WORK, `py-concurrent-${k}`);
     rmSync(dir, { recursive: true, force: true });
@@ -199,8 +209,9 @@ if (cmd === 'synthetic') {
     const files = dirDiffs(seqDir, dir);
     const differ = files.filter(([, d]) => d !== null).map(([n]) => n);
     const resultDiffs = diffStepRecords(readStepRecords(join(WORK, `py-concurrent-${k}.jsonl`)), seqRecords, { history: false }).length;
-    summary.push({ run: k, files: files.length, differ, resultDiffs });
-    log(`concurrent run ${k}: ${differ.length} of ${files.length} files differ from the sequential run (${differ.join(', ')}); ${resultDiffs} step results differ`);
+    const graph = graphDiffs(seqDir, dir);
+    summary.push({ run: k, files: files.length, differ, resultDiffs, graph });
+    log(`concurrent run ${k}: ${differ.length} of ${files.length} files differ from the sequential run (${differ.join(', ')}); ${resultDiffs} step results differ; attributes differ on ${graph.nodes} of ${graph.nodesOf} nodes, ${graph.edges} of ${graph.edgesOf} edges`);
   }
   if (values.json) writeFileSync(values.json, JSON.stringify(summary, null, 2) + '\n');
 } else if (cmd === 'nocache') {

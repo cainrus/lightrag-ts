@@ -314,8 +314,10 @@ for message, and at the spec's own concurrency, which must give the same files
 (the LLM cache compared as a map: its new keys follow completion order) and the
 same results. In that second run the LLM and embedding stand-ins answer after
 a seeded 0-4 ms delay (md5 of the input), so concurrent calls finish out of
-call order as a provider's latency makes them; `test/lightrag.test.ts` checks
-that completions really were reordered.
+call order as a provider's latency makes them. The delays are fixed per input,
+the order of completions is not: timers and scheduling decide it, so it varies
+between runs. `test/lightrag.test.ts` requires at least 50 pairs of calls
+finishing out of their start order (measured: 114-136 of 526 calls).
 
 To get one reproducible upstream run the harness changes upstream's process,
 not its code, and the port follows the same order:
@@ -348,8 +350,9 @@ not its code, and the port follows the same order:
   and set order still pinned) each differ from the sequential run in 8 of 12
   files (GraphML, both entity / relation vdb files, the entity / relation
   chunk lists, full_entities / full_relations, the LLM cache) and in 31-32 of
-  76 step results; 10-12 of the 16 nodes and 4-5 of the 49 edges carry other
-  attributes (descriptions, summaries). The three runs also differ from each
+  76 step results; the same command counts the nodes and edges present in both
+  graphs whose attributes differ (descriptions, summaries): 10-12 of 16 nodes,
+  4-5 of 49 edges. The three runs also differ from each
   other (two pairs in 8 files, one pair in 1).
 - **One task at a time** upstream (`max_parallel_insert=1`, operate's
   semaphores at 1), as for B2.
