@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { EXIT, lightragInitFromEnv, main, StopGuard } from '../src/cli.ts';
-import { APIConnectionError, openaiRuntime } from '../src/llm/openai.ts';
+import { APIConnectionError, type EmbeddingFunc, openaiRuntime } from '../src/llm/openai.ts';
 
 const FAKE_CLAUDE = fileURLToPath(new URL('./fixtures/fake-claude-complete.ts', import.meta.url));
 const CLI = fileURLToPath(new URL('../src/cli.ts', import.meta.url));
@@ -220,6 +220,22 @@ test('B5f-2: the EmbeddingFunc carries no max_token_size unless EMBEDDING_TOKEN_
   const sent = srv.embedInputs.at(-1)![0]!;
   assert.ok(sent.length < long.length, 'the text is cut');
   assert.ok(sent.length > 'alpha '.length * 8000, 'at 8192 tokens, not at a smaller limit');
+});
+
+test('EMBEDDING_SEND_DIM comes from the passed environment, not process.env', () => {
+  const saved = process.env.EMBEDDING_SEND_DIM;
+  try {
+    process.env.EMBEDDING_SEND_DIM = 'false';
+    assert.equal((lightragInitFromEnv(envFor(join(tmp, 'sd'), { EMBEDDING_SEND_DIM: 'true' })).embedding_func as unknown as EmbeddingFunc).send_dimensions, true);
+    process.env.EMBEDDING_SEND_DIM = 'true';
+    assert.equal((lightragInitFromEnv(envFor(join(tmp, 'sd'), { EMBEDDING_SEND_DIM: 'false' })).embedding_func as unknown as EmbeddingFunc).send_dimensions, false);
+    const unset = envFor(join(tmp, 'sd'));
+    delete unset.EMBEDDING_SEND_DIM;
+    assert.equal((lightragInitFromEnv(unset).embedding_func as unknown as EmbeddingFunc).send_dimensions, false, 'default false, whatever process.env says');
+  } finally {
+    if (saved === undefined) delete process.env.EMBEDDING_SEND_DIM;
+    else process.env.EMBEDDING_SEND_DIM = saved;
+  }
 });
 
 test('B5f-3: the OpenAI key comes from the passed environment, never from process.env', async () => {

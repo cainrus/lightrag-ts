@@ -765,9 +765,15 @@ export function pyFloatParse(s: string): number | null {
   return Number(t.replaceAll('_', ''));
 }
 
-/** utils.get_env_value. `type` is the Python type the default would be converted with. */
-export function getEnvValue<T>(envKey: string, dflt: T, type: 'int' | 'float' | 'str' | 'bool' | 'list' = 'str', specialNone = false): T | null {
-  const value = process.env[envKey];
+/** utils.get_env_value. `type` is the Python type the default would be converted with; `env` (port-only) defaults to process.env. */
+export function getEnvValue<T>(
+  envKey: string,
+  dflt: T,
+  type: 'int' | 'float' | 'str' | 'bool' | 'list' = 'str',
+  specialNone = false,
+  env: NodeJS.ProcessEnv = process.env,
+): T | null {
+  const value = env[envKey];
   if (value === undefined) return dflt;
   if (specialNone && value === 'None') return null;
   if (type === 'bool') return ['true', '1', 'yes', 't', 'on'].includes(value.toLowerCase()) as T;

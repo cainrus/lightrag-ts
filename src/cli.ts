@@ -142,7 +142,7 @@ export function lightragInitFromEnv(env: NodeJS.ProcessEnv, over: { working_dir?
   const embedding_func = makeEmbeddingFunc({
     embedding_dim: intEnv('EMBEDDING_DIM', 1536),
     max_token_size: tokenLimit,
-    send_dimensions: getEnvValue<boolean>('EMBEDDING_SEND_DIM', false, 'bool') === true,
+    send_dimensions: getEnvValue<boolean>('EMBEDDING_SEND_DIM', false, 'bool', false, env) === true,
     model_name: embModel,
     func: guarded((texts: string[], o: EmbedCallOptions) =>
       openai_embed_func(texts, {
