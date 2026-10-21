@@ -10,9 +10,10 @@ on-disk store** as the Python library (default storages: JSON KV, NanoVectorDB,
 NetworkX GraphML), so an existing store moves between the two without
 re-ingesting anything.
 
-> Status: early. Step B0 is done: store readers, prompt templates, LLM-cache key
-> computation, and a parity harness. The pipeline itself (chunking, extraction,
-> merge, query) is not ported yet. See [SCOPE.md](SCOPE.md).
+> Status: early. Done: the four default storages (read and write, byte-compatible
+> with upstream), prompt templates, LLM-cache key computation, parity harnesses.
+> The pipeline itself (chunking, extraction, merge, query) is not ported yet.
+> See [SCOPE.md](SCOPE.md).
 
 ## What works today
 
@@ -22,6 +23,11 @@ re-ingesting anything.
 - Byte-exact reconstruction of upstream's entity-extraction prompts and their
   LLM-cache keys, including the Python-specific parts: `html.unescape`,
   `str.strip`, `str.format`, `json.dumps` separators.
+
+- Writing it back: `JsonKVStorage`, `JsonDocStatusStorage`,
+  `NanoVectorDBStorage` and `NetworkXStorage` follow upstream's storage API
+  and persist files byte-identical to what upstream writes for the same state
+  (`node parity/storages.ts <store>`, which works on a copy).
 
 ## Parity approach
 

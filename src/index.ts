@@ -11,10 +11,12 @@ export {
   sanitizeTextForEncoding,
 } from './utils.ts';
 export { buildExtractionPrompts, extractionCacheKeys } from './operate.ts';
-export { forEachJsonKv, kvStorePath, readJsonKv } from './kg/json_kv_impl.ts';
-export { decodeVectorField, readNanoVectorDb, vdbPath } from './kg/nano_vector_db_impl.ts';
-export type { NanoVdbFile, VdbRecord } from './kg/nano_vector_db_impl.ts';
-export { graphmlPath, readGraphml } from './kg/networkx_impl.ts';
+export * from './base.ts';
+export { JsonKVStorage, forEachJsonKv, kvStorePath, readJsonKv } from './kg/json_kv_impl.ts';
+export { JsonDocStatusStorage } from './kg/json_doc_status_impl.ts';
+export { NanoVectorDB, NanoVectorDBStorage, decodeVectorField, encodeVectorField, readNanoVectorDb, vdbPath } from './kg/nano_vector_db_impl.ts';
+export type { NanoVdbFile, UpsertReport, VdbRecord } from './kg/nano_vector_db_impl.ts';
+export { NetworkXStorage, NxGraph, graphmlPath, loadNxGraph, readGraphml, writeNxGraphml } from './kg/networkx_impl.ts';
 export type { GraphmlGraph } from './kg/networkx_impl.ts';
 export { storeStats } from './store.ts';
 export type { StoreStats } from './store.ts';

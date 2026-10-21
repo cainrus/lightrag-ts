@@ -24,7 +24,9 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test 'test/**/*.test.ts'",
     "store:stats": "node scripts/store-stats.ts",
-    "parity:extract": "node parity/replay-extract.ts"
+    "parity:extract": "node parity/replay-extract.ts",
+    "parity:storages": "node parity/storages.ts",
+    "smoke:live": "node parity/live-smoke.ts"
   },
   "keywords": [
     "rag",
@@ -35,9 +37,11 @@
   ],
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "graphology-types": "^0.24.8",
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "graphology": "^0.26.0",
     "saxes": "^6.0.0"
   }
 }
