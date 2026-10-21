@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.tsbuildinfo
+# local reports from runs against a private store
+reports/
+# slices of a private store (tools/upstream/slice_store.py) - personal data, never commit
+fixtures/private/

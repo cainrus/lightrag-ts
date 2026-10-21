@@ -1,0 +1,23 @@
+{
+  "chunk-synthetic-1": {
+    "content": "Alice founded Acme Robotics in Tallinn in 2024. Acme builds warehouse robots.",
+    "file_path": "notes/acme.md",
+    "tokens": 10,
+    "chunk_order_index": 0,
+    "full_doc_id": "doc-1"
+  },
+  "chunk-synthetic-2": {
+    "content": "  Борис 💰 переехал в Тарту &amp; открыл кафе «Кофе {и} код».\u0007\n",
+    "file_path": "notes/борис.md",
+    "tokens": 10,
+    "chunk_order_index": 0,
+    "full_doc_id": "doc-1"
+  },
+  "chunk-synthetic-3": {
+    "content": "Edge case: &#x1F600; html refs, 　 wide spaces  and a {brace}.",
+    "file_path": "notes/edge.md",
+    "tokens": 10,
+    "chunk_order_index": 0,
+    "full_doc_id": "doc-1"
+  }
+}

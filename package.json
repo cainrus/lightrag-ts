@@ -1,0 +1,43 @@
+{
+  "name": "lightrag-ts",
+  "version": "0.0.0",
+  "description": "TypeScript port of HKUDS/LightRAG v1.4.16: graph-based RAG that reads and writes the upstream storage format",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "SCOPE.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test 'test/**/*.test.ts'",
+    "store:stats": "node scripts/store-stats.ts",
+    "parity:extract": "node parity/replay-extract.ts"
+  },
+  "keywords": [
+    "rag",
+    "graphrag",
+    "lightrag",
+    "knowledge-graph",
+    "llm"
+  ],
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "saxes": "^6.0.0"
+  }
+}
