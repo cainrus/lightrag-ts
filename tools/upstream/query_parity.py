@@ -267,7 +267,24 @@ def python_cases():
         ["mix", "emoji 💰 and lone \ud800 surrogate", "English"],
     ]
     strings = ["plain", 'q"uote\\back', "tab\tnl\ncr\r\x00\x1f\x7f", "Кириллица «ё» 💰   ", "﻿bom"]
-    repair_inputs = ['{"a": [1]}', '```json\n{"a": 1}\n```', 'Here: {"a": 1} done', "garbage", "", "[1, 2]", "{}", "null", '```\n{"b": "x"}\n```']
+    hl, ll = '"high_level_keywords": ["a", "b"]', '"low_level_keywords": ["c"]'
+    repair_inputs = [
+        '{"a": [1]}', '```json\n{"a": 1}\n```', 'Here: {"a": 1} done', "garbage", "", "[1, 2]", "{}", "null", '```\n{"b": "x"}\n```',
+        # trailing / doubled / missing commas
+        '{"high_level_keywords": ["a", "b",], "low_level_keywords": ["c"],}', '{"a": ["x",, "y"]}', '{"a": [1, 2] "b": [3]}',
+        '{"a": true, "b": null, "c": 1.5,}', "[1, 2,]", '```json\n{"a": [1,]}\n```',
+        # cut off by max_tokens
+        "{" + hl + ", " + '"low_level_keywords": ["c"', "{" + '"high_level_keywords": ["a", "b', "{" + hl + ', "low_level_keywords": [',
+        "{" + hl + ', "low_level_keywords"', "{" + hl + ', "low_', "{" + hl + ', "low_level_keywords": ', '{"a": ["x"]', "{", "[",
+        '{"a": "unterminated', 'Keywords: {"a": ["x", "y"',
+        # several values, prose around
+        '{"a": 1} {"b": 2}', '{"a": 1}\n{"b": 2}', "{" + hl + ", " + ll + "}\n{" + '"high_level_keywords": ["x", "y"], "low_level_keywords": ["z"]}',
+        "{" + hl + ", " + ll + "}\n{" + '"high_level_keywords": ["x"], "low_level_keywords": ["z"]}', '{"a": 1}, {"a": 2}',
+        '{"a": ["x", "y"]} trailing prose', '{"a": ["x"]}}', "Sure!\n\n{" + hl + ", " + ll + "}\n\nHope this helps.",
+        # quoting
+        "{'a': ['x', 'y']}", '{a: ["x"]}', '{"a": "line\nbreak"}', '{"a": "esc \\" \\\\ \\n \\u00e9"}', '  {"a": ["ё", "💰"]}  ',
+        '{"a": [x, y]}', '{"a": True, "b": None}', '{"a": 1} // done', '"just a string"', '{"a": -1.5e3, "b": .5}',
+    ]
     return {
         "float_repr": [[x, repr(x)] for x in floats],
         "round": [[x, round(x)] for x in [0.5, 1.5, 2.5, 3.5, -0.5, -1.5, 2.4999999999999996, 2.5000000000000004, 4.0, 4.6]],

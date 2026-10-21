@@ -248,6 +248,319 @@
    {
     "b": "x"
    }
+  ],
+  [
+   "{\"high_level_keywords\": [\"a\", \"b\",], \"low_level_keywords\": [\"c\"],}",
+   {
+    "high_level_keywords": [
+     "a",
+     "b"
+    ],
+    "low_level_keywords": [
+     "c"
+    ]
+   }
+  ],
+  [
+   "{\"a\": [\"x\",, \"y\"]}",
+   {
+    "a": [
+     "x",
+     "y"
+    ]
+   }
+  ],
+  [
+   "{\"a\": [1, 2] \"b\": [3]}",
+   {
+    "a": [
+     1,
+     2
+    ],
+    "b": [
+     3
+    ]
+   }
+  ],
+  [
+   "{\"a\": true, \"b\": null, \"c\": 1.5,}",
+   {
+    "a": true,
+    "b": null,
+    "c": 1.5
+   }
+  ],
+  [
+   "[1, 2,]",
+   [
+    1,
+    2
+   ]
+  ],
+  [
+   "```json\n{\"a\": [1,]}\n```",
+   {
+    "a": [
+     1
+    ]
+   }
+  ],
+  [
+   "{\"high_level_keywords\": [\"a\", \"b\"], \"low_level_keywords\": [\"c\"",
+   {
+    "high_level_keywords": [
+     "a",
+     "b"
+    ],
+    "low_level_keywords": [
+     "c"
+    ]
+   }
+  ],
+  [
+   "{\"high_level_keywords\": [\"a\", \"b",
+   {
+    "high_level_keywords": [
+     "a",
+     "b"
+    ]
+   }
+  ],
+  [
+   "{\"high_level_keywords\": [\"a\", \"b\"], \"low_level_keywords\": [",
+   {
+    "high_level_keywords": [
+     "a",
+     "b"
+    ],
+    "low_level_keywords": []
+   }
+  ],
+  [
+   "{\"high_level_keywords\": [\"a\", \"b\"], \"low_level_keywords\"",
+   {
+    "high_level_keywords": [
+     "a",
+     "b"
+    ]
+   }
+  ],
+  [
+   "{\"high_level_keywords\": [\"a\", \"b\"], \"low_",
+   {
+    "high_level_keywords": [
+     "a",
+     "b"
+    ]
+   }
+  ],
+  [
+   "{\"high_level_keywords\": [\"a\", \"b\"], \"low_level_keywords\": ",
+   {
+    "high_level_keywords": [
+     "a",
+     "b"
+    ],
+    "low_level_keywords": ""
+   }
+  ],
+  [
+   "{\"a\": [\"x\"]",
+   {
+    "a": [
+     "x"
+    ]
+   }
+  ],
+  [
+   "{",
+   {}
+  ],
+  [
+   "[",
+   []
+  ],
+  [
+   "{\"a\": \"unterminated",
+   {
+    "a": "unterminated"
+   }
+  ],
+  [
+   "Keywords: {\"a\": [\"x\", \"y\"",
+   {
+    "a": [
+     "x",
+     "y"
+    ]
+   }
+  ],
+  [
+   "{\"a\": 1} {\"b\": 2}",
+   [
+    {
+     "a": 1
+    },
+    {
+     "b": 2
+    }
+   ]
+  ],
+  [
+   "{\"a\": 1}\n{\"b\": 2}",
+   [
+    {
+     "a": 1
+    },
+    {
+     "b": 2
+    }
+   ]
+  ],
+  [
+   "{\"high_level_keywords\": [\"a\", \"b\"], \"low_level_keywords\": [\"c\"]}\n{\"high_level_keywords\": [\"x\", \"y\"], \"low_level_keywords\": [\"z\"]}",
+   {
+    "high_level_keywords": [
+     "x",
+     "y"
+    ],
+    "low_level_keywords": [
+     "z"
+    ]
+   }
+  ],
+  [
+   "{\"high_level_keywords\": [\"a\", \"b\"], \"low_level_keywords\": [\"c\"]}\n{\"high_level_keywords\": [\"x\"], \"low_level_keywords\": [\"z\"]}",
+   [
+    {
+     "high_level_keywords": [
+      "a",
+      "b"
+     ],
+     "low_level_keywords": [
+      "c"
+     ]
+    },
+    {
+     "high_level_keywords": [
+      "x"
+     ],
+     "low_level_keywords": [
+      "z"
+     ]
+    }
+   ]
+  ],
+  [
+   "{\"a\": 1}, {\"a\": 2}",
+   [
+    {
+     "a": 1
+    },
+    {
+     "a": 2
+    }
+   ]
+  ],
+  [
+   "{\"a\": [\"x\", \"y\"]} trailing prose",
+   {
+    "a": [
+     "x",
+     "y"
+    ]
+   }
+  ],
+  [
+   "{\"a\": [\"x\"]}}",
+   {
+    "a": [
+     "x"
+    ]
+   }
+  ],
+  [
+   "Sure!\n\n{\"high_level_keywords\": [\"a\", \"b\"], \"low_level_keywords\": [\"c\"]}\n\nHope this helps.",
+   {
+    "high_level_keywords": [
+     "a",
+     "b"
+    ],
+    "low_level_keywords": [
+     "c"
+    ]
+   }
+  ],
+  [
+   "{'a': ['x', 'y']}",
+   {
+    "a": [
+     "x",
+     "y"
+    ]
+   }
+  ],
+  [
+   "{a: [\"x\"]}",
+   {
+    "a": [
+     "x"
+    ]
+   }
+  ],
+  [
+   "{\"a\": \"line\nbreak\"}",
+   {
+    "a": "line\nbreak"
+   }
+  ],
+  [
+   "{\"a\": \"esc \\\" \\\\ \\n \\u00e9\"}",
+   {
+    "a": "esc \" \\ \n \u00e9"
+   }
+  ],
+  [
+   "  {\"a\": [\"\u0451\", \"\ud83d\udcb0\"]}  ",
+   {
+    "a": [
+     "\u0451",
+     "\ud83d\udcb0"
+    ]
+   }
+  ],
+  [
+   "{\"a\": [x, y]}",
+   {
+    "a": [
+     "x",
+     "y"
+    ]
+   }
+  ],
+  [
+   "{\"a\": True, \"b\": None}",
+   {
+    "a": true,
+    "b": "None"
+   }
+  ],
+  [
+   "{\"a\": 1} // done",
+   {
+    "a": 1
+   }
+  ],
+  [
+   "\"just a string\"",
+   "just a string"
+  ],
+  [
+   "{\"a\": -1.5e3, \"b\": .5}",
+   {
+    "a": -1500.0,
+    "b": 0.5
+   }
   ]
  ],
  "weighted_polling": [

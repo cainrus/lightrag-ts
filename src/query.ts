@@ -6,7 +6,7 @@
 // src/operate.ts while B2 edits that file.
 import type { BaseGraphStorage, EdgeData, NodeData, VectorQueryResult } from './base.ts';
 import { edgePairKey } from './base.ts';
-import { DEFAULT_KG_CHUNK_PICK_METHOD, DEFAULT_RELATED_CHUNK_NUMBER, DEFAULT_SUMMARY_LANGUAGE, GRAPH_FIELD_SEP } from './constants.ts';
+import { DEFAULT_KG_CHUNK_PICK_METHOD, DEFAULT_MIN_RERANK_SCORE, DEFAULT_RELATED_CHUNK_NUMBER, DEFAULT_SUMMARY_LANGUAGE, GRAPH_FIELD_SEP } from './constants.ts';
 import { PROMPTS } from './prompt.ts';
 import {
   generateCacheKey,
@@ -19,6 +19,7 @@ import {
   removeThinkTags,
   saveToCache,
   splitStringByMultiMarkers,
+  TiktokenTokenizer,
 } from './utils.ts';
 import { makeQueryParam, QueryContextResult, type QueryLlmFunc, type QueryLlmOptions, type QueryParam, type QueryRawData, QueryResult } from './query/base.ts';
 import {
@@ -88,6 +89,61 @@ export type QueryTextChunksStorage = {
   readonly embedding_func?: QueryEmbeddingFunc | null;
   get_by_ids(ids: string[]): Promise<(Dict | null)[]>;
 };
+
+/** LightRAG's `get_env_value(name, default, type)` for the query settings. */
+function envValue<T extends string | number>(name: string, dflt: T): T {
+  const v = process.env[name];
+  if (v === undefined) return dflt;
+  if (typeof dflt === 'number') {
+    const n = Number(v.trim());
+    if (!Number.isFinite(n)) throw new Error(`invalid ${name}: ${v}`);
+    return n as T;
+  }
+  return v as T;
+}
+
+/**
+ * The query part of `asdict(LightRAG(...))` with LightRAG's defaults (and its
+ * env overrides): what kg_query / naive_query and `text_chunks_db.global_config`
+ * must carry. Note `min_rerank_score`: LightRAG passes 0.0, while
+ * process_chunks_unified alone falls back to 0.5 when the key is missing.
+ */
+export function lightragQueryConfig(fields: Partial<QueryGlobalConfig> = {}): QueryGlobalConfig {
+  return {
+    tokenizer: new TiktokenTokenizer('gpt-4o-mini'),
+    kg_chunk_pick_method: envValue('KG_CHUNK_PICK_METHOD', DEFAULT_KG_CHUNK_PICK_METHOD),
+    related_chunk_number: envValue('RELATED_CHUNK_NUMBER', DEFAULT_RELATED_CHUNK_NUMBER),
+    min_rerank_score: envValue('MIN_RERANK_SCORE', DEFAULT_MIN_RERANK_SCORE),
+    rerank_model_func: null,
+    enable_llm_cache: true,
+    addon_params: { language: envValue('SUMMARY_LANGUAGE', DEFAULT_SUMMARY_LANGUAGE) },
+    ...fields,
+  };
+}
+
+let warnedVectorWithoutEmbedding = false;
+function warnVectorWithoutEmbedding(): void {
+  if (warnedVectorWithoutEmbedding) return;
+  warnedVectorWithoutEmbedding = true;
+  process.emitWarning('kg_chunk_pick_method is VECTOR but text_chunks_db has no embedding_func: related chunks are picked by WEIGHT instead', {
+    code: 'LIGHTRAG_TS_VECTOR_PICK_WITHOUT_EMBEDDING',
+  });
+}
+
+/**
+ * text_chunks_db as the query path needs it: a KV storage's records plus the
+ * `global_config` and `embedding_func` upstream's storage objects carry (TS
+ * storages carry neither). Warns once per process when VECTOR picking would
+ * silently fall back to WEIGHT for lack of an embedding function.
+ */
+export function queryTextChunks(
+  kv: { get_by_ids(ids: string[]): Promise<(Dict | null)[]> },
+  globalConfig: QueryGlobalConfig,
+  embeddingFunc: QueryEmbeddingFunc | null,
+): QueryTextChunksStorage {
+  if (pyGet(globalConfig, 'kg_chunk_pick_method', DEFAULT_KG_CHUNK_PICK_METHOD) === 'VECTOR' && !embeddingFunc) warnVectorWithoutEmbedding();
+  return { global_config: globalConfig, embedding_func: embeddingFunc, get_by_ids: (ids) => kv.get_by_ids(ids) };
+}
 
 /** chunk_id -> where it came from (C vector, E entity, R relation), occurrence count, 1-based order. */
 export type ChunkTracking = Map<string, { source: string; frequency: number; order: number }>;
@@ -190,17 +246,21 @@ export function kgQueryParamDict(qp: QueryParam, hlKeywordsStr: string, llKeywor
   return { ...head, hl_keywords: hlKeywordsStr, ll_keywords: llKeywordsStr, user_prompt, enable_rerank };
 }
 
-/** Cache keys a query would read, without retrieval: `{mode}:keywords:` and `{mode}:query:`. */
+/**
+ * Cache keys a query would read, without retrieval: `{mode}:keywords:` and
+ * `{mode}:query:`, given the keywords the extraction produced. Empty keywords
+ * go through kg_query's own rule: under 50 characters the query itself is the
+ * ll keyword, from 50 on kg_query answers fail_response and `query` is null.
+ */
 export function queryCacheKeys(
   query: string,
   qp: QueryParam,
   o: { language?: string; hlKeywords?: string[]; llKeywords?: string[] } = {},
-): { keywords?: string; query: string } {
+): { keywords?: string; query: string | null } {
   if (qp.mode === 'naive') return { query: generateCacheKey(qp.mode, 'query', naiveQueryArgsHash(qp, query)) };
   const keywords = generateCacheKey(qp.mode, 'keywords', keywordsArgsHash(qp.mode, query, o.language ?? DEFAULT_SUMMARY_LANGUAGE));
-  const hl = joinKeywords(o.hlKeywords ?? []);
-  const ll = joinKeywords(o.llKeywords ?? []);
-  return { keywords, query: generateCacheKey(qp.mode, 'query', kgQueryArgsHash(qp, query, hl, ll)) };
+  const kw = finalizeKgKeywords(query, qp.mode, o.hlKeywords ?? [], o.llKeywords ?? [], noLog);
+  return { keywords, query: kw === null ? null : generateCacheKey(qp.mode, 'query', kgQueryArgsHash(qp, query, kw.hl, kw.ll)) };
 }
 
 // ------------------------------------------------------------------ kg_query
@@ -301,11 +361,14 @@ export async function resolveKgKeywords(
   globalConfig: QueryGlobalConfig,
   hashingKv: LlmResponseCache | null = null,
 ): Promise<{ hl: string; ll: string } | null> {
-  const log = logOf(globalConfig);
-  const [hlKeywords, kw] = (await getKeywordsFromQuery(query, queryParam, globalConfig, hashingKv)) as [unknown, unknown];
-  let llKeywords = kw;
-  if (isEmptyList(llKeywords) && ['local', 'hybrid', 'mix'].includes(queryParam.mode)) log('warning', 'low_level_keywords is empty');
-  if (isEmptyList(hlKeywords) && ['global', 'hybrid', 'mix'].includes(queryParam.mode)) log('warning', 'high_level_keywords is empty');
+  const [hl, ll] = (await getKeywordsFromQuery(query, queryParam, globalConfig, hashingKv)) as [unknown, unknown];
+  return finalizeKgKeywords(query, queryParam.mode, hl, ll, logOf(globalConfig));
+}
+
+/** kg_query lines 3224-3236: empty-keyword handling and the ", " join. */
+function finalizeKgKeywords(query: string, mode: string, hlKeywords: unknown, llKeywords: unknown, log: QueryLog): { hl: string; ll: string } | null {
+  if (isEmptyList(llKeywords) && ['local', 'hybrid', 'mix'].includes(mode)) log('warning', 'low_level_keywords is empty');
+  if (isEmptyList(hlKeywords) && ['global', 'hybrid', 'mix'].includes(mode)) log('warning', 'high_level_keywords is empty');
   if (isEmptyList(hlKeywords) && isEmptyList(llKeywords)) {
     if (pyLen(query) >= 50) return null;
     log('warning', `Forced low_level_keywords to origin query: ${query}`);
@@ -354,7 +417,7 @@ export async function extractKeywordsOnly(
   const argsHash = keywordsArgsHash(param.mode, text, language);
   const cached = await handleCache(hashingKv, argsHash, text, param.mode, 'keywords');
   if (cached !== null) {
-    const data = jsonRepairLoads(cached[0]);
+    const data = jsonRepairLoads(cached[0], log);
     return [dictGet(data, 'high_level_keywords'), dictGet(data, 'low_level_keywords')] as [string[], string[]];
   }
 
@@ -366,7 +429,7 @@ export async function extractKeywordsOnly(
   const raw = await useModelFunc(kwPrompt, { keyword_extraction: true });
   if (typeof raw !== 'string') throw new TypeError('expected string or bytes-like object, got an async iterator');
   const result = removeThinkTags(raw);
-  const keywordsData = jsonRepairLoads(result);
+  const keywordsData = jsonRepairLoads(result, log);
   if (!pyTruthy(keywordsData)) {
     log('error', 'No JSON-like structure found in the LLM respond.');
     return [[], []];
@@ -966,6 +1029,7 @@ async function selectAndFetchChunks(
     const embed = textChunksDb.embedding_func ?? null;
     if (!embed) {
       log('warning', 'No embedding function found, falling back to WEIGHT method');
+      warnVectorWithoutEmbedding();
       method = 'WEIGHT';
     } else {
       try {

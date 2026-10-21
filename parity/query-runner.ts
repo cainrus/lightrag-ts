@@ -13,6 +13,7 @@ import { NameSpace } from '../src/namespace.ts';
 import {
   type Dict,
   kgQuery,
+  lightragQueryConfig,
   makeQueryParam,
   naiveQuery,
   pyJsonDumpsAny,
@@ -22,9 +23,10 @@ import {
   type QueryParam,
   type QueryResult,
   type QueryTextChunksStorage,
+  queryTextChunks,
   type RerankFunc,
 } from '../src/query.ts';
-import { type LlmResponseCache, pyStrip, TiktokenTokenizer } from '../src/utils.ts';
+import { type LlmResponseCache, pyStrip } from '../src/utils.ts';
 
 export const PINNED_TIME = 1760000000;
 
@@ -125,20 +127,14 @@ export async function openQueryStore(dir: string, workspace: string, vectors: Re
       }),
     { embedding_dim: dim },
   ) as EmbeddingFunc;
+  // LightRAG's query defaults, plus the storage keys upstream's harness sets
   const gc: QueryGlobalConfig & GlobalConfig = {
     working_dir: dir,
-    tokenizer: new TiktokenTokenizer('gpt-4o-mini'),
-    kg_chunk_pick_method: 'VECTOR',
-    related_chunk_number: 5,
-    min_rerank_score: 0.0,
-    rerank_model_func: null,
-    enable_llm_cache: true,
+    ...lightragQueryConfig({ llm_model_func: stubLlm(state) }),
     enable_llm_cache_for_entity_extract: true,
-    addon_params: { language: 'English' },
     embedding_batch_num: 10,
     max_graph_nodes: 1000,
     vector_db_storage_cls_kwargs: { cosine_better_than_threshold: 0.2 },
-    llm_model_func: stubLlm(state),
   };
   const base: Dict = { ...gc };
   const opts = (namespace: string) => ({ namespace, workspace, global_config: gc });
@@ -158,7 +154,7 @@ export async function openQueryStore(dir: string, workspace: string, vectors: Re
       await cacheKv.upsert(d);
     },
   };
-  const textChunks: QueryTextChunksStorage = { global_config: gc, embedding_func: embed, get_by_ids: (ids) => text.get_by_ids(ids) };
+  const textChunks = queryTextChunks(text, gc, embed);
   return { gc, base, graph, entities, relationships, chunks, textChunks, cache, state, missingVectors };
 }
 

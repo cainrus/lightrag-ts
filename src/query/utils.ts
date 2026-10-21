@@ -2,7 +2,7 @@
 // src/utils.ts while B2 edits that file; same upstream names in camelCase.
 import { createHash } from 'node:crypto';
 import { DEFAULT_MAX_TOTAL_TOKENS } from '../constants.ts';
-import { computeArgsHash, type Tokenizer } from '../utils.ts';
+import { computeArgsHash, pyLen, pyStrip, type Tokenizer } from '../utils.ts';
 import type { QueryParam, QueryRawData, ReferenceEntry } from './base.ts';
 
 export type Dict = Record<string, unknown>;
@@ -80,8 +80,9 @@ function pyJsonString(s: string, ensureAscii: boolean): string {
 
 /**
  * Python `json.dumps(v, ensure_ascii=...)` with default separators for
- * JSON-shaped values, floats in `repr` form. A lone surrogate stays raw in
- * Python but is escaped here (only reachable from \\uD800-style escapes in a store).
+ * JSON-shaped values, floats in `repr` form. Lone surrogates behave as in
+ * Python: raw without ensure_ascii, `\udXXX` with it. JS cannot tell 1.0 from
+ * 1, so an integral float prints as an int ("1", Python "1.0").
  */
 export function pyJsonDumpsAny(v: unknown, ensureAscii = false): string {
   if (v === null || v === undefined) return 'null';
@@ -99,34 +100,197 @@ export function pyJsonDumpsAny(v: unknown, ensureAscii = false): string {
   throw new Error(`pyJsonDumpsAny: unsupported ${typeof v}`);
 }
 
+const isEmptyContainer = (v: unknown): boolean =>
+  v === '' || (Array.isArray(v) && v.length === 0) || (v !== null && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0);
+
+/** json_repair's ObjectComparer.is_same_object: same type and shape, atoms compare by type only. */
+function isSameObject(a: unknown, b: unknown): boolean {
+  const kind = (v: unknown) => (v === null ? 'null' : Array.isArray(v) ? 'list' : typeof v === 'number' ? (Number.isInteger(v) ? 'int' : 'float') : typeof v);
+  if (kind(a) !== kind(b)) return false;
+  if (Array.isArray(a)) return a.length === (b as unknown[]).length && a.every((x, i) => isSameObject(x, (b as unknown[])[i]));
+  if (a !== null && typeof a === 'object') {
+    const ka = Object.keys(a);
+    const bo = b as Dict;
+    return ka.length === Object.keys(bo).length && ka.every((k) => Object.hasOwn(bo, k) && isSameObject((a as Dict)[k], bo[k]));
+  }
+  return true;
+}
+
+const QUOTES = new Set(['"', "'", '“', '”']);
+const CLOSE_QUOTE: Record<string, string> = { '"': '"', "'": "'", '“': '”', '”': '”' };
+const JSON_ESC: Record<string, string> = { '"': '"', '\\': '\\', '/': '/', b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' };
+
 /**
- * The part of `json_repair.loads` the keyword path relies on: valid JSON, a
- * fenced ```json block, or the first {...} object inside prose. Anything else
- * returns '' like json_repair does for text with no JSON in it. The wider
- * repairs (trailing commas, single quotes, unquoted keys) are not ported.
+ * A lenient JSON reader for what LLMs answer, modelled on json_repair 0.61
+ * (`json_repair.loads`, which upstream uses for keyword JSON). Valid JSON
+ * parses as JSON. Otherwise: text before the first `{` / `[` is skipped,
+ * trailing and doubled commas dropped, missing commas tolerated, strings,
+ * arrays and objects cut off by the end of the text closed, a key without a
+ * value dropped, single-quoted strings and unquoted keys / words read,
+ * `true`/`false`/`null` and Python's True/False recognised (None stays a word), `#` and
+ * `//` comments skipped. Several top-level values become a list, except that a
+ * value shaped like the previous one replaces it (json_repair's "update"
+ * rule). No JSON at all gives `""`, and `log` gets a warning when the text was
+ * not blank. Not ported: json_repair's heuristics for unescaped quotes inside
+ * strings, parenthesised tuples and schema-guided repair.
  */
-export function jsonRepairLoads(text: string): unknown {
-  const tryParse = (s: string): { ok: true; v: unknown } | { ok: false } => {
-    try {
-      return { ok: true, v: JSON.parse(s) };
-    } catch {
-      return { ok: false };
-    }
+export function jsonRepairLoads(text: string, log?: QueryLog): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    // fall through to the lenient reader
+  }
+  const s = text;
+  let i = 0;
+  const ws = () => {
+    while (i < s.length && /\s/.test(s[i]!)) i++;
   };
-  const direct = tryParse(text);
-  if (direct.ok) return direct.v;
-  const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(text);
-  if (fence) {
-    const r = tryParse(fence[1]!.trim());
-    if (r.ok) return r.v;
+  const skipComment = (): boolean => {
+    if (s[i] === '#' || (s[i] === '/' && s[i + 1] === '/')) {
+      while (i < s.length && s[i] !== '\n') i++;
+      return true;
+    }
+    if (s[i] === '/' && s[i + 1] === '*') {
+      const end = s.indexOf('*/', i + 2);
+      i = end < 0 ? s.length : end + 2;
+      return true;
+    }
+    return false;
+  };
+
+  function parseString(): string {
+    const open = s[i]!;
+    const close = CLOSE_QUOTE[open]!;
+    i++;
+    let out = '';
+    while (i < s.length && s[i] !== close) {
+      if (s[i] === '\\' && i + 1 < s.length) {
+        const e = s[i + 1]!;
+        if (e === 'u' && /^[0-9a-fA-F]{4}$/.test(s.slice(i + 2, i + 6))) {
+          out += String.fromCharCode(Number.parseInt(s.slice(i + 2, i + 6), 16));
+          i += 6;
+          continue;
+        }
+        out += JSON_ESC[e] ?? e;
+        i += 2;
+        continue;
+      }
+      out += s[i]!;
+      i++;
+    }
+    if (i < s.length) i++; // closing quote; at the end of text the string is closed for it
+    return out;
   }
-  const a = text.indexOf('{');
-  const b = text.lastIndexOf('}');
-  if (a >= 0 && b > a) {
-    const r = tryParse(text.slice(a, b + 1));
-    if (r.ok) return r.v;
+
+  /** A bare word: a literal, or an unquoted string ended by a delimiter. */
+  function parseBare(stops: string): unknown {
+    const start = i;
+    while (i < s.length && !stops.includes(s[i]!) && s[i] !== '\n') i++;
+    const word = s.slice(start, i).trim();
+    if (word === 'true' || word === 'True') return true;
+    if (word === 'false' || word === 'False') return false;
+    if (word === 'null') return null; // json_repair reads True/False but leaves None a string
+    if (/^-?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(word)) return Number(word);
+    return word;
   }
-  return '';
+
+  function parseArray(): unknown[] {
+    i++;
+    const arr: unknown[] = [];
+    for (;;) {
+      ws();
+      while (s[i] === ',') {
+        i++;
+        ws();
+      }
+      if (i >= s.length || s[i] === ']' || s[i] === '}') break;
+      if (skipComment()) continue;
+      const before = i;
+      const v = parseValue(',]}');
+      if (isEmptyContainer(v) && s[i] !== ']' && s[i] !== ',') {
+        if (i === before) i++;
+      } else arr.push(v);
+    }
+    if (i < s.length) i++; // `]`, or a stray `}` json_repair also eats
+    return arr;
+  }
+
+  function parseObject(): Dict {
+    i++;
+    const obj: Dict = {};
+    for (;;) {
+      ws();
+      while (s[i] === ',') {
+        i++;
+        ws();
+      }
+      if (i >= s.length || s[i] === '}') break;
+      if (s[i] === ']') {
+        i++;
+        continue;
+      }
+      if (skipComment()) continue;
+      let key: string;
+      if (QUOTES.has(s[i]!)) key = parseString();
+      else if (/[\p{L}\p{N}_$-]/u.test(s[i]!)) key = String(parseBare(':,}'));
+      else {
+        i++;
+        continue;
+      }
+      ws();
+      if (s[i] !== ':') {
+        // a key with no value: dropped (a cut-off answer ends like this)
+        continue;
+      }
+      i++;
+      ws();
+      obj[key] = i >= s.length || s[i] === ',' || s[i] === '}' ? '' : parseValue(',}');
+    }
+    if (i < s.length) i++;
+    return obj;
+  }
+
+  function parseValue(stops: string): unknown {
+    ws();
+    if (i >= s.length) return '';
+    const c = s[i]!;
+    if (c === '{') return parseObject();
+    if (c === '[') return parseArray();
+    if (QUOTES.has(c)) return parseString();
+    return parseBare(stops);
+  }
+
+  /** json_repair's parse_json at top level: skip prose until a container starts. */
+  function parseTop(): unknown {
+    while (i < s.length) {
+      const c = s[i]!;
+      if (c === '{') return parseObject();
+      if (c === '[') return parseArray();
+      if (!skipComment()) i++;
+    }
+    return '';
+  }
+
+  let result: unknown = parseTop();
+  if (i < s.length) {
+    const list: unknown[] = [result];
+    while (i < s.length) {
+      let j = i;
+      while (j < s.length && /\s/.test(s[j]!)) j++;
+      let k = i - 1;
+      while (k >= 0 && /\s/.test(s[k]!)) k--;
+      const commaSeparated = s[j] === ',' || (k >= 0 && s[k] === ',');
+      const v = parseTop();
+      if (pyTruthy(v)) {
+        if (!commaSeparated && isSameObject(list.at(-1), v)) list.pop();
+        else if (!pyTruthy(list.at(-1))) list.pop();
+        list.push(v);
+      } else i++;
+    }
+    result = list.length === 1 ? list[0] : list;
+  }
+  if (result === '' && pyStrip(text)) log?.('warning', `json_repair: no JSON found in ${pyLen(text)} chars of LLM output`);
+  return result;
 }
 
 /** utils.truncate_list_by_token_size */

@@ -47,6 +47,15 @@ export type QueryParam = {
   include_references: boolean;
 };
 
+// base.py: `load_dotenv(dotenv_path=".env", override=False)` at import, before
+// the QueryParam defaults read the environment. Node's loader keeps variables
+// already set, like override=False; no .env in the cwd is not an error.
+try {
+  process.loadEnvFile('.env');
+} catch {
+  // missing or unreadable .env: upstream's load_dotenv returns False and goes on
+}
+
 /** Python's `int(os.getenv(name, str(default)))`, read once like the class attribute. */
 function envInt(name: string, dflt: number): number {
   const v = process.env[name];
@@ -67,8 +76,16 @@ const DEFAULTS = {
   enable_rerank: (process.env.RERANK_BY_DEFAULT ?? 'true').toLowerCase() === 'true',
 };
 
-/** `QueryParam(**fields)` with upstream's defaults (fresh lists per instance). */
-export function makeQueryParam(fields: Partial<QueryParam> = {}): QueryParam {
+/** makeQueryParam's input: any subset of fields, undefined meaning "not given". */
+export type QueryParamInit = { [K in keyof QueryParam]?: QueryParam[K] | undefined };
+
+/**
+ * `QueryParam(**fields)` with upstream's defaults (fresh lists per instance).
+ * A field given as `undefined` keeps its default, as an omitted keyword does in
+ * Python; `null` is Python's None and is kept.
+ */
+export function makeQueryParam(fields: QueryParamInit = {}): QueryParam {
+  const given = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined)) as Partial<QueryParam>;
   return {
     mode: 'mix',
     only_need_context: false,
@@ -88,7 +105,7 @@ export function makeQueryParam(fields: Partial<QueryParam> = {}): QueryParam {
     user_prompt: null,
     enable_rerank: DEFAULTS.enable_rerank,
     include_references: false,
-    ...fields,
+    ...given,
   };
 }
 

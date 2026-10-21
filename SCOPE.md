@@ -103,11 +103,42 @@ mode, query, response_type, top_k, ..., joined keywords, user_prompt,
 enable_rerank), so `str()` of None / bool / float matters: `computeArgsHashPy`
 prints them the Python way.
 
+Contract for B4 (what `LightRAG.aquery*` must hand the query functions):
+
+- `global_config` = `lightragQueryConfig({ llm_model_func, ... })`: tokenizer
+  (tiktoken gpt-4o-mini), `kg_chunk_pick_method`, `related_chunk_number`,
+  `min_rerank_score` (LightRAG passes 0.0; process_chunks_unified alone falls
+  back to 0.5 when the key is missing), `addon_params.language` (part of the
+  keywords cache key), `enable_llm_cache`, `rerank_model_func`, each with
+  LightRAG's env override.
+- `text_chunks_db` = `queryTextChunks(kvStorage, globalConfig, embeddingFunc)`.
+  Upstream reads `global_config` and `embedding_func` off the storage object;
+  TS storages carry neither. Without an embedding function VECTOR chunk
+  picking falls back to WEIGHT (upstream does the same); the TS side also
+  emits one process warning (`LIGHTRAG_TS_VECTOR_PICK_WITHOUT_EMBEDDING`).
+- `hashing_kv` = the llm_response_cache storage with that same config.
+- `src/query/base.ts` loads `.env` from the working directory on import
+  (`process.loadEnvFile`, existing variables win), as base.py's
+  `load_dotenv(override=False)` does before the QueryParam defaults read
+  TOP_K, CHUNK_TOP_K, MAX_*_TOKENS, HISTORY_TURNS, RERANK_BY_DEFAULT. Node's
+  .env syntax is close to python-dotenv's, not identical (multi-line values,
+  `${VAR}` expansion).
+
+`json_repair.loads` (upstream reads keyword answers with it) is a lenient
+reader here, checked against json_repair 0.61.6 on 44 recorded inputs: valid
+JSON, prose around the JSON, fenced blocks, trailing / doubled / missing
+commas, output cut off mid-string / mid-array / after a key (closed, a bare key
+dropped, `"key":` at the end gives `""`), several values (a list, or the
+newest when shaped like the previous one, json_repair's update rule),
+single-quoted strings, unquoted keys and words, True/False, comments. Where
+upstream crashes on the result (a list, e.g. two differently shaped objects:
+AttributeError on `.get`), TS raises the same AttributeError. Text with no
+JSON gives `""` and a warning through `log`. Not ported: json_repair's
+heuristics for unescaped quotes inside strings, parenthesised tuples and
+schema-guided repair.
+
 Deliberate differences:
 
-- `json_repair.loads` is ported for the shapes keyword answers take (valid
-  JSON, a fenced block, an object inside prose, anything else -> `""`); its
-  wider repairs (trailing commas, single quotes) are not.
 - `extract_keywords_only` with no cache storage skips the save (upstream raises
   AttributeError); `llm_model_func` is looked up when first called, not at the
   start of `kg_query` (upstream raises KeyError even for `only_need_context`).
@@ -118,6 +149,9 @@ Deliberate differences:
   norm of the query, a factor common to every score of one call.
 - `_apply_token_truncation` does not format `created_at` (upstream formats it
   with `time.localtime`, then drops the field before use).
+- An integral float has no JS form: `json.dumps(1.0)` is `"1.0"` in Python,
+  `"1"` here (graph weights such as 1.0 in `raw_data`, a rerank score of 1.0
+  in a chunk's truncation key). Values compare equal; strings differ.
 - The `bypass` mode and the `aquery*` dispatch live in `lightrag.py` (B4).
 
 ## Not ported
