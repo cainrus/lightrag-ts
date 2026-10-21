@@ -16,6 +16,9 @@ and the same input must produce the same LLM calls (hence the same cache keys).
 | `types.py` | `src/types.ts` | B0 ✓ | pydantic models -> types |
 | `utils.py` | `src/utils.ts` | B0 partial | hashing, cache keys, sanitize, Python-compat helpers; rest in B2/B3 |
 | `operate.py` | `src/operate.ts` | B0 partial | extraction prompt building only; extraction/merge B2, query B3 |
+| `operate.py` query half (`kg_query` .. `naive_query`) | `src/query.ts` | B3 ✓ | keywords + cache, local/global/hybrid/mix/naive, context builder; folds into `operate.ts` after B2 |
+| `base.py` QueryParam, QueryResult, QueryContextResult | `src/query/base.ts` | B3 ✓ | folds into `base.ts` after B2 |
+| `utils.py` query helpers (`process_chunks_unified`, `pick_by_*`, rerank, references, ...) | `src/query/utils.ts` | B3 ✓ | plus `compute_args_hash` with Python `str()`; folds into `utils.ts` after B2 |
 | `kg/json_kv_impl.py` | `src/kg/json_kv_impl.ts` | B1 ✓ | byte-identical `write_json`, atomic |
 | `kg/json_doc_status_impl.py` | `src/kg/json_doc_status_impl.ts` | B1 ✓ | file_path sort: `lower()`, not pypinyin |
 | `kg/nano_vector_db_impl.py` + nano-vectordb 0.0.4.3 | `src/kg/nano_vector_db_impl.ts` | B1 ✓ | numpy-exact normalize, byte-identical save, streamed |
@@ -63,6 +66,48 @@ Deliberate differences:
   ids and order match on the checked probes.
 - `get_docs_paginated(sort_field="file_path")` sorts by `lower()`; upstream
   uses pypinyin when installed (CJK paths order differently).
+
+## Query (B3): what "compatible" means here
+
+Same query, same store, same QueryParam: the same LLM calls (prompts byte for
+byte), the same context / prompt strings, the same `raw_data`, the same cache
+entries. Checked three ways:
+
+- `test/query.test.ts`: 136 probes over the five modes on a synthetic store
+  (`tools/upstream/query_parity.py synthetic` + `run`): QueryParam and config
+  variants, token budgets that cut entities, relations and chunks, WEIGHT /
+  VECTOR / unknown chunk pick, rerank with score filter, stream, custom system
+  prompts, keyword JSON in fences, prose, lists, empty. Upstream's
+  `tests/test_batch_embeddings.py` is ported alongside.
+- `parity/query.ts keys <store>` (read-only): every `*:keywords:*` and
+  `*:query:*` cache entry of a real store, its key recomputed from the entry's
+  query and `queryparam`; for kg modes the keywords are replayed through
+  `extract_keywords_only` from the cache, so the whole key path runs.
+- `parity/query-context.ts` on a store copy: each cached query in every mode
+  through upstream and TS; query vectors are stored chunk vectors (no live
+  embedding call), the LLM is a stub or the cached answer.
+
+Query cache keys hash the parameters, not the prompt (`compute_args_hash` over
+mode, query, response_type, top_k, ..., joined keywords, user_prompt,
+enable_rerank), so `str()` of None / bool / float matters: `computeArgsHashPy`
+prints them the Python way.
+
+Deliberate differences:
+
+- `json_repair.loads` is ported for the shapes keyword answers take (valid
+  JSON, a fenced block, an object inside prose, anything else -> `""`); its
+  wider repairs (trailing commas, single quotes) are not.
+- `extract_keywords_only` with no cache storage skips the save (upstream raises
+  AttributeError); `llm_model_func` is looked up when first called, not at the
+  start of `kg_query` (upstream raises KeyError even for `only_need_context`).
+- `pick_by_vector_similarity` collects candidates in first-seen order; upstream
+  iterates a Python set (hash-seeded per process). Only ties in similarity and
+  the error fallback depend on it.
+- `cosine_similarity` runs in double precision; upstream divides by a float32
+  norm of the query, a factor common to every score of one call.
+- `_apply_token_truncation` does not format `created_at` (upstream formats it
+  with `time.localtime`, then drops the field before use).
+- The `bypass` mode and the `aquery*` dispatch live in `lightrag.py` (B4).
 
 ## Not ported
 

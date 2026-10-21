@@ -27,6 +27,8 @@
     "parity:extract": "node parity/replay-extract.ts",
     "parity:storages": "node parity/storages.ts",
     "parity:operate": "node parity/operate.ts",
+    "parity:query": "node parity/query.ts keys",
+    "parity:query-context": "node parity/query-context.ts",
     "smoke:live": "node parity/live-smoke.ts"
   },
   "keywords": [
