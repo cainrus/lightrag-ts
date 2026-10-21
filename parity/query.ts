@@ -72,11 +72,18 @@ const view: LlmResponseCache = {
     throw new Error('read-only cache view: the replay asked to write');
   },
 };
+// Upstream saves a keywords entry only when the LLM returned some keywords. A
+// query entry without one therefore had empty keywords (kg_query then forces
+// the query itself as ll keyword): the stub replays exactly that answer, and
+// the run counts how often it was needed.
+let emptyKeywordReplays = 0;
 const gc: QueryGlobalConfig = {
   addon_params: { language: values.language },
   tokenizer: new TiktokenTokenizer('gpt-4o-mini'),
-  llm_model_func: async () => {
-    throw new Error('keywords cache miss: the replay would call the LLM');
+  llm_model_func: async (_prompt, opts) => {
+    if (!opts?.keyword_extraction) throw new Error('the replay asked the LLM for an answer');
+    emptyKeywordReplays++;
+    return '{"high_level_keywords": [], "low_level_keywords": []}';
   },
 };
 
@@ -100,7 +107,7 @@ const misses: { key: string; check: string; detail: string }[] = [];
 const miss = (key: string, check: string, detail: string) => misses.push({ key, check, detail });
 const r = {
   keywords: { total: 0, keyHit: 0, queryparamSame: 0, returnSame: 0, promptHashWouldMatch: 0 },
-  query: { total: 0, kg: 0, naive: 0, keyHitStored: 0, keyHitChained: 0, keywordsAgree: 0, queryparamSame: 0, promptHashWouldMatch: 0 },
+  query: { total: 0, kg: 0, naive: 0, keyHitStored: 0, keyHitChained: 0, chainedViaEmptyKeywords: 0, keywordsAgree: 0, queryparamSame: 0, promptHashWouldMatch: 0 },
 };
 const keywordsClaimed = new Set<string>();
 
@@ -145,11 +152,13 @@ for (const [key, e] of entries) {
   if (stored === hash) r.query.keyHitStored++;
   else miss(key, 'kg query key (stored keywords)', `ts=${stored}`);
   try {
+    const before = emptyKeywordReplays;
     const kw = await resolveKgKeywords(query, qp, gc, view);
+    if (emptyKeywordReplays > before) r.query.chainedViaEmptyKeywords++;
     if (kw === null) {
       miss(key, 'kg query key (chained)', 'keywords empty and query >= 50 chars: kg_query answers fail_response');
     } else {
-      keywordsClaimed.add(generateCacheKey(mode, 'keywords', keywordsArgsHash(mode, query, values.language)));
+      if (emptyKeywordReplays === before) keywordsClaimed.add(generateCacheKey(mode, 'keywords', keywordsArgsHash(mode, query, values.language)));
       if (kw.hl === storedHl && kw.ll === storedLl) r.query.keywordsAgree++;
       else miss(key, 'chained keywords', `ts hl=${JSON.stringify(kw.hl)} ll=${JSON.stringify(kw.ll)} py hl=${JSON.stringify(storedHl)} ll=${JSON.stringify(storedLl)}`);
       const chained = kgQueryArgsHash(qp, query, kw.hl, kw.ll);
