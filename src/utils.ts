@@ -1,6 +1,8 @@
 // Port of lightrag/utils.py (subset needed so far). Function names keep the
 // upstream names in camelCase so a reviewer can diff them side by side.
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
+import { getEncodingNameForModel, Tiktoken, type TiktokenBPE, type TiktokenModel } from 'js-tiktoken/lite';
 import { HTML5, INVALID_CHARREFS, INVALID_CODEPOINTS } from './internal/html5_entities.ts';
 
 /** Lone UTF-16 surrogates; Python's `encode('utf-8', errors='replace')` turns each into '?'. */
@@ -24,6 +26,55 @@ export function makeRelationVdbIds(srcEntity: string, tgtEntity: string): string
   const reverse = computeMdhashId(b + a, 'rel-');
   if (!ids.includes(reverse)) ids.push(reverse);
   return ids;
+}
+
+/** utils.TokenizerInterface */
+export interface TokenizerInterface {
+  encode(content: string): number[];
+  decode(tokens: number[]): string;
+}
+
+/** utils.Tokenizer */
+export class Tokenizer {
+  readonly modelName: string;
+  readonly tokenizer: TokenizerInterface;
+  constructor(modelName: string, tokenizer: TokenizerInterface) {
+    this.modelName = modelName;
+    this.tokenizer = tokenizer;
+  }
+  encode(content: string): number[] {
+    return this.tokenizer.encode(content);
+  }
+  decode(tokens: number[]): string {
+    return this.tokenizer.decode(tokens);
+  }
+}
+
+const require = createRequire(import.meta.url);
+const encodings = new Map<string, Tiktoken>();
+
+/**
+ * utils.TiktokenTokenizer over js-tiktoken. Same BPE ranks and split regex as
+ * tiktoken; encode() rejects special-token text like tiktoken's default
+ * (`disallowed_special="all"`), decode() replaces broken UTF-8 with U+FFFD
+ * like `errors="replace"`. Ranks load lazily, once per encoding.
+ */
+export class TiktokenTokenizer extends Tokenizer {
+  constructor(modelName = 'gpt-4o-mini') {
+    let name: string;
+    try {
+      name = getEncodingNameForModel(modelName as TiktokenModel);
+    } catch {
+      throw new Error(`Invalid model_name: ${modelName}.`);
+    }
+    let enc = encodings.get(name);
+    if (!enc) {
+      enc = new Tiktoken(require(`js-tiktoken/ranks/${name}`) as TiktokenBPE);
+      encodings.set(name, enc);
+    }
+    const e = enc;
+    super(modelName, { encode: (s) => e.encode(s), decode: (t) => e.decode(t) });
+  }
 }
 
 /** utils.generate_cache_key: `{mode}:{cache_type}:{hash}` */
