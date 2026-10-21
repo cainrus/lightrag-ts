@@ -324,6 +324,14 @@ not its code, and the port follows the same order:
   `", ".join(set(keywords))` and `max(set(types), key=count)` in the rebuild,
   `_merge_attributes`' keys and `join_unique` values, the ids it deletes. Their
   order follows the per-process string hash seed, so two upstream runs differ.
+  The widest of them is `filter_keys` (`set(keys) - set(self._data)` in the
+  doc-status storage, called by `apipeline_enqueue_documents`, lightrag.py
+  ~1451/1501): it decides the order of the documents of one `ainsert`, and
+  with it the order their merges append descriptions (the input of every
+  summary, hence its cache key), which source ids KEEP / FIFO cut, and which
+  file paths survive `max_file_paths`. So upstream's own result for a
+  multi-document insert depends on PYTHONHASHSEED; the harness pins it to
+  the caller's order, which is what TS does.
   The harness replaces `set` in the lightrag modules by an insertion-ordered set;
   TS uses insertion order everywhere. With that, full_entities / full_relations
   match byte for byte too (B2 compared them as sets).
@@ -355,7 +363,7 @@ Deliberate differences:
   order, which varies per process; TS creates `src` first. The harness pins
   upstream to that order: `pipeline_parity.py` recompiles
   `_rebuild_single_relationship` with an ordered pair (a set display is not
-  reached by the `set` replacement below).
+  reached by the `set` replacement above).
 - **Tracebacks**: where upstream appends `traceback.format_exc()` to the
   pipeline history, TS appends the JS stack (the comparisons skip both).
 - **Duplicate records** quote the original's status as upstream's f-string

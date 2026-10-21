@@ -17,7 +17,13 @@ upstream's process, not its code:
   places (list(set) into full_entities, ", ".join(set(keywords)) in the
   rebuild, set-ordered deletes, ...), whose order follows the per-process
   string hash seed; insertion order is one of the orders a run can produce,
-  and the one TS uses;
+  and the one TS uses. The one with the widest reach is filter_keys
+  (`set(keys) - set(self._data)`, json_doc_status_impl / json_kv_impl, called
+  from apipeline_enqueue_documents, lightrag.py ~1451/1501): it orders the
+  documents of one ainsert, so it decides in which order their descriptions
+  are merged (summary inputs and cache keys), which source ids KEEP / FIFO
+  keep and which file paths survive max_file_paths. Without this patch a
+  multi-document insert depends on PYTHONHASHSEED;
 - the `{src, tgt}` set display in _rebuild_single_relationship (which endpoint
   a rebuild creates first when both are missing) is not reached by that patch:
   the function is recompiled with an ordered pair, src first;
