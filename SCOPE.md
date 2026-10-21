@@ -15,7 +15,7 @@ and the same input must produce the same LLM calls (hence the same cache keys).
 | `namespace.py` | `src/namespace.ts` | B0 ✓ | |
 | `types.py` | `src/types.ts` | B0 ✓ | pydantic models -> types |
 | `utils.py` | `src/utils.ts` | B0, B2 partial | hashing, cache keys, sanitize, LLM cache path, tokenizer, extraction parsing, source-id/merge helpers, Python-compat helpers (`pyStr`, `pyFormat`, `pyJsonDumps` with ensure_ascii, `computeArgsHash` over Python `str()`), shared by ingest and query |
-| `operate.py` | `src/operate.ts` | B2 ✓ ingest half | chunking, extraction, merge and summaries; `rebuild_knowledge_from_chunks` (delete path) B4, query B3 |
+| `operate.py` | `src/operate.ts` | B2 ✓ ingest half, B4 ✓ rebuild | chunking, extraction, merge and summaries; `rebuild_knowledge_from_chunks` (delete path, B4); query in `src/query.ts` (B3) |
 | `exceptions.py` | `src/exceptions.ts` | B2 | the classes the ported code raises |
 | `operate.py` query half (`kg_query` .. `naive_query`) | `src/query.ts` | B3 ✓ | keywords + cache, local/global/hybrid/mix/naive, context builder; its own module beside `operate.ts` (the ingest half), which would otherwise pass 2500 lines |
 | `utils.py` helpers only the query uses (`process_chunks_unified`, `pick_by_*`, rerank, references, `json_repair.loads`) | `src/query/utils.ts` | B3 ✓ | |
@@ -24,8 +24,8 @@ and the same input must produce the same LLM calls (hence the same cache keys).
 | `kg/nano_vector_db_impl.py` + nano-vectordb 0.0.4.3 | `src/kg/nano_vector_db_impl.ts` | B1 ✓ | numpy-exact normalize, byte-identical save, streamed |
 | `kg/networkx_impl.py` + networkx 3.6 GraphML IO | `src/kg/networkx_impl.ts` | B1 ✓ | Map-based nx.Graph (`NxGraph`), graphology export |
 | `base.py` | `src/base.ts` | B1 ✓ storage contracts, B3 ✓ QueryParam and results | |
-| `lightrag.py` | `src/lightrag.ts` | B4 | pipeline, doc status, insert/delete |
-| `utils_graph.py` | `src/utils_graph.ts` | B4 | |
+| `lightrag.py` | `src/lightrag.ts` | B4 ✓ | the `LightRAG` class: config, storages, pipeline and doc status, delete with rebuild, queries, editing entry points; async API only |
+| `utils_graph.py` | `src/utils_graph.ts` | B4 ✓ | delete / edit / create / merge entities and relations |
 | `llm/openai.py` (subset) | `src/llm/` | B5 | OpenAI-compatible completion + embeddings |
 
 Port-only modules: `src/internal/json_stream.ts` (streaming JSON: vdb files
@@ -158,8 +158,8 @@ Deliberate differences:
   character.
 - `pipeline_status_lock` and shared-storage's cross-process locks are not
   ported: one process; within it `withGraphLock` replaces the keyed locks.
-- Not in B2: `rebuild_knowledge_from_chunks` and the rest of the delete path
-  (B4), `utils_graph` (B4), query (B3).
+- Not in B2: `rebuild_knowledge_from_chunks` and the rest of the delete path,
+  `utils_graph` (both B4, see below), query (B3).
 
 Numbers (a copy of the live personal-vault store, 21.10.2026; upstream
 lightrag-hku 1.4.16 on CPython 3.12.1):
@@ -287,7 +287,145 @@ Deliberate differences:
 - An integral float has no JS form: `json.dumps(1.0)` is `"1.0"` in Python,
   `"1"` here (graph weights such as 1.0 in `raw_data`, a rerank score of 1.0
   in a chunk's truncation key). Values compare equal; strings differ.
-- The `bypass` mode and the `aquery*` dispatch live in `lightrag.py` (B4).
+- The `bypass` mode and the `aquery*` dispatch live in `lightrag.py`: ported in B4.
+
+## Pipeline (B4): what "compatible" means here
+
+`src/lightrag.ts` is the `LightRAG` class over the four default storages:
+the dataclass fields with upstream's defaults (class-level `os.getenv` defaults
+read at import, `default_factory` ones per instance), `__post_init__`
+(tokenizer, wrapped LLM and embedding functions, storages),
+`initialize_storages` / `finalize_storages`, the document pipeline
+(`ainsert`, `apipeline_enqueue_documents`, `apipeline_process_enqueue_documents`,
+`apipeline_enqueue_error_documents`, `ainsert_custom_chunks`, `ainsert_custom_kg`),
+`adelete_by_doc_id` with `rebuild_knowledge_from_chunks` (in `src/operate.ts`),
+`aquery` / `aquery_llm` / `aquery_data` (bypass mode, unknown mode), the
+migration helpers and the editing entry points over `src/utils_graph.ts`.
+
+`parity/pipeline.ts` runs one scenario (a list of steps: inserts, deletes,
+queries, edits) through upstream's `LightRAG` (`tools/upstream/pipeline_parity.py`)
+and through the TS class, from the same starting files, with the same stand-ins
+(an LLM stub, a hash embedding, a fixed clock); each step's return value and its
+pipeline messages are compared, then every file both stores end with, byte for
+byte. TS runs twice: one task at a time (`llm_model_max_async=1`,
+`max_parallel_insert=1`), which must equal upstream file for file and message
+for message, and at the spec's own concurrency, which must give the same files
+(the LLM cache compared as a map: its new keys follow completion order) and the
+same results.
+
+To get one reproducible upstream run the harness changes upstream's process,
+not its code, and the port follows the same order:
+
+- **Clocks**: `time.time()` and `datetime.now()` are fixed in the lightrag
+  modules (doc-status times, `created_at`, cache and vdb stamps). TS takes the
+  clock as the port-only `now` option.
+- **Sets iterate in insertion order.** Upstream iterates Python sets of
+  strings in several places: `list(set)` into full_entities / full_relations,
+  `", ".join(set(keywords))` and `max(set(types), key=count)` in the rebuild,
+  `_merge_attributes`' keys and `join_unique` values, the ids it deletes. Their
+  order follows the per-process string hash seed, so two upstream runs differ.
+  The harness replaces `set` in the lightrag modules by an insertion-ordered set;
+  TS uses insertion order everywhere. With that, full_entities / full_relations
+  match byte for byte too (B2 compared them as sets).
+- **`asyncio.wait`'s `done` set**: extract_entities returns the chunk results
+  in the order of a set of tasks (by task id, i.e. memory address), and the
+  merge consumes them in that order. The harness hands them back in task order;
+  TS returns them in chunk order. Upstream's own run, without this, is not
+  reproducible: the synthetic scenario with upstream's concurrency differs from
+  its sequential run in 8 of 12 files, descriptions and summaries included
+  (description lists with equal timestamps keep input order).
+- **One task at a time** upstream (`max_parallel_insert=1`, operate's
+  semaphores at 1), as for B2.
+
+Deliberate differences:
+
+- **Documents in flight do not interleave.** Upstream processes
+  `max_parallel_insert` documents at once and lets their chunk writes and their
+  merges (entity by entity, under keyed locks) land in scheduling order. TS
+  chunks and extracts concurrently too, but a document's stage-1 writes (doc
+  status, chunk vectors, chunk records) wait for the previous document's, and
+  its merge waits for the previous document's merge: the files equal upstream's
+  with one document at a time, whatever the parallelism.
+- **The rebuild commits in input order**: the reads and LLM summaries of
+  `rebuild_knowledge_from_chunks` run `llm_model_max_async * 2` at once, each
+  rebuild's writes (chunk list, node, vectors) apply in order, entities first.
+  A failing rebuild is reported and skipped, as upstream does. Two relations
+  that both create the same missing endpoint: upstream iterates the set literal
+  `{src, tgt}`; TS creates `src` first.
+- **Tracebacks**: where upstream appends `traceback.format_exc()` to the
+  pipeline history, TS appends the JS stack (the comparisons skip both).
+- **Duplicate records** quote the original's status as upstream's f-string
+  prints it: `DocStatus.PROCESSED` when this process wrote it (a DocStatus member
+  in memory), `processed` when it was read from the file. TS tracks which.
+- Only the async API: `insert`, `query`, `delete_by_doc_id`, ... (event-loop
+  wrappers) are not ported. `aexport_data` (pandas / Excel export) is not
+  ported. Storages are the four defaults; another storage name is an error.
+- The LLM function gets upstream's keyword arguments as one options object
+  (`hashing_kv` and `llm_model_kwargs` merged in, as `functools.partial` does);
+  `priority_limit_async_func_call`'s timeouts and queue limits are not ported
+  (B2).
+- `LightRAG.adelete_by_entity`, `adelete_by_relation`, `acreate_entity` and
+  `acreate_relation` pass no chunk-tracking stores to utils_graph, as upstream;
+  `aedit_*` and `amerge_entities` do.
+- utils_graph takes `withGraphLock(graph)` (the lock every graph writer of the
+  port takes) instead of upstream's keyed locks per entity name.
+- `extract_entities` with no chunks raises ValueError `Set of Tasks/Futures is
+  empty.` (what `asyncio.wait([])` raises upstream): an empty document ends
+  FAILED with that message on both sides.
+
+Upstream's `compute_incremental_chunk_ids` docstring example disagrees with its
+code (the code keeps a kept chunk in place); the port follows the code.
+
+Ported but not compared with upstream yet: `check_and_migrate_data` (seeding
+chunk tracking and full_entities / full_relations for a store from before
+they existed) - none of the checked stores needs it.
+
+The upstream test bridge (d11) now runs all of `test_description_api_validation.py`
+against TS, the six utils_graph tests included: functions a test monkeypatches
+on the Python module (`utils_graph._edit_entity_impl`, `get_entity_info`) go to
+TS as hooks (`utilsGraphHooks`), called back where the Python code looks them up.
+
+Numbers:
+
+- **Synthetic scenario** (`node parity/pipeline.ts synthetic`, public, also
+  `test/lightrag.test.ts` against upstream's digests in
+  `test/fixtures/pipeline-synthetic.json`): 76 steps - 14 documents in 5
+  inserts (fresh, a duplicate, custom ids, a blank document, error records),
+  queries in all five modes plus bypass, an unknown mode, `aquery_data` and
+  `aquery` (three rounds), 4 deletions (with and without their cache, one
+  missing) that rebuild shared entities and relations, the editing API
+  (edit, rename, merge by rename, create, relation edit / delete, entity
+  delete), a custom KG, custom chunks, a re-insert, track-id and id lookups.
+  Every result and message equal, all 12
+  files byte-identical, TS one task at a time and at its default concurrency.
+- **Store replay** (`node parity/pipeline.ts store <copy> ...`, a copy of the
+  live personal-vault store, 21.10.2026): 300 processed documents (in
+  doc-status order, the store's own ids) in 15 inserts of 20, a duplicate
+  re-insert, 4 cached queries x 5 modes x {context, full}, 30 deletions (every
+  other one with its LLM cache) and 8 more queries: 95 steps, every result and
+  message equal; all 12 files byte-identical (GraphML 4.4 MB, LLM cache 12.9 MB,
+  both vdb files), TS sequential and at default concurrency. The run read 651
+  of the store's cache entries (570 extraction, 47 summaries, 4 keywords); 67
+  summaries and 12 keyword sets went to the stand-ins. The deletions rebuilt
+  166 entities and 23 relations from cached extractions. Upstream 95 s, TS
+  60 s (each including a per-document save of every store). 60 documents in 6
+  inserts with 8 deletions: the same, 52 steps.
+- **Deletions on the full store copy** (`parity/pipeline.ts store-delete`):
+  4 processed documents deleted from
+  a copy of the whole live store (4082 processed documents, GraphML 107 MB,
+  vdb files 0.8 + 0.9 GB at dim 1536, LLM cache 333 MB), two of them with their
+  cache entries: 42 entities and 60 relations deleted, 21 entities rebuilt
+  (their descriptions from the store's cache or the summary stand-in); all 12
+  files byte-identical, TS sequential and default. Upstream 153 s, TS 32 s.
+- **Queries through LightRAG**: B3's probes, run through `aquery_llm` instead of
+  kg_query / naive_query, build the same records: on the synthetic store
+  (`test/lightrag.test.ts`) 132 of 136 probes (the other 4 set
+  `system_prompt_template`, which is not a LightRAG field) and on a copy of the live store
+  (`parity/query-context.ts run ... --via lightrag`) 120 of 120: 12 cached
+  queries x 5 modes x {context, full}, 24 per mode, query vectors taken from
+  stored chunk vectors as in B3; the same 120 through kg_query directly also
+  match. In the store replay above the 48 aquery_llm queries also equal
+  upstream's LightRAG, bypass and the unknown mode in the synthetic scenario.
 
 ## Not ported
 
@@ -296,6 +434,8 @@ Deliberate differences:
 - `kg/shared_storage.py` multiprocess locking: Node runs one process; an
   in-process lock replaces it. Two processes on one store stay unsupported, as
   with upstream's default storages without its server.
+- `LightRAG`'s sync wrappers (`insert`, `query`, ...) and `aexport_data`
+  (pandas / Excel export).
 - `api/` (FastAPI server, web UI, Ollama emulation), `evaluation/`, `tools/`,
   `rerank.py`, LLM bindings other than OpenAI-compatible.
 - Deprecated code under `kg/deprecated/`.
