@@ -81,8 +81,8 @@ describe('LightRAG pipeline vs upstream (synthetic scenario)', () => {
       const records = await runSpecTs(syntheticSpec(dir), {
         jitter: { seed: 'b4f', maxMs: 4, onCall: (kind, ev, key) => (ev === 'start' ? started : ended).push(`${kind}:${key}`) },
       });
-      // pairs of calls that finish in the other order than they started: 114-136 of 526 calls
-      // over 8 runs (21.10.2026); a handful would leave this test checking almost nothing
+      // pairs of calls that finish in the other order than they started: 114-136 such pairs
+      // across the 526 calls of a run, over 8 runs (21.10.2026); a handful would leave this test checking almost nothing
       const inv = completionInversions(started, ended);
       assert.ok(inv >= 50, `the delays must reorder completions, or this test checks nothing (${inv} pairs out of order)`);
       const digest = fixtureDigest(dir, records);

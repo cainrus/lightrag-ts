@@ -317,7 +317,8 @@ a seeded 0-4 ms delay (md5 of the input), so concurrent calls finish out of
 call order as a provider's latency makes them. The delays are fixed per input,
 the order of completions is not: timers and scheduling decide it, so it varies
 between runs. `test/lightrag.test.ts` requires at least 50 pairs of calls
-finishing out of their start order (measured: 114-136 of 526 calls).
+finishing out of their start order (measured: 114-136 such pairs across the
+run's 526 calls).
 
 To get one reproducible upstream run the harness changes upstream's process,
 not its code, and the port follows the same order:
