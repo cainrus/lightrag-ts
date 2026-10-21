@@ -251,9 +251,17 @@ for (const ns of kvNamespaces(ORIG)) {
 }
 for (const ns of vdbNamespaces(ORIG)) {
   const after = py('vdb-dump', TSRT, ns, String(DIM));
-  compareDumps(`B vdb ${ns}: upstream reads TS output == original (meta + matrix sha, queries)`, pyVdb[ns], after);
+  // Upstream renormalizes the matrix on every load and float32 normalize is not
+  // idempotent bit for bit, so upstream's own load+save changes some rows: the
+  // matrix is compared with upstream's rewrite, everything else with the original.
+  const { matrix_sha: _m0, probes: _p0, queries: _q0, ...origRest } = pyVdb[ns];
+  const { matrix_sha: _m1, probes: _p1, queries: _q1, ...afterRest } = after;
+  compareDumps(`B vdb ${ns}: upstream reads TS output == original (count, ids, meta incl. vector fields)`, origRest, afterRest);
   const pyRt = join(WORK, `py-rewrite-${ns}`);
   py('vdb-rewrite', ORIG, ns, String(DIM), '--out', pyRt);
+  const afterPy = py('vdb-dump', pyRt, ns, String(DIM));
+  compareDumps(`B vdb ${ns}: upstream reads TS output == upstream reads its own rewrite (matrix sha, queries)`, afterPy, after);
+  if (afterPy.matrix_sha !== pyVdb[ns].matrix_sha) log(`note vdb ${ns}: upstream's own load+save changes the matrix bits (renormalization)`);
   check(`B vdb ${ns}: TS file byte-identical to upstream rewrite`, sameBytes(join(pyRt, `vdb_${ns}.json`), join(TSRT, `vdb_${ns}.json`)));
 }
 
