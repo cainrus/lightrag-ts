@@ -54,7 +54,11 @@ export interface BaseKVStorage extends StorageNameSpace {
 export type VectorQueryResult = Record<string, unknown> & { id: string; distance: number; created_at: number | null };
 
 export interface BaseVectorStorage extends StorageNameSpace {
-  readonly embedding_func: EmbeddingFunc;
+  /**
+   * Upstream's dataclass field. Optional here: the merge embeds queued writes
+   * itself through it and falls back to plain upsert(data) without it.
+   */
+  readonly embedding_func?: EmbeddingFunc;
   readonly cosine_better_than_threshold: number;
   readonly meta_fields: ReadonlySet<string>;
   query(query: string, top_k: number, query_embedding?: ArrayLike<number> | null): Promise<VectorQueryResult[]>;

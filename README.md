@@ -66,7 +66,10 @@ into TS through a Node bridge, while the tokenizers, mocks and stub storages the
 tests define stay Python and are called back. `tools/upstream/upstream-tests.json`
 says which tests run against TS and why the others are skipped; a test marked
 `ts` that never reaches TS fails. Upstream's next release brings its new tests
-along with the down-merge.
+along with the down-merge. Plain values cross the bridge as JSON copies: a
+`pipeline_status` dict is synced back when the call returns, so a
+`cancellation_requested` that a Python callback sets in the middle of a TS
+call is not seen by TS.
 
 ## Layout
 

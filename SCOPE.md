@@ -45,6 +45,9 @@ of vanilla zlib) since B2. Node's own `zlib` is Chromium's fork, whose match
 finder picks different matches: on the live store it reproduced CPython's
 `zlib.compress` output for 104 of 8944 real embeddings, pako for all 8944.
 B1's checks did not see it because a rewrite carries the stored string over.
+The match holds against CPython linked with vanilla zlib (the rag-venv's
+1.2.12); a CPython built on zlib-ng deflates differently, and TS would differ
+from it the same way Node's zlib does.
 
 Deliberate differences:
 
@@ -109,14 +112,36 @@ Deliberate differences:
   from its sequential one in node/edge order; attributes can differ too when
   two relations create the same missing entity (the first to commit sets its
   description). Measured below.
-- **Vector writes are applied at the end of each merge**, with every queued
-  content embedded in batches, then the upserts and deletes replayed in order;
-  the vdb ends up as after upstream's one-record-at-a-time writes. A vdb object
-  without `embedding_func` gets plain `upsert(data)` calls instead.
-- **Failure mid-merge**: TS commits the merges before the failing one (graph,
-  chunk lists, their vectors) and nothing of the failing one; upstream keeps
-  whatever its tasks finished, and records a failing merge's chunk list before
-  its LLM call.
+- **Concurrent merges into one graph run one after another**: every merge
+  writer holds `withGraphLock(graph)` for the whole call, so documents merged
+  at the same time are merged in arrival order. Upstream holds a keyed lock per
+  entity / relation name, so such documents interleave name by name; TS's
+  result equals merging them in call order.
+- **Vector writes are applied at the end of each phase** (entities, then
+  relations): the queued contents are embedded in batches of
+  `embedding_batch_num`, at most `embedding_func_max_async` (8) calls at once,
+  then the upserts and deletes replay in order; the vdb ends up as after
+  upstream's one-record-at-a-time writes. Consequences: `__created_at__` is
+  the clock at the flush, seconds after the record's merge; the embedding
+  service sees fewer, larger calls than upstream's one record per call (a
+  provider whose vectors depend on the batch would differ slightly). A vdb
+  object without `embedding_func` gets plain `upsert(data)` calls instead.
+- **Failure mid-merge**: when entity or relation k fails, the merges before it
+  still commit (graph, chunk lists) and their vectors are written; nothing of k
+  is, and the next phase does not start. Merges after k that are in flight stop
+  at their next LLM call and are not reported - the status gets one
+  `Error processing ...` line, for k. Upstream keeps whatever its tasks
+  finished, logs every task that raised, and records a failing merge's chunk
+  list before its LLM call. If the embedding call fails, the phase's graph and
+  chunk-list writes are already in place without vectors; a retry of the
+  document then meets its own descriptions as existing ones and may summarize
+  more than a clean run (upstream: the same for its finished tasks).
+- **LLM concurrency**: the merge calls `llm_model_func` with `_priority: 8`.
+  `defaultMergeConfig` wraps the function in `priorityLimitAsyncFuncCall`
+  (`llm_model_max_async`, lower `_priority` first) as `LightRAG.__post_init__`
+  does; upstream's per-call timeouts, queue limit and health checks are not
+  ported. A hand-built `MergeConfig` must pass an already limited function.
+  Cancellation is also checked between the LLM calls of a map-reduce summary.
 - `extract_entities` returns results in chunk order; upstream collects them
   from an asyncio `done` set (undefined order).
 - `full_entities` / `full_relations` list names and pairs in insertion order;
@@ -129,8 +154,8 @@ Deliberate differences:
 - A failing relation's error prefix is the Python repr of its sorted key pair;
   `pyReprStr` covers quotes and common escapes, not every non-printable
   character.
-- `pipeline_status_lock` and the shared-storage keyed locks are not ported:
-  one process, and the ordered commit already serializes the writes.
+- `pipeline_status_lock` and shared-storage's cross-process locks are not
+  ported: one process; within it `withGraphLock` replaces the keyed locks.
 - Not in B2: `rebuild_knowledge_from_chunks` and the rest of the delete path
   (B4), `utils_graph` (B4), query (B3).
 

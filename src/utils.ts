@@ -233,15 +233,33 @@ function pyStr(v: unknown): string {
   throw new Error(`pyFormat: value of type ${typeof v} has no verified Python str() equivalent`);
 }
 
+const PY_JSON_ESCAPES: Record<string, string> = {
+  '\\': '\\\\',
+  '"': '\\"',
+  '\b': '\\b',
+  '\f': '\\f',
+  '\n': '\\n',
+  '\r': '\\r',
+  '\t': '\\t',
+};
+
+/**
+ * A string as `json.dumps(s, ensure_ascii=False)` writes it: only `"`, `\\`
+ * and C0 controls are escaped. Unlike JSON.stringify, a lone surrogate stays
+ * raw - a prompt built from it is then cleaned by sanitize_text_for_encoding,
+ * so the escape would change the cache key.
+ */
+function pyJsonString(s: string): string {
+  return '"' + s.replace(/[\x00-\x1f"\\]/g, (c) => PY_JSON_ESCAPES[c] ?? `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`) + '"';
+}
+
 /**
  * Python `json.dumps(obj, ensure_ascii=False)` for JSON-compatible values:
- * `", "` / `": "` separators, same string escaping as JSON.stringify.
- * Known gap: a lone surrogate stays raw in Python but JSON.stringify escapes it;
- * irrelevant on the cache path because sanitizeTextForEncoding strips them first.
+ * `", "` / `": "` separators, Python's string escaping (pyJsonString).
  */
 export function pyJsonDumps(v: unknown): string {
   if (v === null) return 'null';
-  if (typeof v === 'string') return JSON.stringify(v);
+  if (typeof v === 'string') return pyJsonString(v);
   if (typeof v === 'boolean') return v ? 'true' : 'false';
   if (typeof v === 'number') {
     if (!Number.isInteger(v)) throw new Error('pyJsonDumps: float repr not ported yet');
@@ -249,7 +267,7 @@ export function pyJsonDumps(v: unknown): string {
   }
   if (Array.isArray(v)) return '[' + v.map(pyJsonDumps).join(', ') + ']';
   if (typeof v === 'object') {
-    return '{' + Object.entries(v).map(([k, x]) => `${JSON.stringify(k)}: ${pyJsonDumps(x)}`).join(', ') + '}';
+    return '{' + Object.entries(v).map(([k, x]) => `${pyJsonString(k)}: ${pyJsonDumps(x)}`).join(', ') + '}';
   }
   throw new Error(`pyJsonDumps: unsupported ${typeof v}`);
 }
@@ -396,6 +414,66 @@ export type LlmFunc = (
   prompt: string,
   opts: { system_prompt?: string | null; history_messages?: ChatMessage[]; max_tokens?: number; _priority?: number },
 ) => Promise<string>;
+
+const PRIORITY_LIMITED = Symbol.for('lightrag-ts.priorityLimited');
+
+/**
+ * utils.priority_limit_async_func_call, the part the pipeline depends on: at
+ * most `maxSize` calls run at once, waiting calls start by `_priority` (lower
+ * first; 10 when absent, summaries pass 8, queries 5), then in call order. As
+ * upstream, `_priority` is taken out of the trailing options object before the
+ * wrapped function sees it. Not ported: per-call timeouts, queue size limits,
+ * health checks.
+ */
+export function priorityLimitAsyncFuncCall(maxSize: number) {
+  const limit = Math.max(1, Math.trunc(maxSize));
+  return <F extends (...args: never[]) => Promise<unknown>>(fn: F): F => {
+    if (isPriorityLimited(fn)) return fn;
+    let running = 0;
+    let seq = 0;
+    const queue: { priority: number; seq: number; start: () => void }[] = [];
+    const pump = () => {
+      while (running < limit && queue.length) {
+        running++;
+        queue.shift()!.start();
+      }
+    };
+    const wrapped = (...args: unknown[]) =>
+      new Promise((resolve, reject) => {
+        let priority = 10;
+        let callArgs = args;
+        const last = args[args.length - 1];
+        if (last && typeof last === 'object' && !Array.isArray(last) && '_priority' in last) {
+          const { _priority, ...rest } = last as { _priority?: number };
+          if (typeof _priority === 'number') priority = _priority;
+          callArgs = [...args.slice(0, -1), rest];
+        }
+        const item = {
+          priority,
+          seq: seq++,
+          start: () => {
+            Promise.resolve()
+              .then(() => fn(...(callArgs as Parameters<F>)))
+              .then(resolve, reject)
+              .finally(() => {
+                running--;
+                pump();
+              });
+          },
+        };
+        let at = queue.length;
+        while (at > 0 && queue[at - 1]!.priority > priority) at--;
+        queue.splice(at, 0, item);
+        pump();
+      });
+    return Object.assign(wrapped, { [PRIORITY_LIMITED]: true }) as unknown as F;
+  };
+}
+
+/** Whether `f` already went through priorityLimitAsyncFuncCall. */
+export function isPriorityLimited(f: unknown): boolean {
+  return typeof f === 'function' && (f as unknown as Record<symbol, unknown>)[PRIORITY_LIMITED] === true;
+}
 
 /** utils.handle_cache */
 export async function handleCache(
@@ -582,6 +660,9 @@ export function pyReprStr(s: string): string {
   }
   return out + q;
 }
+
+/** Python `repr()` of a list of str. */
+export const pyReprList = (xs: readonly string[]): string => `[${xs.map(pyReprStr).join(', ')}]`;
 
 /**
  * utils.safe_vdb_operation_with_exception: retry, then raise

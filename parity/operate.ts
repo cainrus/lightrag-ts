@@ -61,6 +61,7 @@ const { positionals, values } = parseArgs({
     'py-concurrent': { type: 'boolean', default: false },
     gc: { type: 'string', default: '{}' },
     'ts-only': { type: 'boolean', default: false },
+    'reuse-py': { type: 'boolean', default: false },
   },
 });
 const SRC = positionals[0];
@@ -441,6 +442,9 @@ async function phaseMerge(): Promise<void> {
   const base = join(WORK, `merge-${values.select}-${values.base}-${values.offset}-${docs.length}${values.vdb ? '-vdb' : ''}${gcTag}`);
   mkdirSync(base, { recursive: true });
   const docsFile = join(base, 'docs.json');
+  // --reuse-py: upstream's half of an earlier run in this work dir, if it merged exactly these docs
+  const reuse = values['reuse-py'] && existsSync(join(base, 'py-merge.jsonl')) && existsSync(docsFile) && readFileSync(docsFile, 'utf8') === JSON.stringify(docs);
+  if (values['reuse-py'] && !reuse) throw new Error(`--reuse-py: no earlier upstream run of the same docs under ${base}`);
   writeFileSync(docsFile, JSON.stringify(docs));
   const nChunks = docs.reduce((n, d) => n + (d.chunks?.length ?? 0), 0);
   log(
@@ -450,7 +454,8 @@ async function phaseMerge(): Promise<void> {
   const pyDir = join(base, 'py');
   const pyArgs = ['merge', SRC!, '--work', pyDir, '--docs', docsFile, '--out', join(base, 'py-merge.jsonl'), '--dim', values.dim!, '--gc', values.gc!, '--sequential'];
   if (values.vdb) pyArgs.push('--vdb');
-  if (!values['ts-only']) {
+  if (reuse) log('merge: upstream side reused from the earlier run (same docs.json)');
+  else if (!values['ts-only']) {
     seedWorkDir(pyDir);
     py(pyArgs);
     log('merge: upstream done');

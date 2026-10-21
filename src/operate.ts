@@ -3,6 +3,7 @@
 import { type BaseGraphStorage, type BaseVectorStorage, type Clock, systemClock } from './base.ts';
 import {
   DEFAULT_EMBEDDING_BATCH_NUM,
+  DEFAULT_EMBEDDING_FUNC_MAX_ASYNC,
   DEFAULT_ENTITY_NAME_MAX_LENGTH,
   DEFAULT_ENTITY_TYPES,
   DEFAULT_FILE_PATH_MORE_PLACEHOLDER,
@@ -40,6 +41,8 @@ import {
   pyFormat,
   pyJsonDumps,
   pyLen,
+  priorityLimitAsyncFuncCall,
+  pyReprList,
   pyReprStr,
   pySliceTo,
   pyStrip,
@@ -415,6 +418,12 @@ export async function extractEntities(
 /** The keys of upstream's `global_config` the merge reads. */
 export type MergeConfig = {
   tokenizer: Tokenizer;
+  /**
+   * Called with `_priority` in its options, like upstream's global_config
+   * function, and expected to be limited to llm_model_max_async calls at once
+   * (priorityLimitAsyncFuncCall). defaultMergeConfig wraps a raw function; a
+   * config built by hand passes a limited one (the LightRAG class does it once).
+   */
   llm_model_func: LlmFunc;
   addon_params: { language?: string; [k: string]: unknown };
   summary_context_size: number;
@@ -430,11 +439,17 @@ export type MergeConfig = {
   embedding_token_limit?: number | null;
   llm_model_max_async?: number;
   embedding_batch_num?: number;
+  /** embedding calls at once while a merge writes its vectors (upstream's embedding_func_max_async) */
+  embedding_func_max_async?: number;
 };
 
-/** MergeConfig with LightRAG's defaults (constants.py; the env overrides are LightRAG's job). */
+/**
+ * MergeConfig with LightRAG's defaults (constants.py; the env overrides are
+ * LightRAG's job). The LLM function is wrapped in priorityLimitAsyncFuncCall
+ * (llm_model_max_async), unless it already is.
+ */
 export function defaultMergeConfig(tokenizer: Tokenizer, llmModelFunc: LlmFunc, overrides: Partial<MergeConfig> = {}): MergeConfig {
-  return {
+  const gc: MergeConfig = {
     tokenizer,
     llm_model_func: llmModelFunc,
     addon_params: { language: DEFAULT_SUMMARY_LANGUAGE },
@@ -450,8 +465,11 @@ export function defaultMergeConfig(tokenizer: Tokenizer, llmModelFunc: LlmFunc, 
     embedding_token_limit: null,
     llm_model_max_async: DEFAULT_MAX_ASYNC,
     embedding_batch_num: DEFAULT_EMBEDDING_BATCH_NUM,
+    embedding_func_max_async: DEFAULT_EMBEDDING_FUNC_MAX_ASYNC,
     ...overrides,
   };
+  gc.llm_model_func = priorityLimitAsyncFuncCall(gc.llm_model_max_async ?? DEFAULT_MAX_ASYNC)(gc.llm_model_func);
+  return gc;
 }
 
 export type MergeLog = (level: 'debug' | 'info' | 'warning' | 'error', msg: string) => void;
@@ -491,6 +509,8 @@ export async function summarizeDescriptions(
 /**
  * operate._handle_entity_relation_summary: join when small, otherwise
  * map-reduce LLM summaries until the list fits. Returns [description, llmWasUsed].
+ * `checkStop` (port-only) runs before every LLM call and throws to abandon the
+ * summary - a cancelled pipeline, or a merge that already failed elsewhere.
  */
 export async function handleEntityRelationSummary(
   descriptionType: string,
@@ -500,6 +520,7 @@ export async function handleEntityRelationSummary(
   globalConfig: MergeConfig,
   llmResponseCache: LlmResponseCache | null = null,
   log: MergeLog = () => {},
+  checkStop: () => void = () => {},
 ): Promise<[string, boolean]> {
   if (!descriptionList.length) return ['', false];
   if (descriptionList.length === 1) return [descriptionList[0]!, false];
@@ -507,8 +528,10 @@ export async function handleEntityRelationSummary(
   const contextSize = globalConfig.summary_context_size;
   const maxTokens = globalConfig.summary_max_tokens;
   const force = globalConfig.force_llm_summary_on_merge;
-  const summarize = (list: readonly string[]) =>
-    summarizeDescriptions(descriptionType, entityOrRelationName, list, globalConfig, llmResponseCache, log);
+  const summarize = (list: readonly string[]) => {
+    checkStop();
+    return summarizeDescriptions(descriptionType, entityOrRelationName, list, globalConfig, llmResponseCache, log);
+  };
   let current = [...descriptionList];
   let llmWasUsed = false;
   for (;;) {
@@ -568,18 +591,21 @@ type VdbOp =
   | { kind: 'delete'; vdb: BaseVectorStorage; ids: string[] };
 
 /**
- * Vector writes of one merge, kept in the order upstream issues them. Nothing
- * in the merge reads a vector store, so they are applied at the end: every
- * queued content is embedded in batches first, then the upserts and deletes
- * replay in order with those vectors. The stores end up as after upstream's
+ * Vector writes of one merge phase, kept in the order upstream issues them.
+ * Nothing in the merge reads a vector store, so they are applied when the phase
+ * ends: every queued content is embedded in batches (at most
+ * embedding_func_max_async at once), then the upserts and deletes replay in
+ * order with those vectors. The stores end up as after upstream's
  * one-record-at-a-time writes, at a fraction of the embedding round trips.
  */
 class VdbWriteQueue {
   private ops: VdbOp[] = [];
   private readonly batchNum: number;
+  private readonly maxAsync: number;
   private readonly log: MergeLog;
-  constructor(batchNum: number, log: MergeLog) {
-    this.batchNum = batchNum;
+  constructor(gc: MergeConfig, log: MergeLog) {
+    this.batchNum = gc.embedding_batch_num ?? DEFAULT_EMBEDDING_BATCH_NUM;
+    this.maxAsync = Math.max(1, gc.embedding_func_max_async ?? DEFAULT_EMBEDDING_FUNC_MAX_ASYNC);
     this.log = log;
   }
 
@@ -609,12 +635,12 @@ class VdbWriteQueue {
       const embedded: ArrayLike<number>[] = new Array(contents.length);
       const batches: number[] = [];
       for (let i = 0; i < contents.length; i += this.batchNum) batches.push(i);
-      await Promise.all(
-        batches.map((start) =>
+      const embedFn = vdb.embedding_func;
+      await runLimited(batches, this.maxAsync, (start) =>
           safeVdbOperationWithException(
             async () => {
               const slice = contents.slice(start, start + this.batchNum);
-              const r = await vdb.embedding_func(slice, { context: 'document' });
+              const r = await embedFn(slice, { context: 'document' });
               if (r.length !== slice.length) throw new Error(`embedding is not 1-1 with data, ${r.length} != ${slice.length}`);
               for (let i = 0; i < r.length; i++) embedded[start + i] = r[i]!;
             },
@@ -624,7 +650,6 @@ class VdbWriteQueue {
             list[0]!.retryDelay,
             (m) => this.log('warning', m),
           ),
-        ),
       );
       let at = 0;
       for (const op of list) {
@@ -653,6 +678,24 @@ class VdbWriteQueue {
       );
     }
   }
+}
+
+/** Run fn over items with at most `limit` at once; the first rejection is thrown once all started ones settle. */
+async function runLimited<T>(items: readonly T[], limit: number, fn: (x: T) => Promise<unknown>): Promise<void> {
+  let next = 0;
+  let failure: { e: unknown } | undefined;
+  const worker = async () => {
+    while (!failure && next < items.length) {
+      const x = items[next++]!;
+      try {
+        await fn(x);
+      } catch (e) {
+        failure ??= { e };
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  if (failure) throw failure.e;
 }
 
 type MergeCtx = {
@@ -776,7 +819,12 @@ type Commit<R> = () => Promise<R>;
  * reads and the LLM summary (nothing another entity's merge writes); the
  * function it resolves to does every write, in upstream's order.
  */
-async function prepareNodeMerge(entityName: string, nodesDataIn: readonly ExtractedEntity[], ctx: MergeCtx): Promise<Commit<Record<string, unknown>>> {
+async function prepareNodeMerge(
+  entityName: string,
+  nodesDataIn: readonly ExtractedEntity[],
+  ctx: MergeCtx,
+  checkStop: () => void = () => {},
+): Promise<Commit<Record<string, unknown>>> {
   const { kg, gc, log } = ctx;
   const alreadyEntityTypes: string[] = [];
   const alreadySourceIds: string[] = [];
@@ -833,7 +881,7 @@ async function prepareNodeMerge(entityName: string, nodesDataIn: readonly Extrac
     return async () => {
       await writeChunkList();
       if (alreadyNode && nodeExists) {
-        log('info', `Skipped \`${entityName}\`: KEEP old chunks ${alreadySourceIds.length}/${fullSourceIds.length}`);
+        log('info', `Skipped \`${entityName}\`: KEEP old chunks ${pyReprList(alreadySourceIds)}/${fullSourceIds.length}`);
         return { ...alreadyNode };
       }
       throw pyError('ValueError', `Internal Error: already_node missing for \`${entityName}\``);
@@ -868,10 +916,23 @@ async function prepareNodeMerge(entityName: string, nodesDataIn: readonly Extrac
     descriptionList = [fallback];
   }
 
-  checkCancelled(ctx.status, 'User cancelled during entity summary');
+  const stopOrCancel = () => {
+    checkStop();
+    checkCancelled(ctx.status, 'User cancelled during entity summary');
+  };
+  stopOrCancel();
 
   // 8. summary
-  const [description, llmWasUsed] = await handleEntityRelationSummary('Entity', entityName, descriptionList, GRAPH_FIELD_SEP, gc, ctx.llmResponseCache, log);
+  const [description, llmWasUsed] = await handleEntityRelationSummary(
+    'Entity',
+    entityName,
+    descriptionList,
+    GRAPH_FIELD_SEP,
+    gc,
+    ctx.llmResponseCache,
+    log,
+    stopOrCancel,
+  );
 
   // 9. file_path
   const fp = buildFilePath(alreadyFilePaths, nodesData, gc, `\`${entityName}\``, log);
@@ -930,7 +991,13 @@ async function prepareNodeMerge(entityName: string, nodesDataIn: readonly Extrac
 type EdgeResult = [Record<string, unknown> | null, Record<string, unknown>[]];
 
 /** operate._merge_edges_then_upsert, split like prepareNodeMerge. */
-async function prepareEdgeMerge(srcId: string, tgtId: string, edgesDataIn: readonly ExtractedRelation[], ctx: MergeCtx): Promise<Commit<EdgeResult>> {
+async function prepareEdgeMerge(
+  srcId: string,
+  tgtId: string,
+  edgesDataIn: readonly ExtractedRelation[],
+  ctx: MergeCtx,
+  checkStop: () => void = () => {},
+): Promise<Commit<EdgeResult>> {
   const { kg, gc, log } = ctx;
   if (srcId === tgtId) return async () => [null, []];
   let alreadyEdge: Record<string, unknown> | null = null;
@@ -983,7 +1050,7 @@ async function prepareEdgeMerge(srcId: string, tgtId: string, edgesDataIn: reado
     return async () => {
       await writeChunkList();
       if (alreadyEdge && pyTruthy(alreadyEdge)) {
-        log('info', `Skipped \`${srcId}\`~\`${tgtId}\`: KEEP old chunks  ${alreadySourceIds.length}/${fullSourceIds.length}`);
+        log('info', `Skipped \`${srcId}\`~\`${tgtId}\`: KEEP old chunks  ${pyReprList(alreadySourceIds)}/${fullSourceIds.length}`);
         return [{ ...alreadyEdge }, []];
       }
       throw pyError('ValueError', `Internal Error: already_node missing for \`${srcId}\`~\`${tgtId}\``);
@@ -1017,10 +1084,23 @@ async function prepareEdgeMerge(srcId: string, tgtId: string, edgesDataIn: reado
     throw pyError('ValueError', `Relation ${srcId}~${tgtId} has no description`);
   }
 
-  checkCancelled(ctx.status, 'User cancelled during relation summary');
+  const stopOrCancel = () => {
+    checkStop();
+    checkCancelled(ctx.status, 'User cancelled during relation summary');
+  };
+  stopOrCancel();
 
   // 8.
-  const [description, llmWasUsed] = await handleEntityRelationSummary('Relation', `(${srcId}, ${tgtId})`, descriptionList, GRAPH_FIELD_SEP, gc, ctx.llmResponseCache, log);
+  const [description, llmWasUsed] = await handleEntityRelationSummary(
+    'Relation',
+    `(${srcId}, ${tgtId})`,
+    descriptionList,
+    GRAPH_FIELD_SEP,
+    gc,
+    ctx.llmResponseCache,
+    log,
+    stopOrCancel,
+  );
 
   // 9.
   const fp = buildFilePath(alreadyFilePaths, edgesData, gc, `\`${srcId}\`~\`${tgtId}\``, log);
@@ -1192,10 +1272,36 @@ function singleCtx(kg: BaseGraphStorage, entityVdb: BaseVectorStorage | null, re
     llmResponseCache: o.llmResponseCache ?? null,
     entityChunks: o.entityChunksStorage ?? null,
     relationChunks: o.relationChunksStorage ?? null,
-    vdbQueue: new VdbWriteQueue(gc.embedding_batch_num ?? DEFAULT_EMBEDDING_BATCH_NUM, log),
+    vdbQueue: new VdbWriteQueue(gc, log),
     clock: o.clock ?? systemClock,
     log,
   };
+}
+
+const graphLocks = new WeakMap<object, Promise<void>>();
+
+/**
+ * Runs `fn` as the only merge writing to `graph` (and the KV/vector stores that
+ * go with it) at that time; callers queue in arrival order. Upstream takes a
+ * keyed lock per entity / relation name inside merge_nodes_and_edges, so two
+ * documents merged at once interleave name by name; here a whole merge waits
+ * for the previous one, and the result is the documents merged in call order.
+ * Anything else that rewrites graph nodes or edges (B4's edit/delete paths)
+ * should take the same lock.
+ */
+export async function withGraphLock<T>(graph: BaseGraphStorage, fn: () => Promise<T>): Promise<T> {
+  const previous = graphLocks.get(graph) ?? Promise.resolve();
+  let release!: () => void;
+  const mine = new Promise<void>((r) => (release = r));
+  const tail = previous.then(() => mine);
+  graphLocks.set(graph, tail);
+  await previous;
+  try {
+    return await fn();
+  } finally {
+    release();
+    if (graphLocks.get(graph) === tail) graphLocks.delete(graph);
+  }
 }
 
 /** operate._merge_nodes_then_upsert for one entity (mergeNodesAndEdges batches these). */
@@ -1207,10 +1313,12 @@ export async function mergeNodesThenUpsert(
   globalConfig: MergeConfig,
   opts: SingleMergeOptions = {},
 ): Promise<Record<string, unknown>> {
-  const ctx = singleCtx(knowledgeGraphInst, entityVdb, null, globalConfig, opts);
-  const result = await (await prepareNodeMerge(entityName, nodesData, ctx))();
-  await ctx.vdbQueue.flush();
-  return result;
+  return withGraphLock(knowledgeGraphInst, async () => {
+    const ctx = singleCtx(knowledgeGraphInst, entityVdb, null, globalConfig, opts);
+    const result = await (await prepareNodeMerge(entityName, nodesData, ctx))();
+    await ctx.vdbQueue.flush();
+    return result;
+  });
 }
 
 /**
@@ -1227,21 +1335,35 @@ export async function mergeEdgesThenUpsert(
   globalConfig: MergeConfig,
   opts: SingleMergeOptions & { addedEntities?: Record<string, unknown>[] | null } = {},
 ): Promise<Record<string, unknown> | null> {
-  const ctx = singleCtx(knowledgeGraphInst, entityVdb, relationshipsVdb, globalConfig, opts);
-  const [edgeData, added] = await (await prepareEdgeMerge(srcId, tgtId, edgesData, ctx))();
-  await ctx.vdbQueue.flush();
-  opts.addedEntities?.push(...added);
-  return edgeData;
+  return withGraphLock(knowledgeGraphInst, async () => {
+    const ctx = singleCtx(knowledgeGraphInst, entityVdb, relationshipsVdb, globalConfig, opts);
+    const [edgeData, added] = await (await prepareEdgeMerge(srcId, tgtId, edgesData, ctx))();
+    await ctx.vdbQueue.flush();
+    opts.addedEntities?.push(...added);
+    return edgeData;
+  });
 }
 
 const sameList = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
+/** Thrown by an item's checkStop once an earlier item failed; never reported. */
+class MergeAborted extends Error {
+  override name = 'MergeAborted';
+}
+
 /**
  * Prepare up to `limit` items at once, commit them strictly in index order.
- * The first failure stops new prepares; items before it are committed, the
- * in-flight ones are awaited and dropped, then the error is thrown.
+ * When item k fails, items before it still prepare and commit, items after it
+ * are not started, and the ones in flight abandon their work at their next
+ * checkStop (between LLM calls); `fail` reports and throws only k's error.
  */
-async function orderedPool<P, R>(n: number, limit: number, prepare: (i: number) => Promise<P>, commit: (i: number, p: P) => Promise<R>): Promise<R[]> {
+async function orderedPool<P, R>(
+  n: number,
+  limit: number,
+  prepare: (i: number, checkStop: () => void) => Promise<P>,
+  commit: (i: number, p: P) => Promise<R>,
+  fail: (i: number, e: unknown) => never,
+): Promise<R[]> {
   const prepared = Array.from({ length: n }, () => {
     let resolve!: (v: P) => void;
     let reject!: (e: unknown) => void;
@@ -1253,14 +1375,17 @@ async function orderedPool<P, R>(n: number, limit: number, prepare: (i: number) 
     return { promise, resolve, reject };
   });
   let next = 0;
-  let stopped = false;
+  let stopAt = Infinity;
   const worker = async () => {
-    while (!stopped && next < n) {
+    while (next < n && next <= stopAt) {
       const i = next++;
+      const checkStop = () => {
+        if (i > stopAt) throw new MergeAborted();
+      };
       try {
-        prepared[i]!.resolve(await prepare(i));
+        prepared[i]!.resolve(await prepare(i, checkStop));
       } catch (e) {
-        stopped = true;
+        if (!(e instanceof MergeAborted)) stopAt = Math.min(stopAt, i);
         prepared[i]!.reject(e);
       }
     }
@@ -1268,9 +1393,22 @@ async function orderedPool<P, R>(n: number, limit: number, prepare: (i: number) 
   const workers = Array.from({ length: Math.max(1, Math.min(limit, n)) }, worker);
   const results: R[] = [];
   try {
-    for (let i = 0; i < n; i++) results.push(await commit(i, await prepared[i]!.promise));
+    for (let i = 0; i < n; i++) {
+      let p: P;
+      try {
+        p = await prepared[i]!.promise;
+      } catch (e) {
+        stopAt = Math.min(stopAt, i);
+        fail(i, e);
+      }
+      try {
+        results.push(await commit(i, p));
+      } catch (e) {
+        stopAt = Math.min(stopAt, i);
+        fail(i, e);
+      }
+    }
   } finally {
-    stopped = true;
     await Promise.allSettled(workers);
   }
   return results;
@@ -1302,7 +1440,8 @@ export type MergeOptions = {
  * order their writes land in follows asyncio scheduling and, in production,
  * LLM and embedding latency. Here the LLM work still runs concurrently, but
  * writes happen in input order, so the result is upstream's with the merges run
- * one after another - deterministic, independent of latency.
+ * one after another - deterministic, independent of latency. Concurrent calls
+ * on the same graph run one after another (withGraphLock).
  */
 export async function mergeNodesAndEdges(
   chunkResults: readonly ChunkExtraction[],
@@ -1311,6 +1450,17 @@ export async function mergeNodesAndEdges(
   relationshipsVdb: BaseVectorStorage | null,
   globalConfig: MergeConfig,
   opts: MergeOptions = {},
+): Promise<void> {
+  return withGraphLock(knowledgeGraphInst, () => mergeLocked(chunkResults, knowledgeGraphInst, entityVdb, relationshipsVdb, globalConfig, opts));
+}
+
+async function mergeLocked(
+  chunkResults: readonly ChunkExtraction[],
+  knowledgeGraphInst: BaseGraphStorage,
+  entityVdb: BaseVectorStorage | null,
+  relationshipsVdb: BaseVectorStorage | null,
+  globalConfig: MergeConfig,
+  opts: MergeOptions,
 ): Promise<void> {
   const status = opts.pipelineStatus;
   const log = opts.log ?? (() => {});
@@ -1351,7 +1501,7 @@ export async function mergeNodesAndEdges(
     llmResponseCache: opts.llmResponseCache ?? null,
     entityChunks: opts.entityChunksStorage ?? null,
     relationChunks: opts.relationChunksStorage ?? null,
-    vdbQueue: new VdbWriteQueue(globalConfig.embedding_batch_num ?? DEFAULT_EMBEDDING_BATCH_NUM, log),
+    vdbQueue: new VdbWriteQueue(globalConfig, log),
     clock: opts.clock ?? systemClock,
     log,
   };
@@ -1361,74 +1511,66 @@ export async function mergeNodesAndEdges(
     pushStatus(status, msg);
     throw createPrefixedException(e, prefix);
   };
+  // Each phase's vectors are written before the next phase starts, also when
+  // one of its merges failed (then the merges before it keep their vectors).
+  const thenFlush = async <T>(phase: () => Promise<T>): Promise<T> => {
+    let result: T | undefined;
+    let error: { e: unknown } | undefined;
+    try {
+      result = await phase();
+    } catch (e) {
+      error = { e };
+    }
+    try {
+      await ctx.vdbQueue.flush();
+    } catch (e) {
+      error ??= { e };
+    }
+    if (error) throw error.e;
+    return result as T;
+  };
 
-  let processedEntities: Record<string, unknown>[] = [];
-  const processedEdges: Record<string, unknown>[] = [];
-  const allAddedEntities: Record<string, unknown>[] = [];
-  let error: unknown;
-  try {
-    // ===== Phase 1: entities
-    say(`Phase 1: Processing ${allNodes.size} entities from ${docLabel} (async: ${graphMaxAsync})`);
-    const nodeItems = [...allNodes];
-    processedEntities = await orderedPool(
+  // ===== Phase 1: entities
+  say(`Phase 1: Processing ${allNodes.size} entities from ${docLabel} (async: ${graphMaxAsync})`);
+  const nodeItems = [...allNodes];
+  const entityLabel = (i: number) => `\`${nodeItems[i]![0]}\``;
+  const processedEntities = await thenFlush(() =>
+    orderedPool(
       nodeItems.length,
       limit,
-      async (i) => {
-        const [name, entities] = nodeItems[i]!;
+      async (i, checkStop) => {
         checkCancelled(status, 'User cancelled during entity merge');
-        try {
-          return await prepareNodeMerge(name, entities, ctx);
-        } catch (e) {
-          return failed(`entity \`${name}\``, e, `\`${name}\``);
-        }
+        const [name, entities] = nodeItems[i]!;
+        return prepareNodeMerge(name, entities, ctx, checkStop);
       },
-      async (i, commit) => {
-        try {
-          return await commit();
-        } catch (e) {
-          return failed(`entity \`${nodeItems[i]![0]}\``, e, `\`${nodeItems[i]![0]}\``);
-        }
-      },
-    );
+      (_i, commit) => commit(),
+      (i, e) => failed(`entity ${entityLabel(i)}`, e, entityLabel(i)),
+    ),
+  );
 
-    // ===== Phase 2: relations
-    say(`Phase 2: Processing ${allEdges.size} relations from ${docLabel} (async: ${graphMaxAsync})`);
-    const edgeItems = [...allEdges.values()];
-    const edgeLabel = (i: number) => `[${pyReprStr(edgeItems[i]!.src)}, ${pyReprStr(edgeItems[i]!.tgt)}]`;
-    const edgeResults = await orderedPool(
+  // ===== Phase 2: relations
+  say(`Phase 2: Processing ${allEdges.size} relations from ${docLabel} (async: ${graphMaxAsync})`);
+  const edgeItems = [...allEdges.values()];
+  const edgeLabel = (i: number) => `[${pyReprStr(edgeItems[i]!.src)}, ${pyReprStr(edgeItems[i]!.tgt)}]`;
+  const edgeResults = await thenFlush(() =>
+    orderedPool(
       edgeItems.length,
       limit,
-      async (i) => {
-        const { src, tgt, edges } = edgeItems[i]!;
+      async (i, checkStop) => {
         checkCancelled(status, 'User cancelled during relation merge');
-        try {
-          return await prepareEdgeMerge(src, tgt, edges, ctx);
-        } catch (e) {
-          return failed(`relation \`${edgeLabel(i)}\``, e, edgeLabel(i));
-        }
+        const { src, tgt, edges } = edgeItems[i]!;
+        return prepareEdgeMerge(src, tgt, edges, ctx, checkStop);
       },
-      async (i, commit) => {
-        try {
-          return await commit();
-        } catch (e) {
-          return failed(`relation \`${edgeLabel(i)}\``, e, edgeLabel(i));
-        }
-      },
-    );
-    for (const [edgeData, added] of edgeResults) {
-      if (edgeData !== null) processedEdges.push(edgeData);
-      allAddedEntities.push(...added);
-    }
-  } catch (e) {
-    error = e;
+      (_i, commit) => commit(),
+      (i, e) => failed(`relation \`${edgeLabel(i)}\``, e, edgeLabel(i)),
+    ),
+  );
+  const processedEdges: Record<string, unknown>[] = [];
+  const allAddedEntities: Record<string, unknown>[] = [];
+  for (const [edgeData, added] of edgeResults) {
+    if (edgeData !== null) processedEdges.push(edgeData);
+    allAddedEntities.push(...added);
   }
-  // vector writes of every merge that committed, also when a later one failed
-  try {
-    await ctx.vdbQueue.flush();
-  } catch (e) {
-    error ??= e;
-  }
-  if (error !== undefined) throw error;
 
   // ===== Phase 3: the document's entity and relation index
   if (opts.fullEntitiesStorage && opts.fullRelationsStorage && docId) {
