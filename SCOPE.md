@@ -372,7 +372,13 @@ Deliberate differences:
   order, which varies per process; TS creates `src` first. The harness pins
   upstream to that order: `pipeline_parity.py` recompiles
   `_rebuild_single_relationship` with an ordered pair (a set display is not
-  reached by the `set` replacement above).
+  reached by the `set` replacement above). On the default storages the branch
+  is unreachable, so no pipeline scenario executes the pin: the function returns
+  when `get_edge` finds no edge (operate.py:1366), and NetworkX keeps no edge
+  without its nodes. The pin is a safeguard for backends that can hold a
+  dangling edge; `test/rebuild-dangling.test.ts` runs the branch on such a
+  view of the graph (src created first, `UNKNOWN`, entity vectors and
+  entity_chunks in that order).
 - **Tracebacks**: where upstream appends `traceback.format_exc()` to the
   pipeline history, TS appends the JS stack (the comparisons skip both).
 - **Duplicate records** quote the original's status as upstream's f-string
