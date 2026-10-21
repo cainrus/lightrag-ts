@@ -12,6 +12,9 @@
 //       KG chunk, and enable_llm_cache_for_entity_extract=false
 //       (pipeline-driver.ts noCacheRebuildSpec); fixtures
 //       pipeline-nocache-<variant>.json for test/lightrag.test.ts.
+//   node parity/pipeline.ts upstream-concurrent [--runs N] [--json out.json]
+//       upstream alone: the synthetic scenario one task at a time vs with its
+//       own concurrency (pipeline_parity.py --concurrent), file by file.
 //   node parity/pipeline.ts store <store-dir> --workspace W --work DIR [--docs N] [--batch B] [--deletes M]
 //       a COPY-based replay of a real store (private data, nothing committed):
 //       N processed documents, B per ainsert call, inserted into an empty store
@@ -63,6 +66,7 @@ const { positionals, values } = parseArgs({
     'ts-mode': { type: 'string', default: 'both' },
     // the default-concurrency TS run delays each stub answer by 0..N ms (seeded), so calls finish out of order
     'jitter-ms': { type: 'string', default: '4' },
+    runs: { type: 'string', default: '3' },
     'reuse-py': { type: 'boolean', default: false },
     json: { type: 'string' },
   },
@@ -73,9 +77,9 @@ mkdirSync(WORK, { recursive: true });
 const t0 = Date.now();
 const log = (s: string) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s] ${s}`);
 
-function runPy(specFile: string, out: string): void {
+function runPy(specFile: string, out: string, concurrent = false): void {
   try {
-    execFileSync(PY, ['-I', PY_TOOL, specFile, '--out', out], { maxBuffer: 1 << 30, stdio: ['ignore', 'inherit', 'pipe'] });
+    execFileSync(PY, ['-I', PY_TOOL, specFile, '--out', out, ...(concurrent ? ['--concurrent'] : [])], { maxBuffer: 1 << 30, stdio: ['ignore', 'inherit', 'pipe'] });
   } catch (e) {
     const err = (e as { stderr?: Buffer }).stderr?.toString('utf8') ?? '';
     throw new Error(`upstream run failed:\n${err.split('\n').slice(-15).join('\n')}`);
@@ -172,6 +176,33 @@ if (cmd === 'synthetic') {
     writeFileSync(fixture, JSON.stringify(fixtureDigest(join(WORK, 'py'), readStepRecords(join(WORK, 'py.jsonl'))), null, 1) + '\n');
     log(`fixture written to ${fixture}`);
   }
+} else if (cmd === 'upstream-concurrent') {
+  // how far upstream's own concurrency (operate's semaphores and asyncio.wait's
+  // done-set order left alone; clock and set order still pinned) moves it from
+  // its one-at-a-time run on the synthetic scenario, --runs times
+  const runs = Number(values.runs);
+  const seqDir = join(WORK, 'py');
+  rmSync(seqDir, { recursive: true, force: true });
+  mkdirSync(seqDir, { recursive: true });
+  const specFile = join(WORK, 'spec-seq.json');
+  writeFileSync(specFile, JSON.stringify(syntheticSpec(seqDir)));
+  runPy(specFile, join(WORK, 'py.jsonl'));
+  const seqRecords = readStepRecords(join(WORK, 'py.jsonl'));
+  const summary: { run: number; files: number; differ: string[]; resultDiffs: number }[] = [];
+  for (let k = 0; k < runs; k++) {
+    const dir = join(WORK, `py-concurrent-${k}`);
+    rmSync(dir, { recursive: true, force: true });
+    mkdirSync(dir, { recursive: true });
+    const f = join(WORK, `spec-concurrent-${k}.json`);
+    writeFileSync(f, JSON.stringify(syntheticSpec(dir)));
+    runPy(f, join(WORK, `py-concurrent-${k}.jsonl`), true);
+    const files = dirDiffs(seqDir, dir);
+    const differ = files.filter(([, d]) => d !== null).map(([n]) => n);
+    const resultDiffs = diffStepRecords(readStepRecords(join(WORK, `py-concurrent-${k}.jsonl`)), seqRecords, { history: false }).length;
+    summary.push({ run: k, files: files.length, differ, resultDiffs });
+    log(`concurrent run ${k}: ${differ.length} of ${files.length} files differ from the sequential run (${differ.join(', ')}); ${resultDiffs} step results differ`);
+  }
+  if (values.json) writeFileSync(values.json, JSON.stringify(summary, null, 2) + '\n');
 } else if (cmd === 'nocache') {
   // rebuilds that find no cached extraction (pipeline-driver.ts noCacheRebuildSpec)
   const out = values['write-fixture'];

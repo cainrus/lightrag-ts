@@ -342,9 +342,14 @@ not its code, and the port follows the same order:
   in the order of a set of tasks (by task id, i.e. memory address), and the
   merge consumes them in that order. The harness hands them back in task order;
   TS returns them in chunk order. Upstream's own run, without this, is not
-  reproducible: the synthetic scenario with upstream's concurrency differs from
-  its sequential run in 8 of 12 files, descriptions and summaries included
-  (description lists with equal timestamps keep input order).
+  reproducible (`node parity/pipeline.ts upstream-concurrent`, 21.10.2026):
+  three runs of the synthetic scenario with operate's own concurrency (clock
+  and set order still pinned) each differ from the sequential run in 8 of 12
+  files (GraphML, both entity / relation vdb files, the entity / relation
+  chunk lists, full_entities / full_relations, the LLM cache) and in 31-32 of
+  76 step results; 10-12 of the 16 nodes and 4-5 of the 49 edges carry other
+  attributes (descriptions, summaries). The three runs also differ from each
+  other (two pairs in 8 files, one pair in 1).
 - **One task at a time** upstream (`max_parallel_insert=1`, operate's
   semaphores at 1), as for B2.
 
