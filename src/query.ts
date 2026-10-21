@@ -2,29 +2,31 @@
 // kg_query (local / global / hybrid / mix), naive_query and the four-stage
 // context builder (search -> truncate -> merge chunks -> context string).
 // Functions keep upstream's names in camelCase and upstream's argument order,
-// so each one diffs against its Python counterpart. Lives outside
-// src/operate.ts while B2 edits that file.
+// so each one diffs against its Python counterpart. A module of its own next to
+// src/operate.ts (the ingest half), so neither file grows past review size.
 import type { BaseGraphStorage, EdgeData, NodeData, VectorQueryResult } from './base.ts';
-import { edgePairKey } from './base.ts';
+import { edgePairKey, makeQueryParam, QueryContextResult, type QueryLlmFunc, type QueryLlmOptions, type QueryParam, type QueryRawData, QueryResult } from './base.ts';
 import { DEFAULT_KG_CHUNK_PICK_METHOD, DEFAULT_MIN_RERANK_SCORE, DEFAULT_RELATED_CHUNK_NUMBER, DEFAULT_SUMMARY_LANGUAGE, GRAPH_FIELD_SEP } from './constants.ts';
+import { pyError } from './exceptions.ts';
 import { PROMPTS } from './prompt.ts';
 import {
+  computeArgsHash,
   generateCacheKey,
   handleCache,
   type LlmResponseCache,
   pyCompare,
   pyFormat,
+  pyJsonDumps,
   pyLen,
   pyStrip,
   removeThinkTags,
   saveToCache,
   splitStringByMultiMarkers,
   TiktokenTokenizer,
+  truncateListByTokenSize,
 } from './utils.ts';
-import { makeQueryParam, QueryContextResult, type QueryLlmFunc, type QueryLlmOptions, type QueryParam, type QueryRawData, QueryResult } from './query/base.ts';
 import {
   type ChunkGlobalConfig,
-  computeArgsHashPy,
   convertToUserFormat,
   type Dict,
   generateReferenceListFromChunks,
@@ -36,18 +38,15 @@ import {
   pickByWeightedPolling,
   processChunksUnified,
   pyGet,
-  pyJsonDumpsAny,
-  pyStr,
   pyTruthy,
   type QueryEmbeddingFunc,
   type QueryLog,
-  truncateListByTokenSize,
 } from './query/utils.ts';
 
-export * from './query/base.ts';
+export { makeQueryParam, QueryContextResult, QueryResult } from './base.ts';
+export type { QueryLlmFunc, QueryLlmOptions, QueryMode, QueryParam, QueryParamInit, QueryRawData, ReferenceEntry } from './base.ts';
 export {
   applyRerankIfEnabled,
-  computeArgsHashPy,
   convertToUserFormat,
   cosineSimilarity,
   generateReferenceListFromChunks,
@@ -55,11 +54,7 @@ export {
   pickByVectorSimilarity,
   pickByWeightedPolling,
   processChunksUnified,
-  pyFloatRepr,
-  pyJsonDumpsAny,
   pyRound,
-  pyStr,
-  truncateListByTokenSize,
 } from './query/utils.ts';
 export type { Dict, QueryEmbeddingFunc, QueryLog, RerankFunc, RerankResult } from './query/utils.ts';
 
@@ -155,7 +150,7 @@ function queryModelFunc(qp: QueryParam, gc: QueryGlobalConfig): QueryLlmFunc {
   if (qp.model_func) return qp.model_func;
   return (prompt: string, opts: QueryLlmOptions = {}) => {
     const f = gc.llm_model_func;
-    if (!f) throw new Error("KeyError: 'llm_model_func'");
+    if (!f) throw pyError('KeyError', "'llm_model_func'");
     return f(prompt, { _priority: 5, ...opts });
   };
 }
@@ -166,7 +161,7 @@ const pyTypeName = (v: unknown): string =>
 /** `obj.get(key, [])` on what json_repair returned; a non-dict raises like Python. */
 function dictGet(obj: unknown, key: string): unknown {
   if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) {
-    throw Object.assign(new Error(`'${pyTypeName(obj)}' object has no attribute 'get'`), { name: 'AttributeError' });
+    throw pyError('AttributeError', `'${pyTypeName(obj)}' object has no attribute 'get'`);
   }
   return pyGet(obj as Dict, key, []);
 }
@@ -175,9 +170,9 @@ function dictGet(obj: unknown, key: string): unknown {
 function joinKeywords(x: unknown): string {
   if (!pyTruthy(x)) return '';
   const items: unknown[] = typeof x === 'string' ? Array.from(x) : Array.isArray(x) ? x : typeof x === 'object' ? Object.keys(x as Dict) : [x];
-  if (typeof x !== 'string' && !Array.isArray(x) && (typeof x !== 'object' || x === null)) throw new TypeError(`can only join an iterable`);
+  if (typeof x !== 'string' && !Array.isArray(x) && (typeof x !== 'object' || x === null)) throw pyError('TypeError', 'can only join an iterable');
   items.forEach((it, i) => {
-    if (typeof it !== 'string') throw new TypeError(`sequence item ${i}: expected str instance, ${pyTypeName(it)} found`);
+    if (typeof it !== 'string') throw pyError('TypeError', `sequence item ${i}: expected str instance, ${pyTypeName(it)} found`);
   });
   return items.join(', ');
 }
@@ -188,12 +183,12 @@ const isEmptyList = (x: unknown): boolean => Array.isArray(x) && x.length === 0;
 
 /** compute_args_hash arguments of extract_keywords_only. */
 export function keywordsArgsHash(mode: string, text: string, language: string): string {
-  return computeArgsHashPy(mode, text, language);
+  return computeArgsHash(mode, text, language);
 }
 
 /** compute_args_hash arguments of kg_query (keywords already joined with ", "). */
 export function kgQueryArgsHash(qp: QueryParam, query: string, hlKeywordsStr: string, llKeywordsStr: string): string {
-  return computeArgsHashPy(
+  return computeArgsHash(
     qp.mode,
     query,
     qp.response_type,
@@ -211,7 +206,7 @@ export function kgQueryArgsHash(qp: QueryParam, query: string, hlKeywordsStr: st
 
 /** compute_args_hash arguments of naive_query. */
 export function naiveQueryArgsHash(qp: QueryParam, query: string): string {
-  return computeArgsHashPy(
+  return computeArgsHash(
     qp.mode,
     query,
     qp.response_type,
@@ -427,7 +422,7 @@ export async function extractKeywordsOnly(
 
   const useModelFunc = queryModelFunc(param, globalConfig);
   const raw = await useModelFunc(kwPrompt, { keyword_extraction: true });
-  if (typeof raw !== 'string') throw new TypeError('expected string or bytes-like object, got an async iterator');
+  if (typeof raw !== 'string') throw pyError('TypeError', 'expected string or bytes-like object, got an async iterator');
   const result = removeThinkTags(raw);
   const keywordsData = jsonRepairLoads(result, log);
   if (!pyTruthy(keywordsData)) {
@@ -443,7 +438,7 @@ export async function extractKeywordsOnly(
     if (hashingKv?.global_config.enable_llm_cache) {
       await saveToCache(hashingKv, {
         argsHash,
-        content: pyJsonDumpsAny(cacheData, true),
+        content: pyJsonDumps(cacheData, { ensureAscii: true }),
         prompt: text,
         mode: param.mode,
         cacheType: 'keywords',
@@ -553,7 +548,7 @@ export async function performKgSearch(
         const all = await embed(texts, { context: 'query', _priority: 5 });
         // assigned one by one: an IndexError midway keeps the earlier ones, as upstream
         for (let i = 0; i < purposes.length; i++) {
-          if (i >= all.length) throw new Error('index out of range');
+          if (i >= all.length) throw pyError('IndexError', 'index out of range');
           const p = purposes[i];
           if (p === 'query') queryEmbedding = all[i]!;
           else if (p === 'll') llEmbedding = all[i]!;
@@ -581,7 +576,7 @@ export async function performKgSearch(
       vectorChunks.forEach((chunk, i) => {
         const chunkId = (pyGet(chunk, 'chunk_id', null) || pyGet(chunk, 'id', null)) as string | null;
         if (chunkId) chunkTracking.set(chunkId, { source: 'C', frequency: 1, order: i + 1 });
-        else log('warning', `Vector chunk missing chunk_id: ${pyJsonDumpsAny(chunk)}`);
+        else log('warning', `Vector chunk missing chunk_id: ${pyJsonDumps(chunk)}`);
       });
     }
   }
@@ -948,7 +943,7 @@ export async function getNodeData(
   const results = await entitiesVdb.query(query, queryParam.top_k, queryEmbedding);
   if (!results.length) return [[], []];
   const nodeIds = results.map((r) => {
-    if (!Object.hasOwn(r, 'entity_name')) throw new Error("KeyError: 'entity_name'");
+    if (!Object.hasOwn(r, 'entity_name')) throw pyError('KeyError', "'entity_name'");
     return r.entity_name as string;
   });
   const [nodesDict, degreesDict] = await Promise.all([knowledgeGraphInst.get_nodes_batch(nodeIds), knowledgeGraphInst.node_degrees_batch(nodeIds)]);
@@ -1285,7 +1280,7 @@ export async function naiveQuery(
   if (queryParam.only_need_context && !queryParam.only_need_prompt) return new QueryResult({ content: contextContent, raw_data: rawData });
 
   // upstream passes the raw response_type here (None prints as "None"), unlike the budget prompt above
-  const sysPrompt = pyFormat(sysPromptTemplate, { response_type: pyStr(queryParam.response_type), user_prompt: userPrompt, content_data: contextContent });
+  const sysPrompt = pyFormat(sysPromptTemplate, { response_type: queryParam.response_type, user_prompt: userPrompt, content_data: contextContent });
   const userQuery = query;
   if (queryParam.only_need_prompt) {
     return new QueryResult({ content: [sysPrompt, '---User Query---', userQuery].join('\n\n'), raw_data: rawData });

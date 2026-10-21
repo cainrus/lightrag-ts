@@ -13,8 +13,10 @@ re-ingesting anything.
 > Status: early. Done: the four default storages (read and write, byte-compatible
 > with upstream), prompt templates, LLM-cache key computation, and the ingest
 > half of `operate.py`: chunking, entity/relation extraction, merge and
-> summaries, byte-identical to upstream on a real store. Not yet: query modes,
-> the `LightRAG` class and its pipeline, LLM adapters. See [SCOPE.md](SCOPE.md).
+> summaries, byte-identical to upstream on a real store; the five query modes
+> (local, global, hybrid, mix, naive) with keyword extraction and context
+> building. Not yet: the `LightRAG` class and its pipeline, LLM adapters. See
+> [SCOPE.md](SCOPE.md).
 
 ## What works today
 
@@ -29,6 +31,11 @@ re-ingesting anything.
   extraction (`extractEntities`) and merging into the graph and vector stores
   (`mergeNodesAndEdges`, map-reduce summaries): the same chunks, records,
   graph, vectors and LLM cache entries as upstream for the same input.
+- Queries: `kgQuery` (local / global / hybrid / mix) and `naiveQuery` build
+  the same keyword prompt, context, final prompt and cache keys as upstream
+  (`lightragQueryConfig` and `queryTextChunks` give them the config LightRAG
+  would): on a real store 768 of 770 query/mode probes identical, the other two
+  an exact score tie in the vector search; every cached query key recomputed.
 - Writing it back: `JsonKVStorage`, `JsonDocStatusStorage`,
   `NanoVectorDBStorage` and `NetworkXStorage` follow upstream's storage API
   and persist files byte-identical to what upstream writes for the same state

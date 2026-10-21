@@ -1,9 +1,9 @@
-// Port of the lightrag/utils.py helpers the query path uses. Kept out of
-// src/utils.ts while B2 edits that file; same upstream names in camelCase.
-import { createHash } from 'node:crypto';
+// Port of the lightrag/utils.py helpers only the query path uses (the shared
+// ones - compute_args_hash, json.dumps, truncate_list_by_token_size, Python
+// str() - live in src/utils.ts). Same upstream names in camelCase.
+import type { QueryParam, QueryRawData, ReferenceEntry } from '../base.ts';
 import { DEFAULT_MAX_TOTAL_TOKENS } from '../constants.ts';
-import { computeArgsHash, pyLen, pyStrip, type Tokenizer } from '../utils.ts';
-import type { QueryParam, QueryRawData, ReferenceEntry } from './base.ts';
+import { pyJsonDumps, pyLen, pyStrip, truncateListByTokenSize, type Tokenizer } from '../utils.ts';
 
 export type Dict = Record<string, unknown>;
 
@@ -22,45 +22,6 @@ export function pyTruthy(v: unknown): boolean {
   return true;
 }
 
-/** Python `repr(float)`: shortest round-trip digits, Python's switch to exponent form. */
-export function pyFloatRepr(x: number): string {
-  if (Number.isNaN(x)) return 'nan';
-  if (!Number.isFinite(x)) return x > 0 ? 'inf' : '-inf';
-  if (x === 0) return Object.is(x, -0) ? '-0.0' : '0.0';
-  const [mant, expStr] = x.toExponential().split('e') as [string, string];
-  const exp = Number(expStr);
-  const neg = mant.startsWith('-');
-  const digits = mant.replace('-', '').replace('.', '');
-  const sign = neg ? '-' : '';
-  if (exp < -4 || exp >= 16) {
-    const m = digits.length > 1 ? `${digits[0]}.${digits.slice(1)}` : digits;
-    return `${sign}${m}e${exp < 0 ? '-' : '+'}${String(Math.abs(exp)).padStart(2, '0')}`;
-  }
-  if (exp < 0) return `${sign}0.${'0'.repeat(-exp - 1)}${digits}`;
-  const intLen = exp + 1;
-  if (digits.length <= intLen) return `${sign}${digits}${'0'.repeat(intLen - digits.length)}.0`;
-  return `${sign}${digits.slice(0, intLen)}.${digits.slice(intLen)}`;
-}
-
-/**
- * Python `str(x)` for the argument types compute_args_hash receives. JS has
- * no int/float split: integral numbers print as Python ints (QueryParam's
- * numeric fields are ints), others as `repr(float)`.
- */
-export function pyStr(v: unknown): string {
-  if (typeof v === 'string') return v;
-  if (v === null || v === undefined) return 'None';
-  if (typeof v === 'boolean') return v ? 'True' : 'False';
-  if (typeof v === 'bigint') return v.toString();
-  if (typeof v === 'number') return Number.isInteger(v) ? BigInt(v).toString() : pyFloatRepr(v);
-  throw new Error(`pyStr: no verified Python str() for ${typeof v}`);
-}
-
-/** utils.compute_args_hash with Python `str()` of each argument (True, None, 0.5, ...). */
-export function computeArgsHashPy(...args: unknown[]): string {
-  return computeArgsHash(...args.map(pyStr));
-}
-
 /** Python `round(x)` for a float: round half to even. */
 export function pyRound(x: number): number {
   const f = Math.floor(x);
@@ -68,36 +29,6 @@ export function pyRound(x: number): number {
   if (d > 0.5) return f + 1;
   if (d < 0.5) return f;
   return f % 2 === 0 ? f : f + 1;
-}
-
-const ESC: Record<string, string> = { '"': '\\"', '\\': '\\\\', '\n': '\\n', '\r': '\\r', '\t': '\\t', '\b': '\\b', '\f': '\\f' };
-const hex4 = (c: number) => '\\u' + c.toString(16).padStart(4, '0');
-
-function pyJsonString(s: string, ensureAscii: boolean): string {
-  const re = ensureAscii ? /[\\"\u0000-\u001f\u007f-￿]/g : /[\\"\u0000-\u001f]/g;
-  return '"' + s.replace(re, (c) => ESC[c] ?? hex4(c.charCodeAt(0))) + '"';
-}
-
-/**
- * Python `json.dumps(v, ensure_ascii=...)` with default separators for
- * JSON-shaped values, floats in `repr` form. Lone surrogates behave as in
- * Python: raw without ensure_ascii, `\udXXX` with it. JS cannot tell 1.0 from
- * 1, so an integral float prints as an int ("1", Python "1.0").
- */
-export function pyJsonDumpsAny(v: unknown, ensureAscii = false): string {
-  if (v === null || v === undefined) return 'null';
-  if (typeof v === 'string') return pyJsonString(v, ensureAscii);
-  if (typeof v === 'boolean') return v ? 'true' : 'false';
-  if (typeof v === 'number') {
-    if (Number.isNaN(v)) return 'NaN';
-    if (!Number.isFinite(v)) return v > 0 ? 'Infinity' : '-Infinity';
-    return Number.isInteger(v) ? BigInt(v).toString() : pyFloatRepr(v);
-  }
-  if (Array.isArray(v)) return '[' + v.map((x) => pyJsonDumpsAny(x, ensureAscii)).join(', ') + ']';
-  if (typeof v === 'object') {
-    return '{' + Object.entries(v).map(([k, x]) => `${pyJsonString(k, ensureAscii)}: ${pyJsonDumpsAny(x, ensureAscii)}`).join(', ') + '}';
-  }
-  throw new Error(`pyJsonDumpsAny: unsupported ${typeof v}`);
 }
 
 const isEmptyContainer = (v: unknown): boolean =>
@@ -293,19 +224,8 @@ export function jsonRepairLoads(text: string, log?: QueryLog): unknown {
   return result;
 }
 
-/** utils.truncate_list_by_token_size */
-export function truncateListByTokenSize<T>(listData: T[], key: (x: T) => string, maxTokenSize: number, tokenizer: Tokenizer): T[] {
-  if (maxTokenSize <= 0) return [];
-  let tokens = 0;
-  for (let i = 0; i < listData.length; i++) {
-    tokens += tokenizer.encode(key(listData[i]!)).length;
-    if (tokens > maxTokenSize) return listData.slice(0, i);
-  }
-  return listData;
-}
-
 /** The truncation key upstream uses everywhere: `"\n".join(json.dumps(item, ensure_ascii=False) for item in [x])`. */
-export const jsonLineKey = (x: unknown): string => pyJsonDumpsAny(x, false);
+export const jsonLineKey = (x: unknown): string => pyJsonDumps(x);
 
 /**
  * utils.cosine_similarity. Upstream mixes a float32 query norm with float64
@@ -439,7 +359,7 @@ export async function applyRerankIfEnabled(
   try {
     const texts = retrievedDocs.map((d) => {
       for (const k of ['content', 'text', 'chunk_content', 'document']) if (pyTruthy(d[k])) return d[k] as string;
-      return pyJsonDumpsAny(d); // upstream: str(doc), a Python repr; no ported caller reaches it
+      return pyJsonDumps(d); // upstream: str(doc), a Python repr; no ported caller reaches it
     });
     const results = await rerank({ query, documents: texts, top_n: topN });
     if (results && results.length > 0) {
@@ -600,5 +520,3 @@ export function generateReferenceListFromChunks(chunks: Dict[]): [ReferenceEntry
 export type QueryLog = (level: 'error' | 'warning' | 'info' | 'debug', msg: string) => void;
 export const noLog: QueryLog = () => {};
 
-/** md5 hex of a string, for diagnostics. */
-export const md5 = (s: string): string => createHash('md5').update(s).digest('hex');

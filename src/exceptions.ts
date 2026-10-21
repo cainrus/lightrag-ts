@@ -25,7 +25,7 @@ export class ChunkTokenLimitExceededError extends Error {
  * (ValueError, IndexError, ...), so callers and the upstream-test adapter can
  * tell them apart the way Python code does.
  */
-export function pyError(type: 'ValueError' | 'IndexError' | 'KeyError' | 'TypeError', message: string): Error {
+export function pyError(type: 'ValueError' | 'IndexError' | 'KeyError' | 'TypeError' | 'AttributeError', message: string): Error {
   const e = new Error(message);
   e.name = type;
   return e;

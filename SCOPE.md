@@ -14,17 +14,16 @@ and the same input must produce the same LLM calls (hence the same cache keys).
 | `constants.py` | `src/constants.ts` | B0 ✓ | generated |
 | `namespace.py` | `src/namespace.ts` | B0 ✓ | |
 | `types.py` | `src/types.ts` | B0 ✓ | pydantic models -> types |
-| `utils.py` | `src/utils.ts` | B0, B2 partial | hashing, cache keys, sanitize, LLM cache path, tokenizer, extraction parsing, source-id/merge helpers, Python-compat helpers; query helpers in B3 |
+| `utils.py` | `src/utils.ts` | B0, B2 partial | hashing, cache keys, sanitize, LLM cache path, tokenizer, extraction parsing, source-id/merge helpers, Python-compat helpers (`pyStr`, `pyFormat`, `pyJsonDumps` with ensure_ascii, `computeArgsHash` over Python `str()`), shared by ingest and query |
 | `operate.py` | `src/operate.ts` | B2 ✓ ingest half | chunking, extraction, merge and summaries; `rebuild_knowledge_from_chunks` (delete path) B4, query B3 |
 | `exceptions.py` | `src/exceptions.ts` | B2 | the classes the ported code raises |
-| `operate.py` query half (`kg_query` .. `naive_query`) | `src/query.ts` | B3 ✓ | keywords + cache, local/global/hybrid/mix/naive, context builder; folds into `operate.ts` after B2 |
-| `base.py` QueryParam, QueryResult, QueryContextResult | `src/query/base.ts` | B3 ✓ | folds into `base.ts` after B2 |
-| `utils.py` query helpers (`process_chunks_unified`, `pick_by_*`, rerank, references, ...) | `src/query/utils.ts` | B3 ✓ | plus `compute_args_hash` with Python `str()`; folds into `utils.ts` after B2 |
+| `operate.py` query half (`kg_query` .. `naive_query`) | `src/query.ts` | B3 ✓ | keywords + cache, local/global/hybrid/mix/naive, context builder; its own module beside `operate.ts` (the ingest half), which would otherwise pass 2500 lines |
+| `utils.py` helpers only the query uses (`process_chunks_unified`, `pick_by_*`, rerank, references, `json_repair.loads`) | `src/query/utils.ts` | B3 ✓ | |
 | `kg/json_kv_impl.py` | `src/kg/json_kv_impl.ts` | B1 ✓ | byte-identical `write_json`, atomic |
 | `kg/json_doc_status_impl.py` | `src/kg/json_doc_status_impl.ts` | B1 ✓ | file_path sort: `lower()`, not pypinyin |
 | `kg/nano_vector_db_impl.py` + nano-vectordb 0.0.4.3 | `src/kg/nano_vector_db_impl.ts` | B1 ✓ | numpy-exact normalize, byte-identical save, streamed |
 | `kg/networkx_impl.py` + networkx 3.6 GraphML IO | `src/kg/networkx_impl.ts` | B1 ✓ | Map-based nx.Graph (`NxGraph`), graphology export |
-| `base.py` | `src/base.ts` | B1 ✓ storage contracts | QueryParam and results in B3 |
+| `base.py` | `src/base.ts` | B1 ✓ storage contracts, B3 ✓ QueryParam and results | |
 | `lightrag.py` | `src/lightrag.ts` | B4 | pipeline, doc status, insert/delete |
 | `utils_graph.py` | `src/utils_graph.ts` | B4 | |
 | `llm/openai.py` (subset) | `src/llm/` | B5 | OpenAI-compatible completion + embeddings |
@@ -208,7 +207,8 @@ entries. Checked three ways:
   variants, token budgets that cut entities, relations and chunks, WEIGHT /
   VECTOR / unknown chunk pick, rerank with score filter, stream, custom system
   prompts, keyword JSON in fences, prose, lists, empty. Upstream's
-  `tests/test_batch_embeddings.py` is ported alongside.
+  `tests/test_batch_embeddings.py` runs unchanged through the pytest bridge
+  (`npm run test:upstream`; the adapter passes mocks and numpy arrays).
 - `parity/query.ts keys <store>` (read-only): every `*:keywords:*` and
   `*:query:*` cache entry of a real store, its key recomputed from the entry's
   query and `queryparam`; for kg modes the keywords are replayed through
@@ -230,8 +230,9 @@ a near-tie can flip the same way.
 
 Query cache keys hash the parameters, not the prompt (`compute_args_hash` over
 mode, query, response_type, top_k, ..., joined keywords, user_prompt,
-enable_rerank), so `str()` of None / bool / float matters: `computeArgsHashPy`
-prints them the Python way.
+enable_rerank), so `str()` of None / bool / float matters: `computeArgsHash` prints
+them the Python way (strings, all the extract and summary keys hash, pass
+unchanged).
 
 Contract for B4 (what `LightRAG.aquery*` must hand the query functions):
 
@@ -247,12 +248,16 @@ Contract for B4 (what `LightRAG.aquery*` must hand the query functions):
   picking falls back to WEIGHT (upstream does the same); the TS side also
   emits one process warning (`LIGHTRAG_TS_VECTOR_PICK_WITHOUT_EMBEDDING`).
 - `hashing_kv` = the llm_response_cache storage with that same config.
-- `src/query/base.ts` loads `.env` from the working directory on import
+- `src/base.ts` loads `.env` from the working directory on import
   (`process.loadEnvFile`, existing variables win), as base.py's
   `load_dotenv(override=False)` does before the QueryParam defaults read
   TOP_K, CHUNK_TOP_K, MAX_*_TOKENS, HISTORY_TURNS, RERANK_BY_DEFAULT. Node's
   .env syntax is close to python-dotenv's, not identical (multi-line values,
   `${VAR}` expansion).
+- **Side effect, kept for parity:** importing the library writes the .env
+  variables into `process.env` of the whole process, as `import lightrag` does
+  in Python - unexpected for an npm package, but those variables change query
+  cache keys. `LIGHTRAG_TS_NO_DOTENV=1` turns it off.
 
 `json_repair.loads` (upstream reads keyword answers with it) is a lenient
 reader here, checked against json_repair 0.61.6 on 44 recorded inputs: valid

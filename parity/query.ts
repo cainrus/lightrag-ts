@@ -29,14 +29,13 @@ import {
   kgQueryParamDict,
   makeQueryParam,
   naiveQueryArgsHash,
-  pyJsonDumpsAny,
   type QueryGlobalConfig,
   type QueryMode,
   type QueryParam,
   queryParamDict,
   resolveKgKeywords,
 } from '../src/query.ts';
-import { computeArgsHash, generateCacheKey, type LlmResponseCache, TiktokenTokenizer } from '../src/utils.ts';
+import { computeArgsHash, generateCacheKey, type LlmResponseCache, pyJsonDumps, TiktokenTokenizer } from '../src/utils.ts';
 
 type Entry = { return: string; cache_type?: string; original_prompt?: string; queryparam?: Dict | null; create_time?: number };
 
@@ -126,7 +125,7 @@ for (const [key, e] of entries) {
     const got = JSON.stringify(queryParamDict(qp));
     if (got === want) r.keywords.queryparamSame++;
     else miss(key, 'keywords queryparam', `ts=${got} py=${want}`);
-    const back = pyJsonDumpsAny(jsonRepairLoads(e.return), true);
+    const back = pyJsonDumps(jsonRepairLoads(e.return), { ensureAscii: true });
     if (back === e.return) r.keywords.returnSame++;
     else miss(key, 'keywords return', `ts=${back.slice(0, 120)} py=${e.return.slice(0, 120)}`);
     continue;

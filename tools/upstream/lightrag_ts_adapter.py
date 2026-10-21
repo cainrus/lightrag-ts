@@ -19,7 +19,9 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from unittest import mock
 
+import numpy as np
 import pytest
 
 import lightrag.exceptions as lr_exceptions
@@ -66,6 +68,10 @@ class Bridge:
     def enc(self, v):
         if v is None or isinstance(v, (bool, int, float, str)):
             return v
+        if isinstance(v, np.ndarray):  # TS gets a typed array (float32) or plain numbers
+            return {"$nd": v.tolist(), "dtype": str(v.dtype)}
+        if isinstance(v, np.generic):
+            return v.item()
         if isinstance(v, (list, tuple)):
             return [self.enc(x) for x in v]
         if isinstance(v, dict):
@@ -74,10 +80,18 @@ class Bridge:
             raise TypeError("bridge: dict with non-str keys")
         hid = id(v)
         self.handles[hid] = v
-        if callable(v):
+        is_mock = isinstance(v, mock.NonCallableMock)
+        if callable(v) and not is_mock:
             return {"$h": hid, "kind": "fn"}
+        # a mock is both: callable (an LLM function) and an object (a storage)
         cls = type(v)
-        methods = [n for n in dir(cls) if not n.startswith("_") and callable(getattr(cls, n, None))]
+        if is_mock:
+            # a mock stands for an object: its methods are the child mocks the
+            # test configured (mock.query = AsyncMock(...)), its attributes the
+            # plain values set on it (mock.global_config = {...})
+            methods = [n for n, c in v._mock_children.items() if not n.startswith("_") and isinstance(c, mock.NonCallableMock)]
+        else:
+            methods = [n for n in dir(cls) if not n.startswith("_") and callable(getattr(cls, n, None))]
         attrs = {}
         for k, x in vars(v).items() if hasattr(v, "__dict__") else ():
             if k.startswith("_") or k in methods:
@@ -86,7 +100,7 @@ class Bridge:
                 attrs[k] = self.enc(x)
             except TypeError:
                 pass
-        return {"$h": hid, "kind": "obj", "methods": methods, "attrs": attrs}
+        return {"$h": hid, "kind": "fn" if callable(v) else "obj", "methods": methods, "attrs": attrs}
 
     def _send(self, msg):
         self.proc.stdin.write(json.dumps(msg) + "\n")
@@ -101,7 +115,7 @@ class Bridge:
     def _run_cb(self, cb):
         obj = self.handles[cb["target"]]
         fn = obj if cb["method"] is None else getattr(obj, cb["method"])
-        return fn(*cb["args"], **cb["kwargs"])
+        return fn(*dec(cb["args"]), **dec(cb["kwargs"]))
 
     def _reply_cb(self, value=None, error=None):
         if error is not None:
@@ -145,6 +159,17 @@ class Bridge:
 
 
 BRIDGE = Bridge()
+
+
+def dec(v):
+    """TS typed arrays ({"$nd": ..., "dtype"}) back to numpy, the rest as is."""
+    if isinstance(v, list):
+        return [dec(x) for x in v]
+    if isinstance(v, dict):
+        if "$nd" in v:
+            return np.array(v["$nd"], dtype=v.get("dtype") or None)
+        return {k: dec(x) for k, x in v.items()}
+    return v
 
 
 def raise_ts_error(err):
@@ -232,6 +257,12 @@ def _tuple(value, p):
     return tuple(value)
 
 
+def _kg_search_post(value, p):
+    value = dec(value)
+    value["chunk_tracking"] = dict(value["chunk_tracking"])
+    return value
+
+
 sync_adapter(lr_operate, "chunking_by_token_size")
 sync_adapter(lr_utils, "remove_think_tags")
 sync_adapter(lr_operate, "_handle_single_entity_extraction")
@@ -240,6 +271,7 @@ async_adapter(lr_operate, "extract_entities", _extract_post, _drop("pipeline_sta
 async_adapter(lr_operate, "_handle_entity_relation_summary", _tuple)
 async_adapter(lr_operate, "_merge_nodes_then_upsert", pre=_drop("pipeline_status_lock"))
 async_adapter(lr_operate, "_merge_edges_then_upsert", _edges_post, _drop("pipeline_status_lock", "added_entities"))
+async_adapter(lr_operate, "_perform_kg_search", _kg_search_post)
 
 # --------------------------------------------------------------------------- selection
 

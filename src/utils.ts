@@ -4,14 +4,19 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { getEncodingNameForModel, Tiktoken, type TiktokenBPE, type TiktokenModel } from 'js-tiktoken/lite';
 import { HTML5, INVALID_CHARREFS, INVALID_CODEPOINTS } from './internal/html5_entities.ts';
+import { pyFloatRepr } from './internal/py_json.ts';
 import { PY_ISDIGIT, PY_RE_DIGIT, PY_RE_SPACE } from './internal/py_unicode.ts';
 
 /** Lone UTF-16 surrogates; Python's `encode('utf-8', errors='replace')` turns each into '?'. */
 const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
-/** utils.compute_args_hash: md5 hex of the concatenated str() of every argument. */
+/**
+ * utils.compute_args_hash: md5 hex of the concatenated str() of every argument.
+ * Python's str(): None, True / False, repr of a float (query keys hash QueryParam
+ * fields); strings, which the extract and summary keys hash, pass unchanged.
+ */
 export function computeArgsHash(...args: unknown[]): string {
-  const s = args.map((a) => String(a)).join('');
+  const s = args.map(pyStr).join('');
   return createHash('md5').update(Buffer.from(s.replace(LONE_SURROGATE, '?'), 'utf8')).digest('hex');
 }
 
@@ -227,10 +232,25 @@ export function pyFormat(template: string, values: Readonly<Record<string, unkno
   return out;
 }
 
-function pyStr(v: unknown): string {
+/** Python `repr(float)` (also its `str()`): 'nan' and 'inf', where json.dumps writes NaN / Infinity. */
+export function pyReprFloat(x: number): string {
+  if (Number.isNaN(x)) return 'nan';
+  if (!Number.isFinite(x)) return x > 0 ? 'inf' : '-inf';
+  return pyFloatRepr(x);
+}
+
+/**
+ * Python `str(v)` for the scalars the port formats or hashes: str, None, bool,
+ * int, float. JS has no int/float split: an integral number prints as an int
+ * (QueryParam's numeric fields are ints); 1.0 would print "1", Python "1.0".
+ */
+export function pyStr(v: unknown): string {
   if (typeof v === 'string') return v;
-  if (typeof v === 'number' && Number.isInteger(v)) return String(v);
-  throw new Error(`pyFormat: value of type ${typeof v} has no verified Python str() equivalent`);
+  if (v === null || v === undefined) return 'None';
+  if (typeof v === 'boolean') return v ? 'True' : 'False';
+  if (typeof v === 'bigint') return v.toString();
+  if (typeof v === 'number') return Number.isInteger(v) ? BigInt(v).toString() : pyReprFloat(v);
+  throw new Error(`pyStr: value of type ${typeof v} has no verified Python str() equivalent`);
 }
 
 const PY_JSON_ESCAPES: Record<string, string> = {
@@ -243,33 +263,39 @@ const PY_JSON_ESCAPES: Record<string, string> = {
   '\t': '\\t',
 };
 
+const hex4 = (c: number) => '\\u' + c.toString(16).padStart(4, '0');
+
 /**
- * A string as `json.dumps(s, ensure_ascii=False)` writes it: only `"`, `\\`
- * and C0 controls are escaped. Unlike JSON.stringify, a lone surrogate stays
- * raw - a prompt built from it is then cleaned by sanitize_text_for_encoding,
- * so the escape would change the cache key.
+ * A string as `json.dumps` writes it. Without ensure_ascii only `"`, `\\`
+ * and C0 controls are escaped, and unlike JSON.stringify a lone surrogate stays
+ * raw (a prompt built from it is then cleaned by sanitize_text_for_encoding, so
+ * an escape would change the cache key). With ensure_ascii everything outside
+ * printable ASCII becomes `\\uXXXX` per UTF-16 unit, DEL and lone surrogates too.
  */
-function pyJsonString(s: string): string {
-  return '"' + s.replace(/[\x00-\x1f"\\]/g, (c) => PY_JSON_ESCAPES[c] ?? `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`) + '"';
+function pyJsonString(s: string, ensureAscii = false): string {
+  const re = ensureAscii ? /[\\"\u0000-\u001f\u007f-\uffff]/g : /[\x00-\x1f"\\]/g;
+  return '"' + s.replace(re, (c) => PY_JSON_ESCAPES[c] ?? hex4(c.charCodeAt(0))) + '"';
 }
 
 /**
- * Python `json.dumps(obj, ensure_ascii=False)` for JSON-compatible values:
- * `", "` / `": "` separators, Python's string escaping (pyJsonString).
+ * Python `json.dumps(obj, ensure_ascii=...)` (default False here, upstream's
+ * prompt path) for JSON-shaped values: `", "` / `": "` separators, Python's
+ * string escaping, floats in repr form (NaN / Infinity as json spells them).
+ * JS cannot tell 1.0 from 1, so an integral float prints as an int ("1",
+ * Python "1.0"). `undefined` prints as null.
  */
-export function pyJsonDumps(v: unknown): string {
-  if (v === null) return 'null';
-  if (typeof v === 'string') return pyJsonString(v);
-  if (typeof v === 'boolean') return v ? 'true' : 'false';
-  if (typeof v === 'number') {
-    if (!Number.isInteger(v)) throw new Error('pyJsonDumps: float repr not ported yet');
-    return String(v);
-  }
-  if (Array.isArray(v)) return '[' + v.map(pyJsonDumps).join(', ') + ']';
-  if (typeof v === 'object') {
-    return '{' + Object.entries(v).map(([k, x]) => `${pyJsonString(k)}: ${pyJsonDumps(x)}`).join(', ') + '}';
-  }
-  throw new Error(`pyJsonDumps: unsupported ${typeof v}`);
+export function pyJsonDumps(v: unknown, opts: { ensureAscii?: boolean } = {}): string {
+  const ascii = opts?.ensureAscii === true;
+  const dump = (x: unknown): string => {
+    if (x === null || x === undefined) return 'null';
+    if (typeof x === 'string') return pyJsonString(x, ascii);
+    if (typeof x === 'boolean') return x ? 'true' : 'false';
+    if (typeof x === 'number') return Number.isInteger(x) ? BigInt(x).toString() : pyFloatRepr(x);
+    if (Array.isArray(x)) return '[' + x.map(dump).join(', ') + ']';
+    if (typeof x === 'object') return '{' + Object.entries(x).map(([k, y]) => `${pyJsonString(k, ascii)}: ${dump(y)}`).join(', ') + '}';
+    throw new Error(`pyJsonDumps: unsupported ${typeof x}`);
+  };
+  return dump(v);
 }
 
 // ---------------------------------------------------------------------------

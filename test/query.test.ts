@@ -9,22 +9,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { TiktokenTokenizer } from '../src/utils.ts';
+import { computeArgsHash, pyJsonDumps, pyReprFloat, TiktokenTokenizer } from '../src/utils.ts';
 import { describeProbe, diffRecords, openQueryStore, type Probe, readRecords, runProbe } from '../parity/query-runner.ts';
 import {
-  computeArgsHashPy,
   jsonRepairLoads,
   kgQueryArgsHash,
   lightragQueryConfig,
   makeQueryParam,
-  performKgSearch,
   pickByWeightedPolling,
-  pyFloatRepr,
-  pyJsonDumpsAny,
   pyRound,
-  type QueryGraphStorage,
-  type QueryTextChunksStorage,
-  type QueryVectorStorage,
   queryCacheKeys,
   queryTextChunks,
 } from '../src/query.ts';
@@ -101,7 +94,7 @@ test('jsonRepairLoads warns when non-blank text holds no JSON', () => {
 test('base.ts reads .env from the working directory without overriding the environment (load_dotenv)', () => {
   const tmp = mkdtempSync(join(tmpdir(), 'lightrag-ts-env-'));
   writeFileSync(join(tmp, '.env'), 'TOP_K=7\nCHUNK_TOP_K=3\n');
-  const base = new URL('../src/query/base.ts', import.meta.url).href;
+  const base = new URL('../src/base.ts', import.meta.url).href;
   const script = `import { makeQueryParam } from ${JSON.stringify(base)}; const q = makeQueryParam(); console.log(q.top_k, q.chunk_top_k);`;
   const run = (env: NodeJS.ProcessEnv) =>
     execFileSync(process.execPath, ['--input-type=module', '-e', script], { cwd: tmp, env, encoding: 'utf8' }).trim();
@@ -110,6 +103,8 @@ test('base.ts reads .env from the working directory without overriding the envir
   delete env.CHUNK_TOP_K;
   assert.equal(run(env), '7 3');
   assert.equal(run({ ...env, TOP_K: '9' }), '9 3');
+  // opt-out: the library leaves process.env alone
+  assert.equal(run({ ...env, LIGHTRAG_TS_NO_DOTENV: '1' }), '40 20');
 });
 
 test('lightragQueryConfig carries LightRAG defaults the query path reads', () => {
@@ -162,22 +157,22 @@ type Cases = {
 };
 const cases = read<Cases>('py-cases.json');
 
-test('pyFloatRepr matches repr(float)', () => {
-  for (const [x, r] of cases.float_repr) assert.equal(pyFloatRepr(x), r, String(x));
+test('pyReprFloat matches repr(float)', () => {
+  for (const [x, r] of cases.float_repr) assert.equal(pyReprFloat(x), r, String(x));
 });
 
 test('pyRound matches round() (half to even)', () => {
   for (const [x, r] of cases.round) assert.equal(pyRound(x), r, String(x));
 });
 
-test('computeArgsHashPy matches compute_args_hash (str of None, bool, float; lone surrogate)', () => {
-  for (const [args, h] of cases.args_hash) assert.equal(computeArgsHashPy(...args), h, JSON.stringify(args));
+test('computeArgsHash matches compute_args_hash (str of None, bool, float; lone surrogate)', () => {
+  for (const [args, h] of cases.args_hash) assert.equal(computeArgsHash(...args), h, JSON.stringify(args));
 });
 
-test('pyJsonDumpsAny matches json.dumps with and without ensure_ascii', () => {
+test('pyJsonDumps matches json.dumps with and without ensure_ascii', () => {
   for (const [v, ascii, raw] of cases.json_dumps) {
-    assert.equal(pyJsonDumpsAny(v, true), ascii);
-    if (raw !== null) assert.equal(pyJsonDumpsAny(v, false), raw);
+    assert.equal(pyJsonDumps(v, { ensureAscii: true }), ascii);
+    if (raw !== null) assert.equal(pyJsonDumps(v), raw);
   }
 });
 
@@ -191,76 +186,5 @@ test('pickByWeightedPolling matches pick_by_weighted_polling', () => {
   }
 });
 
-// ------------------------------- upstream tests/test_batch_embeddings.py, ported
-// (d11: B2's pytest adapter is not in main yet; these five tests mock storages
-// with MagicMock, so they are ported as-is rather than bridged)
-
-type Call = { texts: string[]; opts: unknown };
-function batchFixture(fail = false) {
-  const dim = 1536;
-  const calls: Call[] = [];
-  const embed = async (texts: string[], opts?: unknown) => {
-    calls.push({ texts, opts });
-    if (fail) throw new Error('API error');
-    return texts.map((_, i) => new Float32Array(dim).fill(i + 1));
-  };
-  const vdb = () => {
-    const queries: { query: string; top_k: number; query_embedding: ArrayLike<number> | null | undefined }[] = [];
-    const v: QueryVectorStorage & { queries: typeof queries } = {
-      cosine_better_than_threshold: 0.2,
-      queries,
-      query: async (query, top_k, query_embedding) => {
-        queries.push({ query, top_k, query_embedding });
-        return [];
-      },
-      get_vectors_by_ids: async () => ({}),
-    };
-    return v;
-  };
-  const textChunks: QueryTextChunksStorage = { global_config: { kg_chunk_pick_method: 'VECTOR' }, embedding_func: embed, get_by_ids: async () => [] };
-  const graph = {} as QueryGraphStorage;
-  return { calls, textChunks, graph, entities: vdb(), relationships: vdb() };
-}
-
-test('test_hybrid_mode_batches_embeddings', async () => {
-  const f = batchFixture();
-  await performKgSearch('test query', 'entity1, entity2', 'theme1, theme2', f.graph, f.entities, f.relationships, f.textChunks, makeQueryParam({ mode: 'hybrid', top_k: 5 }));
-  assert.equal(f.calls.length, 1);
-  assert.deepEqual(f.calls[0]!.texts, ['test query', 'entity1, entity2', 'theme1, theme2']);
-});
-
-test('test_hybrid_mode_passes_embeddings_to_vdbs', async () => {
-  const f = batchFixture();
-  await performKgSearch('test query', 'entity keywords', 'theme keywords', f.graph, f.entities, f.relationships, f.textChunks, makeQueryParam({ mode: 'hybrid', top_k: 5 }));
-  const ll = f.entities.queries[0]?.query_embedding;
-  assert.ok(ll, 'll_embedding was not passed to entities_vdb.query');
-  assert.ok(Array.from(ll).every((x) => x === 2));
-  const hl = f.relationships.queries[0]?.query_embedding;
-  assert.ok(hl, 'hl_embedding was not passed to relationships_vdb.query');
-  assert.ok(Array.from(hl).every((x) => x === 3));
-});
-
-test('test_local_mode_skips_hl_keywords', async () => {
-  const f = batchFixture();
-  await performKgSearch('test query', 'entity keywords', 'theme keywords', f.graph, f.entities, f.relationships, f.textChunks, makeQueryParam({ mode: 'local', top_k: 5 }));
-  assert.equal(f.calls.length, 1);
-  assert.equal(f.calls[0]!.texts.length, 2);
-  assert.ok(!f.calls[0]!.texts.includes('theme keywords'));
-});
-
-test('test_global_mode_skips_ll_keywords', async () => {
-  const f = batchFixture();
-  await performKgSearch('test query', 'entity keywords', 'theme keywords', f.graph, f.entities, f.relationships, f.textChunks, makeQueryParam({ mode: 'global', top_k: 5 }));
-  assert.equal(f.calls.length, 1);
-  assert.equal(f.calls[0]!.texts.length, 2);
-  assert.ok(!f.calls[0]!.texts.includes('entity keywords'));
-});
-
-test('test_embedding_failure_falls_back_gracefully', async () => {
-  const f = batchFixture(true);
-  await performKgSearch('test query', 'entity keywords', 'theme keywords', f.graph, f.entities, f.relationships, f.textChunks, makeQueryParam({ mode: 'hybrid', top_k: 5 }));
-  assert.equal(f.entities.queries.length, 1);
-  assert.equal(f.entities.queries[0]!.query_embedding, null);
-  assert.equal(f.relationships.queries.length, 1);
-  assert.equal(f.relationships.queries[0]!.query_embedding, null);
-});
+// upstream tests/test_batch_embeddings.py runs unchanged against this code through
+// the pytest bridge (npm run test:upstream, d11), so it is not ported here.

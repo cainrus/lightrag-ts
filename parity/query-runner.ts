@@ -16,7 +16,6 @@ import {
   lightragQueryConfig,
   makeQueryParam,
   naiveQuery,
-  pyJsonDumpsAny,
   type QueryGlobalConfig,
   type QueryLlmOptions,
   type QueryMode,
@@ -26,7 +25,7 @@ import {
   queryTextChunks,
   type RerankFunc,
 } from '../src/query.ts';
-import { type LlmResponseCache, pyStrip } from '../src/utils.ts';
+import { type LlmResponseCache, pyJsonDumps, pyStrip } from '../src/utils.ts';
 
 export const PINNED_TIME = 1760000000;
 
@@ -244,4 +243,4 @@ export function readRecords(file: string): ProbeRecord[] {
 }
 
 /** For a record that diverged: the probe in a form a reader can rerun upstream. */
-export const describeProbe = (p: Probe): string => pyJsonDumpsAny({ id: p.id, mode: p.mode, variant: p.variant, query: p.query, param: p.param, gc: p.gc });
+export const describeProbe = (p: Probe): string => pyJsonDumps({ id: p.id, mode: p.mode, variant: p.variant, query: p.query, param: p.param, gc: p.gc });

@@ -24,6 +24,16 @@ export {
   mergeNodesThenUpsert,
 } from './operate.ts';
 export type { ChunkExtraction, ExtractConfig, ExtractedEntity, ExtractedRelation, MergeConfig, MergeOptions, TextChunk } from './operate.ts';
+export {
+  extractKeywordsOnly,
+  getKeywordsFromQuery,
+  kgQuery,
+  lightragQueryConfig,
+  naiveQuery,
+  queryCacheKeys,
+  queryTextChunks,
+} from './query.ts';
+export type { QueryGlobalConfig, QueryGraphStorage, QueryTextChunksStorage, QueryVectorStorage, QueryEmbeddingFunc, QueryLog, RerankFunc } from './query.ts';
 export { ChunkTokenLimitExceededError, PipelineCancelledException } from './exceptions.ts';
 export * from './base.ts';
 export { JsonKVStorage, forEachJsonKv, kvStorePath, readJsonKv } from './kg/json_kv_impl.ts';
