@@ -66,7 +66,8 @@ re-ingesting anything.
   `fetch` (no `openai` package), with both of upstream's retry layers; a
   server sees the same request bodies byte for byte (checked against
   recordings of upstream). `makeClaudeCompleteLlm` calls the `claude-complete`
-  bridge the way the personal vault does; `classifyProviderError` tells an
+  bridge (a command that takes a prompt on stdin and prints Claude's answer,
+  found through `CLAUDE_COMPLETE_BIN` or `PATH`); `classifyProviderError` tells an
   empty balance, a spent Claude usage window and a lost network apart.
 
   ```ts
@@ -104,11 +105,11 @@ variable names: `WORKING_DIR`, `WORKSPACE`, `LLM_BINDING` (`openai` or
 `EMBEDDING_MODEL`, `EMBEDDING_DIM`, `EMBEDDING_SEND_DIM`,
 `EMBEDDING_TOKEN_LIMIT` (unset: texts are still cut at 8192 tokens), `EMBEDDING_BINDING_HOST`, `EMBEDDING_BINDING_API_KEY`
 (keys fall back to `OPENAI_API_KEY`), and whatever the `LightRAG` class reads
-itself (`MAX_ASYNC`, `MAX_PARALLEL_INSERT`, `CHUNK_SIZE`, `TOP_K`, ...). The
-personal vault's setup, for example:
+itself (`MAX_ASYNC`, `MAX_PARALLEL_INSERT`, `CHUNK_SIZE`, `TOP_K`, ...). For
+example, Claude for extraction and OpenAI for embeddings:
 
 ```sh
-WORKING_DIR=~/.claude-home/rag WORKSPACE=personal-vault \
+WORKING_DIR=./rag_storage WORKSPACE=notes \
 LLM_BINDING=claude-complete LLM_MODEL=haiku \
 EMBEDDING_MODEL=text-embedding-3-large EMBEDDING_DIM=1536 EMBEDDING_SEND_DIM=true \
 MAX_ASYNC=4 EMBEDDING_FUNC_MAX_ASYNC=4 MAX_PARALLEL_INSERT=2 \

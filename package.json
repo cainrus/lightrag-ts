@@ -1,6 +1,6 @@
 {
   "name": "lightrag-ts",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "TypeScript port of HKUDS/LightRAG v1.4.16: graph-based RAG that reads and writes the upstream storage format",
   "license": "MIT",
   "type": "module",
@@ -14,7 +14,7 @@
     }
   },
   "bin": {
-    "lightrag-ts": "./dist/cli.js"
+    "lightrag-ts": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -23,6 +23,7 @@
     "SCOPE.md"
   ],
   "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "node --test 'test/**/*.test.ts'",
@@ -34,7 +35,8 @@
     "parity:query": "node parity/query.ts keys",
     "parity:query-context": "node parity/query-context.ts",
     "smoke:live": "node parity/live-smoke.ts",
-    "cli": "node src/cli.ts"
+    "cli": "node src/cli.ts",
+    "prepublishOnly": "npm run clean && npm run typecheck && npm run build"
   },
   "keywords": [
     "rag",
@@ -46,13 +48,14 @@
   "devDependencies": {
     "@types/node": "^24.19.2",
     "@types/pako": "^2.0.4",
-    "graphology-types": "^0.24.8",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "graphology": "^0.26.0",
+    "graphology-types": "^0.24.8",
     "js-tiktoken": "1.0.21",
     "pako": "2.1.0",
     "saxes": "^6.0.0"
-  }
+  },
+  "author": "Sergei Tarassov <cainrus@gmail.com>"
 }
