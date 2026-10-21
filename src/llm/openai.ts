@@ -196,16 +196,24 @@ export type OpenAIClient = {
 
 /** openai.py create_openai_async_client (not Azure). */
 export function create_openai_async_client(
-  opts: { api_key?: string | null | undefined; base_url?: string | null | undefined; timeout?: number | null | undefined; client_configs?: OpenAIClientConfigs | null | undefined } = {},
+  opts: {
+    api_key?: string | null | undefined;
+    base_url?: string | null | undefined;
+    timeout?: number | null | undefined;
+    client_configs?: OpenAIClientConfigs | null | undefined;
+    /** port-only: the environment OPENAI_API_KEY / OPENAI_API_BASE come from (upstream: os.environ) */
+    env?: NodeJS.ProcessEnv | undefined;
+  } = {},
 ): OpenAIClient {
+  const env = opts.env ?? process.env;
   let apiKey = opts.api_key;
   if (!apiKey) {
-    apiKey = process.env.OPENAI_API_KEY;
+    apiKey = env.OPENAI_API_KEY;
     // os.environ["OPENAI_API_KEY"] raises KeyError when it is unset
     if (apiKey === undefined) throw named(new Error("'OPENAI_API_KEY'"), 'KeyError');
   }
   const configs = opts.client_configs ?? {};
-  const baseUrl = opts.base_url ?? process.env.OPENAI_API_BASE ?? DEFAULT_OPENAI_BASE_URL;
+  const baseUrl = opts.base_url ?? env.OPENAI_API_BASE ?? DEFAULT_OPENAI_BASE_URL;
   const clientTimeout = opts.timeout ?? configs.timeout ?? DEFAULT_TIMEOUT_SECONDS;
   const maxRetries = configs.max_retries ?? DEFAULT_MAX_RETRIES;
   const headers: Record<string, string> = {
@@ -415,6 +423,8 @@ export type OpenAICompleteOptions = {
   /** dropped, as upstream pops it */
   hashing_kv?: unknown;
   openai_client_configs?: OpenAIClientConfigs;
+  /** port-only: the environment the client reads OPENAI_API_KEY / OPENAI_API_BASE from (default process.env) */
+  env?: NodeJS.ProcessEnv;
   /** replaces the built message list, as upstream's `kwargs.pop("messages", messages)` */
   messages?: Record<string, unknown>[];
   /** any chat.completions.create parameter (max_tokens, temperature, ...) or extra_headers / extra_query / extra_body */
@@ -448,12 +458,13 @@ async function completeOnce(model: string, prompt: string, opts: OpenAICompleteO
     keyword_extraction: keywordExtraction = false,
     hashing_kv: _hashingKv,
     openai_client_configs: clientConfigs = {},
+    env,
     messages: messagesOverride,
     ...rest
   } = opts;
   const kwargs: Record<string, unknown> = { ...rest };
   if (keywordExtraction) kwargs.response_format = GPT_KEYWORD_EXTRACTION_FORMAT;
-  const client = create_openai_async_client({ api_key: apiKey, base_url: baseUrl, timeout, client_configs: clientConfigs });
+  const client = create_openai_async_client({ api_key: apiKey, base_url: baseUrl, timeout, client_configs: clientConfigs, env });
 
   let messages: Record<string, unknown>[] = [];
   if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
@@ -687,6 +698,8 @@ export type OpenAIEmbedOptions = {
   document_prefix?: string | null;
   /** port-only: overrides EMBEDDING_USE_BASE64 for this call */
   use_base64?: boolean;
+  /** port-only: the environment the client reads OPENAI_API_KEY / OPENAI_API_BASE from (default process.env) */
+  env?: NodeJS.ProcessEnv;
 };
 
 const embedTokenizers = new Map<string, Tokenizer>();
@@ -723,7 +736,7 @@ async function embedOnce(input: string[], opts: OpenAIEmbedOptions): Promise<Flo
       return tokens.length > maxTokens ? enc.decode(tokens.slice(0, maxTokens)) : t;
     });
   }
-  const client = create_openai_async_client({ api_key: opts.api_key, base_url: opts.base_url, client_configs: opts.client_configs });
+  const client = create_openai_async_client({ api_key: opts.api_key, base_url: opts.base_url, client_configs: opts.client_configs, env: opts.env });
   const b64 = opts.use_base64 ?? EMBEDDING_USE_BASE64;
   const body: Record<string, unknown> = { input: texts, model };
   if (opts.embedding_dim !== null && opts.embedding_dim !== undefined) body.dimensions = opts.embedding_dim;

@@ -530,13 +530,35 @@ Deliberate differences:
 The CLI (`src/cli.ts`, bin `lightrag-ts`) reads upstream's server variable
 names, only those its commands need. Where it parts from the server:
 `LLM_BINDING` defaults to `openai` (upstream: `ollama`, not ported) and
-`LLM_MODEL` to `gpt-4o-mini` (`haiku` for `claude-complete`); the server's
-OpenAI embedding wrapper does not hand `max_token_size` to `openai_embed`, so
-it never truncates, while the CLI does, as the vault does
-(`EMBEDDING_TOKEN_LIMIT`, default 8192, also LightRAG's
-`embedding_token_limit`, which only gates a warning). `test/cli.test.ts`
-runs insert / status / query (the repeat answered from the LLM cache) /
-delete against a fake server and the fake bridge, and both stops.
+`LLM_MODEL` to `gpt-4o-mini` (`haiku` for `claude-complete`). The rest
+follows the vault (`vault-rag-ingest.py`), the CLI's one real caller:
+
+- **Embedding limit.** The EmbeddingFunc carries no `max_token_size`, so
+  LightRAG's `embedding_token_limit` stays `None` (and with it the summary
+  length check of `operate.py` ~371), while every call cuts its texts at
+  `openai_embed`'s own 8192 tokens, as the vault's lambda does.
+  `EMBEDDING_TOKEN_LIMIT`, when set, becomes the EmbeddingFunc's limit.
+  (The server's wrapper never truncates.)
+- **Document paths.** An inserted file is stored under its path relative to
+  the current directory (the vault passes the path relative to the vault), so
+  `notes/a.md` and `daily/a.md` stay two paths; `--file-path`, given once per
+  input like `--id`, overrides it. Stdin is `unknown_source`, as upstream.
+- **Credentials.** `OPENAI_API_KEY` / `OPENAI_API_BASE` are read from the
+  environment the CLI is given (`main(argv, { env })`), not from
+  `process.env`: the adapters take a port-only `env` option for the client
+  (upstream reads `os.environ`, which is the same thing in a Python process).
+- **Stops.** The first provider refusal (billing, a spent usage window, no
+  network) stops the insert, as the vault's `guard_task` does: the pipeline is
+  asked to cancel and every later LLM or embedding call fails at once with the
+  recorded error. Upstream keeps going: each call spends its own retries (9
+  requests per call on `insufficient_quota`), document after document. When
+  calls already in flight fail with different kinds, the exit code follows the
+  vault's order, billing > usage window > network.
+
+`test/cli.test.ts` runs insert / status / query (the repeat answered from the
+LLM cache) / delete against a fake server and the fake bridge, the stops
+(four documents on an empty balance send 9 requests, not 36), same-named
+files in two folders, and the key taken from the passed environment.
 
 ## Not ported
 

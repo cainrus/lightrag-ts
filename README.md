@@ -90,7 +90,7 @@ re-ingesting anything.
 ## Command line
 
 ```sh
-lightrag-ts insert notes/*.md          # or stdin: ... | lightrag-ts insert --file-path note.md
+lightrag-ts insert notes/*.md          # stored as notes/<name>.md; stdin: ... | lightrag-ts insert --file-path note.md
 lightrag-ts query "What did I decide about X?" --mode mix
 lightrag-ts delete --doc-id doc-0123... [--delete-llm-cache]
 lightrag-ts status                     # documents by status, graph and vector counts
@@ -101,7 +101,7 @@ environment, `.env` in the current directory first, with upstream's server
 variable names: `WORKING_DIR`, `WORKSPACE`, `LLM_BINDING` (`openai` or
 `claude-complete`), `LLM_MODEL`, `LLM_BINDING_HOST`, `LLM_BINDING_API_KEY`,
 `EMBEDDING_MODEL`, `EMBEDDING_DIM`, `EMBEDDING_SEND_DIM`,
-`EMBEDDING_TOKEN_LIMIT`, `EMBEDDING_BINDING_HOST`, `EMBEDDING_BINDING_API_KEY`
+`EMBEDDING_TOKEN_LIMIT` (unset: texts are still cut at 8192 tokens), `EMBEDDING_BINDING_HOST`, `EMBEDDING_BINDING_API_KEY`
 (keys fall back to `OPENAI_API_KEY`), and whatever the `LightRAG` class reads
 itself (`MAX_ASYNC`, `MAX_PARALLEL_INSERT`, `CHUNK_SIZE`, `TOP_K`, ...). The
 personal vault's setup, for example:
@@ -115,8 +115,9 @@ lightrag-ts status
 ```
 
 Exit codes: 0 done, 1 error, 2 usage, 3 no credit (OpenAI
-`insufficient_quota`), 4 the Claude usage window is spent, 5 no network; an
-insert whose documents failed for one of those reasons exits the same way.
+`insufficient_quota`), 4 the Claude usage window is spent, 5 no network. The
+first such refusal stops an insert; when several kinds meet, billing wins, then
+the usage window.
 
 ## Parity approach
 
