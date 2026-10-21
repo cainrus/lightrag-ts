@@ -1,0 +1,280 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d11" for="edge" attr.name="created_at" attr.type="long" />
+  <key id="d10" for="edge" attr.name="file_path" attr.type="string" />
+  <key id="d9" for="edge" attr.name="source_id" attr.type="string" />
+  <key id="d8" for="edge" attr.name="keywords" attr.type="string" />
+  <key id="d7" for="edge" attr.name="description" attr.type="string" />
+  <key id="d6" for="edge" attr.name="weight" attr.type="double" />
+  <key id="d5" for="node" attr.name="created_at" attr.type="long" />
+  <key id="d4" for="node" attr.name="file_path" attr.type="string" />
+  <key id="d3" for="node" attr.name="source_id" attr.type="string" />
+  <key id="d2" for="node" attr.name="description" attr.type="string" />
+  <key id="d1" for="node" attr.name="entity_type" attr.type="string" />
+  <key id="d0" for="node" attr.name="entity_id" attr.type="string" />
+  <graph edgedefault="undirected">
+    <node id="Alice">
+      <data key="d0">Alice</data>
+      <data key="d1">person</data>
+      <data key="d2">Founder of Acme Robotics.</data>
+      <data key="d3">chunk-060f67a45683be0da2f1350c3f09dd9a&lt;SEP&gt;chunk-d78fb92d8851a3e1edb16171c6f79faa</data>
+      <data key="d4">notes/acme.md&lt;SEP&gt;notes/places.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Acme Robotics">
+      <data key="d0">Acme Robotics</data>
+      <data key="d1">organization</data>
+      <data key="d2">Robotics company in Tallinn building warehouse robots.</data>
+      <data key="d3">chunk-060f67a45683be0da2f1350c3f09dd9a&lt;SEP&gt;chunk-f367838ccd968d7bd6daaa083df7b44c&lt;SEP&gt;chunk-a54845328b88c555b543c195fac8e014</data>
+      <data key="d4">notes/acme.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Tallinn">
+      <data key="d0">Tallinn</data>
+      <data key="d1">location</data>
+      <data key="d2">Capital of Estonia, home of Acme Robotics.</data>
+      <data key="d3">chunk-060f67a45683be0da2f1350c3f09dd9a&lt;SEP&gt;chunk-96f7274872aab5f26daf9fb1f6792b8d</data>
+      <data key="d4">notes/acme.md&lt;SEP&gt;notes/places.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Bob">
+      <data key="d0">Bob</data>
+      <data key="d1">person</data>
+      <data key="d2">Chief engineer at Acme Robotics.</data>
+      <data key="d3">chunk-f367838ccd968d7bd6daaa083df7b44c</data>
+      <data key="d4">notes/acme.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Mover">
+      <data key="d0">Mover</data>
+      <data key="d1">artifact</data>
+      <data key="d2">Warehouse robot designed by Bob.</data>
+      <data key="d3">chunk-f367838ccd968d7bd6daaa083df7b44c&lt;SEP&gt;chunk-bc4f7a316df58f3a9e11c70c59646171</data>
+      <data key="d4">notes/acme.md&lt;SEP&gt;notes/robots.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Lidar">
+      <data key="d0">Lidar</data>
+      <data key="d1">artifact</data>
+      <data key="d2">Sensor used by the Mover robot.</data>
+      <data key="d3">chunk-bc4f7a316df58f3a9e11c70c59646171&lt;SEP&gt;chunk-d418a7a3cc8363b8282f8b7752c034a3</data>
+      <data key="d4">notes/robots.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Rust">
+      <data key="d0">Rust</data>
+      <data key="d1">concept</data>
+      <data key="d2">Programming language used for the planner and at meetups.</data>
+      <data key="d3">chunk-bc4f7a316df58f3a9e11c70c59646171&lt;SEP&gt;chunk-73792f3393e1ec19701e6931b2d617d0&lt;SEP&gt;chunk-d78fb92d8851a3e1edb16171c6f79faa</data>
+      <data key="d4">notes/robots.md&lt;SEP&gt;notes/борис.md&lt;SEP&gt;notes/places.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Борис">
+      <data key="d0">Борис</data>
+      <data key="d1">person</data>
+      <data key="d2">Переехал в Тарту и открыл кафе.</data>
+      <data key="d3">chunk-85c9cc4bdcd27fa4dac77fccfcd7fd56&lt;SEP&gt;chunk-d78fb92d8851a3e1edb16171c6f79faa</data>
+      <data key="d4">notes/борис.md&lt;SEP&gt;notes/places.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Тарту">
+      <data key="d0">Тарту</data>
+      <data key="d1">location</data>
+      <data key="d2">Университетский город Эстонии.</data>
+      <data key="d3">chunk-85c9cc4bdcd27fa4dac77fccfcd7fd56&lt;SEP&gt;chunk-96f7274872aab5f26daf9fb1f6792b8d&lt;SEP&gt;chunk-d78fb92d8851a3e1edb16171c6f79faa</data>
+      <data key="d4">notes/борис.md&lt;SEP&gt;notes/places.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Кофе и код">
+      <data key="d0">Кофе и код</data>
+      <data key="d1">organization</data>
+      <data key="d2">Кафе Бориса с митапами по Rust.</data>
+      <data key="d3">chunk-85c9cc4bdcd27fa4dac77fccfcd7fd56&lt;SEP&gt;chunk-73792f3393e1ec19701e6931b2d617d0</data>
+      <data key="d4">notes/борис.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Estonia">
+      <data key="d0">Estonia</data>
+      <data key="d1">location</data>
+      <data key="d2">Country with Tallinn and Tartu.</data>
+      <data key="d3">chunk-96f7274872aab5f26daf9fb1f6792b8d</data>
+      <data key="d4">notes/places.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Eve">
+      <data key="d0">Eve</data>
+      <data key="d1">person</data>
+      <data key="d2">Auditor of Acme's supply chain.</data>
+      <data key="d3">chunk-a54845328b88c555b543c195fac8e014</data>
+      <data key="d4">notes/acme.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Shenzhen">
+      <data key="d0">Shenzhen</data>
+      <data key="d1">location</data>
+      <data key="d2">Where robot parts come from.</data>
+      <data key="d3">chunk-a54845328b88c555b543c195fac8e014&lt;SEP&gt;chunk-d418a7a3cc8363b8282f8b7752c034a3&lt;SEP&gt;chunk-00000000000000000000000000000000</data>
+      <data key="d4">notes/acme.md&lt;SEP&gt;notes/robots.md&lt;SEP&gt;notes/missing.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Supply chain">
+      <data key="d0">Supply chain</data>
+      <data key="d1">concept</data>
+      <data key="d2">Acme's parts pipeline.</data>
+      <data key="d3">chunk-a54845328b88c555b543c195fac8e014</data>
+      <data key="d4">notes/acme.md</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <node id="Quote &quot;Q&quot; &amp; &lt;tag&gt;">
+      <data key="d0">Quote "Q" &amp; &lt;tag&gt;</data>
+      <data key="d1">concept</data>
+      <data key="d2">Has "quotes", a back\slash and a tab	here.</data>
+      <data key="d3">chunk-6ca600f6ce94d75f10371d6653a36c86</data>
+      <data key="d4">unknown_source</data>
+      <data key="d5">1759999900</data>
+    </node>
+    <edge source="Alice" target="Acme Robotics">
+      <data key="d6">2.0</data>
+      <data key="d7">Alice founded Acme Robotics.</data>
+      <data key="d8">founding</data>
+      <data key="d9">chunk-060f67a45683be0da2f1350c3f09dd9a</data>
+      <data key="d10">notes/acme.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Alice" target="Борис">
+      <data key="d6">1.0</data>
+      <data key="d7">Alice met Борис at a meetup.</data>
+      <data key="d8">meetup</data>
+      <data key="d9">chunk-d78fb92d8851a3e1edb16171c6f79faa</data>
+      <data key="d10">notes/places.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Alice" target="Rust">
+      <data key="d7">Alice attends Rust meetups (edge stored without weight).</data>
+      <data key="d8">meetup</data>
+      <data key="d9">chunk-d78fb92d8851a3e1edb16171c6f79faa</data>
+      <data key="d10">notes/places.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Alice" target="Quote &quot;Q&quot; &amp; &lt;tag&gt;">
+      <data key="d6">1.0</data>
+      <data key="d7">Quoted entity relates to Alice.</data>
+      <data key="d8">edge case</data>
+      <data key="d9">chunk-6ca600f6ce94d75f10371d6653a36c86</data>
+      <data key="d10">unknown_source</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Acme Robotics" target="Tallinn">
+      <data key="d6">1.0</data>
+      <data key="d7">Acme Robotics is based in Tallinn.</data>
+      <data key="d8">headquarters</data>
+      <data key="d9">chunk-060f67a45683be0da2f1350c3f09dd9a</data>
+      <data key="d10">notes/acme.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Acme Robotics" target="Bob">
+      <data key="d6">1.5</data>
+      <data key="d7">Acme hired Bob.</data>
+      <data key="d8">employment</data>
+      <data key="d9">chunk-f367838ccd968d7bd6daaa083df7b44c</data>
+      <data key="d10">notes/acme.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Acme Robotics" target="Eve">
+      <data key="d6">1.0</data>
+      <data key="d7">Eve audits Acme.</data>
+      <data key="d8">audit</data>
+      <data key="d9">chunk-a54845328b88c555b543c195fac8e014</data>
+      <data key="d10">notes/acme.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Tallinn" target="Estonia">
+      <data key="d6">3.0</data>
+      <data key="d7">Tallinn is the capital of Estonia.</data>
+      <data key="d8">capital</data>
+      <data key="d9">chunk-96f7274872aab5f26daf9fb1f6792b8d</data>
+      <data key="d10">notes/places.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Bob" target="Mover">
+      <data key="d6">1.0</data>
+      <data key="d7">Bob designed the Mover.</data>
+      <data key="d8">design</data>
+      <data key="d9">chunk-f367838ccd968d7bd6daaa083df7b44c</data>
+      <data key="d10">notes/acme.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Mover" target="Lidar">
+      <data key="d6">1.0</data>
+      <data key="d7">The Mover uses lidar.</data>
+      <data key="d8">sensor</data>
+      <data key="d9">chunk-bc4f7a316df58f3a9e11c70c59646171</data>
+      <data key="d10">notes/robots.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Mover" target="Rust">
+      <data key="d6">0.7</data>
+      <data key="d7">The Mover planner is written in Rust.</data>
+      <data key="d8">software</data>
+      <data key="d9">chunk-bc4f7a316df58f3a9e11c70c59646171</data>
+      <data key="d10">notes/robots.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Lidar" target="Shenzhen">
+      <data key="d6">1.0</data>
+      <data key="d7">Lidar sensors come from Shenzhen.</data>
+      <data key="d8">sourcing</data>
+      <data key="d9">chunk-d418a7a3cc8363b8282f8b7752c034a3&lt;SEP&gt;chunk-00000000000000000000000000000000</data>
+      <data key="d10">notes/robots.md&lt;SEP&gt;notes/missing.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Rust" target="Кофе и код">
+      <data key="d6">1.0</data>
+      <data key="d7">В кафе проходят митапы по Rust.</data>
+      <data key="d8">митапы</data>
+      <data key="d9">chunk-73792f3393e1ec19701e6931b2d617d0</data>
+      <data key="d10">notes/борис.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Борис" target="Тарту">
+      <data key="d6">1.0</data>
+      <data key="d7">Борис переехал в Тарту.</data>
+      <data key="d8">переезд</data>
+      <data key="d9">chunk-85c9cc4bdcd27fa4dac77fccfcd7fd56</data>
+      <data key="d10">notes/борис.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Борис" target="Кофе и код">
+      <data key="d6">2.0</data>
+      <data key="d7">Борис открыл кафе.</data>
+      <data key="d8">основание</data>
+      <data key="d9">chunk-85c9cc4bdcd27fa4dac77fccfcd7fd56</data>
+      <data key="d10">notes/борис.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Тарту" target="Estonia">
+      <data key="d6">1.0</data>
+      <data key="d7">Tartu is in Estonia.</data>
+      <data key="d8">geography</data>
+      <data key="d9">chunk-96f7274872aab5f26daf9fb1f6792b8d</data>
+      <data key="d10">notes/places.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Eve" target="Supply chain">
+      <data key="d6">1.0</data>
+      <data key="d7">Eve audits the supply chain.</data>
+      <data key="d8">audit</data>
+      <data key="d9">chunk-a54845328b88c555b543c195fac8e014</data>
+      <data key="d10">notes/acme.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+    <edge source="Shenzhen" target="Supply chain">
+      <data key="d6">1.0</data>
+      <data key="d7">Parts come from Shenzhen.</data>
+      <data key="d8">sourcing</data>
+      <data key="d9">chunk-a54845328b88c555b543c195fac8e014&lt;SEP&gt;chunk-d418a7a3cc8363b8282f8b7752c034a3</data>
+      <data key="d10">notes/acme.md&lt;SEP&gt;notes/robots.md</data>
+      <data key="d11">1759999950</data>
+    </edge>
+  </graph>
+</graphml>
