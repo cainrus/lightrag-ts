@@ -349,9 +349,13 @@ Deliberate differences:
 - **The rebuild commits in input order**: the reads and LLM summaries of
   `rebuild_knowledge_from_chunks` run `llm_model_max_async * 2` at once, each
   rebuild's writes (chunk list, node, vectors) apply in order, entities first.
-  A failing rebuild is reported and skipped, as upstream does. Two relations
-  that both create the same missing endpoint: upstream iterates the set literal
-  `{src, tgt}`; TS creates `src` first.
+  A failing rebuild is reported and skipped, as upstream does. A rebuilt
+  relation whose two endpoints are both missing creates them in the order of
+  the set display `{src, tgt}` upstream (operate.py:1510), i.e. string-hash
+  order, which varies per process; TS creates `src` first. The harness pins
+  upstream to that order: `pipeline_parity.py` recompiles
+  `_rebuild_single_relationship` with an ordered pair (a set display is not
+  reached by the `set` replacement below).
 - **Tracebacks**: where upstream appends `traceback.format_exc()` to the
   pipeline history, TS appends the JS stack (the comparisons skip both).
 - **Duplicate records** quote the original's status as upstream's f-string

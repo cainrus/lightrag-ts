@@ -18,6 +18,9 @@ upstream's process, not its code:
   rebuild, set-ordered deletes, ...), whose order follows the per-process
   string hash seed; insertion order is one of the orders a run can produce,
   and the one TS uses;
+- the `{src, tgt}` set display in _rebuild_single_relationship (which endpoint
+  a rebuild creates first when both are missing) is not reached by that patch:
+  the function is recompiled with an ordered pair, src first;
 - one task at a time: max_parallel_insert=1 and operate's semaphores at 1, so
   merge and rebuild writes land in task order (see SCOPE.md, B2/B4).
 """
@@ -157,6 +160,7 @@ def patch_process(sequential=True):
     import lightrag.lightrag as lr
 
     lr.datetime = FixedDatetime
+    pin_rebuild_endpoint_order()
     if sequential:
         from lightrag import operate
 
@@ -173,6 +177,29 @@ def patch_process(sequential=True):
 
         shim.wait = ordered_wait
         operate.asyncio = shim
+
+
+def pin_rebuild_endpoint_order():
+    """_rebuild_single_relationship creates missing endpoints in `for node_id in
+    {src, tgt}:`. A set display is built by the interpreter, not by the `set`
+    name the OrderedSet patch replaces, so the order follows the string hash
+    seed and a rebuild with both ends missing creates them in either order.
+    Recompile that one function with the literal as an insertion-ordered pair
+    (src first, as TS does)."""
+    import ast
+    import inspect
+
+    from lightrag import operate
+
+    lines, start = inspect.getsourcelines(operate._rebuild_single_relationship)
+    src = "".join(lines)
+    old = "for node_id in {src, tgt}:"
+    if src.count(old) != 1:
+        raise RuntimeError("pipeline_parity: _rebuild_single_relationship changed upstream; re-check the {src, tgt} pin")
+    tree = ast.increment_lineno(ast.parse(src.replace(old, "for node_id in dict.fromkeys((src, tgt)):")), start - 1)
+    ns = {}
+    exec(compile(tree, inspect.getsourcefile(operate), "exec"), operate.__dict__, ns)
+    operate._rebuild_single_relationship = ns["_rebuild_single_relationship"]
 
 
 # ----------------------------------------------------------------- stand-ins
