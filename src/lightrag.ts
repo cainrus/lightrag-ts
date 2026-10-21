@@ -15,6 +15,7 @@ import {
   type DocProcessingStatus,
   DocStatus,
   type DocStatusValue,
+  edgePairKey,
   type EmbeddingFunc,
   type GlobalConfig,
   makeQueryParam,
@@ -1931,7 +1932,7 @@ export class LightRAG implements LightRAGFields {
             const pairs = docRelations!.relation_pairs as [string, string][];
             const edges = await graph.get_edges_batch(pairs.map((p) => ({ src: p[0], tgt: p[1] })));
             for (const [src, tgt] of pairs) {
-              const ed = edges.get(`${src}\u0000${tgt}`);
+              const ed = edges.get(edgePairKey(src, tgt));
               if (!ed || !pyTruthy(ed)) continue;
               if (!('source' in ed)) ed.source = src;
               if (!('target' in ed)) ed.target = tgt;
