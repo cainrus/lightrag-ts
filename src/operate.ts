@@ -338,6 +338,8 @@ export async function extractEntities(
   const log = opts.log ?? (() => {});
   if (status?.cancellation_requested) throw new PipelineCancelledException('User cancelled during entity extraction');
   const ordered = chunks instanceof Map ? [...chunks] : Object.entries(chunks);
+  // upstream hands the (empty) task list to asyncio.wait, which raises
+  if (!ordered.length) throw pyError('ValueError', 'Set of Tasks/Futures is empty.');
   const prompts = (content: string) => buildExtractionPrompts(content, globalConfig.addon_params);
   const tupleDelimiter = PROMPTS.DEFAULT_TUPLE_DELIMITER;
   const completionDelimiter = PROMPTS.DEFAULT_COMPLETION_DELIMITER;
@@ -1602,4 +1604,504 @@ async function mergeLocked(
     }
   }
   say(`Completed merging: ${processedEntities.length} entities, ${allAddedEntities.length} extra entities, ${processedEdges.length} relations`);
+}
+
+// ---------------------------------------------------------------- rebuild (delete path, B4)
+
+/** The KV reads the rebuild makes: text chunks (file path, llm_cache_list) and the LLM cache. */
+export type RebuildKv = {
+  get_by_id(id: string): Promise<Record<string, unknown> | null>;
+  get_by_ids(ids: string[]): Promise<(Record<string, unknown> | null)[]>;
+};
+
+export type RebuildOptions = {
+  pipelineStatus?: PipelineStatus;
+  entityChunksStorage?: MergeKv | null;
+  relationChunksStorage?: MergeKv | null;
+  /** port-only: `int(time.time())` for created_at */
+  clock?: Clock;
+  /** port-only: rebuilds preparing at once; default llm_model_max_async * 2 */
+  maxConcurrency?: number;
+  log?: MergeLog;
+};
+
+type CachedResult = [string, number];
+
+/**
+ * operate._get_cached_extraction_results: chunk id -> [(extraction text, create_time)],
+ * each list oldest first, chunks ordered by their oldest entry (stable sorts).
+ * Upstream iterates Python sets here; insertion order stands in for them.
+ */
+export async function getCachedExtractionResults(
+  llmResponseCache: RebuildKv,
+  chunkIds: ReadonlySet<string>,
+  textChunksStorage: RebuildKv,
+  log: MergeLog = () => {},
+): Promise<Map<string, CachedResult[]>> {
+  const cached = new Map<string, CachedResult[]>();
+  const allCacheIds = new Set<string>();
+  for (const chunkData of await textChunksStorage.get_by_ids([...chunkIds])) {
+    if (chunkData && typeof chunkData === 'object' && !Array.isArray(chunkData)) {
+      const list = chunkData.llm_cache_list as string[] | undefined;
+      if (list && list.length) for (const id of list) allCacheIds.add(id);
+    } else log('warning', `Chunk data is invalid or None: ${chunkData === null ? 'None' : String(chunkData)}`);
+  }
+  if (!allCacheIds.size) {
+    log('warning', `No LLM cache IDs found for ${chunkIds.size} chunk IDs`);
+    return cached;
+  }
+  let valid = 0;
+  for (const entry of await llmResponseCache.get_by_ids([...allCacheIds])) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    if (entry.cache_type !== 'extract' || !chunkIds.has(entry.chunk_id as string)) continue;
+    const chunkId = entry.chunk_id as string;
+    valid++;
+    const list = cached.get(chunkId) ?? [];
+    list.push([entry.return as string, (entry.create_time as number | undefined) ?? 0]);
+    cached.set(chunkId, list);
+  }
+  const earliest = new Map<string, number>();
+  for (const [chunkId, list] of cached) {
+    list.sort((a, b) => a[1] - b[1]);
+    earliest.set(chunkId, list[0]![1]);
+  }
+  const sorted = [...cached.keys()].sort((a, b) => earliest.get(a)! - earliest.get(b)!);
+  const out = new Map<string, CachedResult[]>();
+  for (const k of sorted) out.set(k, cached.get(k)!);
+  log('info', `Found ${valid} valid cache entries, ${out.size} chunks with results`);
+  return out;
+}
+
+/** Keep the record list with the longer first description; the first one seen wins a tie. */
+function keepLonger<T extends { description?: string }>(into: Map<string, T[]>, key: string, list: T[]): void {
+  const have = into.get(key);
+  if (!have || have.length === 0) {
+    into.set(key, [...(have ?? []), ...list]);
+    return;
+  }
+  if (pyLen(list[0]?.description ?? '') > pyLen(have[0]?.description ?? '')) into.set(key, [...list]);
+}
+
+/** One rebuild: reads and LLM work first (concurrent), then its writes (in order). */
+type RebuildPlan = { pre: () => Promise<void>; error?: unknown; commit?: () => Promise<void> };
+
+/** Upstream's `", ".join(...)`/f-string of a value that may be None. */
+const pyStrOrNone = (v: unknown) => (v === null || v === undefined ? 'None' : String(v));
+
+/**
+ * operate.rebuild_knowledge_from_chunks: entities and relations that lost some
+ * of their chunks get their descriptions rebuilt from the cached extractions of
+ * the chunks they keep (no extraction call; summaries go through the LLM cache).
+ *
+ * Upstream runs one task per entity / relation (llm_model_max_async * 2 at once,
+ * keyed locks), so its writes land in completion order. Here the reads and LLM
+ * summaries run concurrently and each rebuild's writes are applied in input
+ * order (entities, then relations): upstream's result with the tasks run one at
+ * a time. A rebuild that fails is reported and skipped, as upstream does.
+ */
+export async function rebuildKnowledgeFromChunks(
+  entitiesToRebuild: ReadonlyMap<string, string[]>,
+  relationshipsToRebuild: ReadonlyMap<string, string[]>,
+  knowledgeGraphInst: BaseGraphStorage,
+  entitiesVdb: BaseVectorStorage | null,
+  relationshipsVdb: BaseVectorStorage | null,
+  textChunksStorage: RebuildKv,
+  llmResponseCache: (RebuildKv & LlmResponseCache) | null,
+  globalConfig: MergeConfig,
+  opts: RebuildOptions = {},
+): Promise<void> {
+  if (!entitiesToRebuild.size && !relationshipsToRebuild.size) return;
+  return withGraphLock(knowledgeGraphInst, () =>
+    rebuildLocked(entitiesToRebuild, relationshipsToRebuild, knowledgeGraphInst, entitiesVdb, relationshipsVdb, textChunksStorage, llmResponseCache, globalConfig, opts),
+  );
+}
+
+async function rebuildLocked(
+  entitiesToRebuild: ReadonlyMap<string, string[]>,
+  relationshipsToRebuild: ReadonlyMap<string, string[]>,
+  kg: BaseGraphStorage,
+  entitiesVdb: BaseVectorStorage | null,
+  relationshipsVdb: BaseVectorStorage | null,
+  textChunksStorage: RebuildKv,
+  llmResponseCache: (RebuildKv & LlmResponseCache) | null,
+  gc: MergeConfig,
+  opts: RebuildOptions,
+): Promise<void> {
+  const status = opts.pipelineStatus;
+  const log = opts.log ?? (() => {});
+  const clock = opts.clock ?? systemClock;
+  const say = (level: 'info' | 'warning', m: string) => {
+    log(level, m);
+    pushStatus(status, m);
+  };
+
+  const allReferenced = new Set<string>();
+  for (const ids of entitiesToRebuild.values()) for (const c of ids) allReferenced.add(c);
+  for (const ids of relationshipsToRebuild.values()) for (const c of ids) allReferenced.add(c);
+  say('info', `Rebuilding knowledge from ${allReferenced.size} cached chunk extractions (parallel processing)`);
+
+  // upstream passes the cache storage unchecked; a missing one raises there
+  if (!llmResponseCache) throw pyError('AttributeError', "'NoneType' object has no attribute 'get_by_ids'");
+  const cachedResults = await getCachedExtractionResults(llmResponseCache, allReferenced, textChunksStorage, log);
+  if (!cachedResults.size) {
+    say('warning', 'No cached extraction results found, cannot rebuild');
+    return;
+  }
+
+  const chunkEntities = new Map<string, Map<string, ExtractedEntity[]>>();
+  const chunkRelationships = new Map<string, Map<string, ExtractedRelation[]>>();
+  for (const [chunkId, results] of cachedResults) {
+    try {
+      const ents = new Map<string, ExtractedEntity[]>();
+      const rels = new Map<string, ExtractedRelation[]>();
+      chunkEntities.set(chunkId, ents);
+      chunkRelationships.set(chunkId, rels);
+      const chunkData = await textChunksStorage.get_by_id(chunkId);
+      const filePath = chunkData ? ((chunkData.file_path as string | undefined) ?? 'unknown_source') : 'unknown_source';
+      for (const [text, ts] of results) {
+        const { nodes, edges } = processExtractionResult(text, chunkId, ts, filePath, PROMPTS.DEFAULT_TUPLE_DELIMITER, PROMPTS.DEFAULT_COMPLETION_DELIMITER);
+        for (const [name, list] of nodes) keepLonger(ents, name, list);
+        for (const [k, list] of edges) keepLonger(rels, k, list);
+      }
+    } catch (e) {
+      say('info', `Failed to parse cached extraction result for chunk ${chunkId}: ${(e as Error)?.message ?? e}`);
+    }
+  }
+
+  const graphMaxAsync = (gc.llm_model_max_async ?? 4) * 2;
+  const ctx: RebuildCtx = { kg, entitiesVdb, relationshipsVdb, llmResponseCache, gc, status, log, clock, chunkEntities, chunkRelationships, ...opts };
+  const items: { label: string; plan: () => Promise<RebuildPlan> }[] = [];
+  for (const [name, chunkIds] of entitiesToRebuild) items.push({ label: `\`${name}\``, plan: () => planEntityRebuild(name, chunkIds, ctx) });
+  for (const [k, chunkIds] of relationshipsToRebuild) {
+    const [src, tgt] = edgeKeyParts(k);
+    items.push({ label: `\`${src}\`~\`${tgt}\``, plan: () => planRelationshipRebuild(src, tgt, chunkIds, ctx) });
+  }
+  say('info', `Starting parallel rebuild of ${entitiesToRebuild.size} entities and ${relationshipsToRebuild.size} relationships (async: ${graphMaxAsync})`);
+
+  let rebuiltEntities = 0;
+  let rebuiltRelationships = 0;
+  let failedEntities = 0;
+  let failedRelationships = 0;
+  const nEntities = entitiesToRebuild.size;
+  await orderedPool(
+    items.length,
+    opts.maxConcurrency ?? graphMaxAsync,
+    async (i) => {
+      try {
+        return await items[i]!.plan();
+      } catch (e) {
+        return { pre: async () => {}, error: e } satisfies RebuildPlan;
+      }
+    },
+    async (i, plan) => {
+      try {
+        await plan.pre();
+        if (plan.error !== undefined) throw plan.error;
+        await plan.commit?.();
+        if (i < nEntities) rebuiltEntities++;
+        else rebuiltRelationships++;
+      } catch (e) {
+        if (i < nEntities) failedEntities++;
+        else failedRelationships++;
+        say('info', `Failed to rebuild ${items[i]!.label}: ${(e as Error)?.message ?? e}`);
+      }
+    },
+    (_i, e) => {
+      throw e;
+    },
+  );
+
+  let msg = `KG rebuild completed: ${rebuiltEntities} entities and ${rebuiltRelationships} relationships rebuilt successfully.`;
+  if (failedEntities > 0 || failedRelationships > 0) msg += ` Failed: ${failedEntities} entities, ${failedRelationships} relationships.`;
+  say('info', msg);
+}
+
+type RebuildCtx = RebuildOptions & {
+  kg: BaseGraphStorage;
+  entitiesVdb: BaseVectorStorage | null;
+  relationshipsVdb: BaseVectorStorage | null;
+  llmResponseCache: LlmResponseCache | null;
+  gc: MergeConfig;
+  status: PipelineStatus | undefined;
+  log: MergeLog;
+  clock: Clock;
+  chunkEntities: Map<string, Map<string, ExtractedEntity[]>>;
+  chunkRelationships: Map<string, Map<string, ExtractedRelation[]>>;
+};
+
+/** The file_path list within max_file_paths, the rebuild's variant (placeholder with method and counts). */
+function limitRebuildFilePaths(paths: string[], gc: MergeConfig, label: string, log: MergeLog): string[] {
+  const maxFilePaths = gc.max_file_paths ?? DEFAULT_MAX_FILE_PATHS;
+  const placeholder = gc.file_path_more_placeholder ?? DEFAULT_FILE_PATH_MORE_PLACEHOLDER;
+  const limitMethod = gc.source_ids_limit_method;
+  const original = paths.length;
+  if (original <= maxFilePaths) return paths;
+  const kept = limitMethod === SOURCE_IDS_LIMIT_METHOD_FIFO ? paths.slice(-maxFilePaths) : paths.slice(0, maxFilePaths);
+  kept.push(`...${placeholder}...(${pyStrOrNone(limitMethod)} ${maxFilePaths}/${original})`);
+  log('info', `Limited ${label}: file_path ${original} -> ${maxFilePaths} (${pyStrOrNone(limitMethod)})`);
+  return kept;
+}
+
+/** operate._rebuild_single_entity, split into reads + summary and writes. */
+async function planEntityRebuild(entityName: string, chunkIds: string[], ctx: RebuildCtx): Promise<RebuildPlan> {
+  const { kg, gc, log } = ctx;
+  const noop: RebuildPlan = { pre: async () => {} };
+  const currentEntity = await kg.get_node(entityName);
+  if (!currentEntity || !pyTruthy(currentEntity)) return noop;
+
+  const pre = async () => {
+    if (ctx.entityChunksStorage && chunkIds.length) {
+      await ctx.entityChunksStorage.upsert({ [entityName]: { chunk_ids: chunkIds, count: chunkIds.length } });
+    }
+  };
+  const limitMethod = pyOr(gc.source_ids_limit_method, SOURCE_IDS_LIMIT_METHOD_KEEP) as string;
+  const limited = applySourceIdsLimit(chunkIds, gc.max_source_ids_per_entity, limitMethod);
+
+  const update = (finalDescription: string, entityType: string, filePaths: string[], sourceChunkIds: string[], truncation = '') => async () => {
+    try {
+      const updated: Record<string, string | number | boolean> = {
+        ...currentEntity,
+        description: finalDescription,
+        entity_type: entityType,
+        source_id: sourceChunkIds.join(GRAPH_FIELD_SEP),
+        file_path: filePaths.length ? filePaths.join(GRAPH_FIELD_SEP) : (pyGet(currentEntity, 'file_path', 'unknown_source') as string),
+        created_at: ctx.clock(),
+        truncate: truncation,
+      };
+      await kg.upsert_node(entityName, updated);
+      if (ctx.entitiesVdb) {
+        const vdb = ctx.entitiesVdb;
+        const data = {
+          [computeMdhashId(entityName, 'ent-')]: {
+            content: `${entityName}\n${finalDescription}`,
+            entity_name: entityName,
+            source_id: updated.source_id,
+            description: finalDescription,
+            entity_type: entityType,
+            file_path: updated.file_path,
+          },
+        };
+        await safeVdbOperationWithException(() => vdb.upsert(data), 'rebuild_entity_upsert', entityName, 3, 0.1, (m) => log('warning', m));
+      }
+    } catch (e) {
+      log('error', `Failed to update entity storage for \`${entityName}\`: ${(e as Error)?.message ?? e}`);
+      throw e;
+    }
+  };
+
+  const allEntityData: ExtractedEntity[] = [];
+  for (const c of limited) {
+    const recs = ctx.chunkEntities.get(c)?.get(entityName);
+    if (recs) allEntityData.push(...recs);
+  }
+
+  if (!allEntityData.length) {
+    log('warning', `No entity data found for \`${entityName}\`, trying to rebuild from relationships`);
+    const edges = await kg.get_node_edges(entityName);
+    if (!edges || !edges.length) {
+      log('warning', `No relations attached to entity \`${entityName}\``);
+      return { pre };
+    }
+    const relDescriptions: string[] = [];
+    const filePaths = new Set<string>();
+    for (const [s, t] of edges) {
+      const edge = await kg.get_edge(s, t);
+      if (!edge) continue;
+      if (pyTruthy(edge.description)) relDescriptions.push(edge.description as string);
+      if (pyTruthy(edge.file_path)) for (const fp of (edge.file_path as string).split(GRAPH_FIELD_SEP)) filePaths.add(fp);
+    }
+    const descriptionList = [...new Set(relDescriptions)];
+    let finalDescription: string;
+    try {
+      finalDescription = descriptionList.length
+        ? (await handleEntityRelationSummary('Entity', entityName, descriptionList, GRAPH_FIELD_SEP, gc, ctx.llmResponseCache, log))[0]
+        : (pyGet(currentEntity, 'description', '') as string);
+    } catch (e) {
+      return { pre, error: e };
+    }
+    const entityType = pyGet(currentEntity, 'entity_type', 'UNKNOWN') as string;
+    return { pre, commit: update(finalDescription, entityType, [...filePaths], limited) };
+  }
+
+  const descriptions: string[] = [];
+  const entityTypes: string[] = [];
+  let filePaths: string[] = [];
+  const seen = new Set<string>();
+  for (const d of allEntityData) {
+    if (d.description) descriptions.push(d.description);
+    if (d.entity_type) entityTypes.push(d.entity_type);
+    if (d.file_path && !seen.has(d.file_path)) {
+      filePaths.push(d.file_path);
+      seen.add(d.file_path);
+    }
+  }
+  filePaths = limitRebuildFilePaths(filePaths, gc, `\`${entityName}\``, log);
+  const descriptionList = [...new Set(descriptions)];
+  // `max(set(types), key=types.count)` over de-duplicated types: every count is 1,
+  // so upstream returns its set's first member; here the first one seen
+  const entityType = entityTypes.length ? entityTypes[0]! : (pyGet(currentEntity, 'entity_type', 'UNKNOWN') as string);
+  let finalDescription: string;
+  try {
+    finalDescription = descriptionList.length
+      ? (await handleEntityRelationSummary('Entity', entityName, descriptionList, GRAPH_FIELD_SEP, gc, ctx.llmResponseCache, log))[0]
+      : (pyGet(currentEntity, 'description', '') as string);
+  } catch (e) {
+    return { pre, error: e };
+  }
+  const truncation = limited.length < chunkIds.length ? `${limitMethod} ${limited.length}/${chunkIds.length}` : '';
+  const write = update(finalDescription, entityType, filePaths, limited, truncation);
+  return {
+    pre,
+    commit: async () => {
+      await write();
+      let msg = `Rebuild \`${entityName}\` from ${chunkIds.length} chunks`;
+      if (truncation) msg += ` (${truncation})`;
+      // upstream's caller passes no pipeline status here: the line is only logged
+      log('info', msg);
+    },
+  };
+}
+
+/** operate._rebuild_single_relationship, split like planEntityRebuild. */
+async function planRelationshipRebuild(srcIn: string, tgtIn: string, chunkIds: string[], ctx: RebuildCtx): Promise<RebuildPlan> {
+  const { kg, gc, log } = ctx;
+  const currentRelationship = await kg.get_edge(srcIn, tgtIn);
+  if (!currentRelationship || !pyTruthy(currentRelationship)) return { pre: async () => {} };
+
+  const pre = async () => {
+    if (ctx.relationChunksStorage && chunkIds.length) {
+      await ctx.relationChunksStorage.upsert({ [makeRelationChunkKey(srcIn, tgtIn)]: { chunk_ids: chunkIds, count: chunkIds.length } });
+    }
+  };
+  const limitMethod = pyOr(gc.source_ids_limit_method, SOURCE_IDS_LIMIT_METHOD_KEEP) as string;
+  const limited = applySourceIdsLimit(chunkIds, gc.max_source_ids_per_relation, limitMethod);
+
+  const all: ExtractedRelation[] = [];
+  for (const c of limited) {
+    const rels = ctx.chunkRelationships.get(c);
+    if (!rels) continue;
+    for (const k of [edgeKey(srcIn, tgtIn), edgeKey(tgtIn, srcIn)]) {
+      const recs = rels.get(k);
+      if (recs) all.push(...recs);
+    }
+  }
+  if (!all.length) {
+    log('warning', `No relation data found for \`${srcIn}-${tgtIn}\``);
+    return { pre };
+  }
+
+  const descriptions: string[] = [];
+  let keywords: string[] = [];
+  const weights: number[] = [];
+  let filePaths: string[] = [];
+  const seen = new Set<string>();
+  for (const r of all) {
+    if (r.description) descriptions.push(r.description);
+    if (r.keywords) keywords.push(r.keywords);
+    if (r.weight) weights.push(r.weight);
+    if (r.file_path && !seen.has(r.file_path)) {
+      filePaths.push(r.file_path);
+      seen.add(r.file_path);
+    }
+  }
+  filePaths = limitRebuildFilePaths(filePaths, gc, `\`${srcIn}\`~\`${tgtIn}\``, log);
+  const descriptionList = [...new Set(descriptions)];
+  keywords = [...new Set(keywords)];
+  // upstream: ", ".join(set(keywords)); insertion order here
+  const combinedKeywords = keywords.length ? keywords.join(', ') : (pyGet(currentRelationship, 'keywords', '') as string);
+  const weight = weights.length ? pySumFloats(weights) : (pyGet(currentRelationship, 'weight', 1.0) as number);
+  let finalDescription: string;
+  try {
+    finalDescription = descriptionList.length
+      ? (await handleEntityRelationSummary('Relation', `${srcIn}-${tgtIn}`, descriptionList, GRAPH_FIELD_SEP, gc, ctx.llmResponseCache, log))[0]
+      : (pyGet(currentRelationship, 'description', '') as string);
+  } catch (e) {
+    return { pre, error: e };
+  }
+  const truncation = limited.length < chunkIds.length ? `${limitMethod} ${limited.length}/${chunkIds.length}` : '';
+
+  const commit = async () => {
+    const updated: Record<string, string | number | boolean> = {
+      ...currentRelationship,
+      description: finalDescription ? finalDescription : (pyGet(currentRelationship, 'description', '') as string),
+      keywords: combinedKeywords,
+      weight,
+      source_id: limited.join(GRAPH_FIELD_SEP),
+      file_path: filePaths.length ? filePaths.filter((fp) => fp).join(GRAPH_FIELD_SEP) : (pyGet(currentRelationship, 'file_path', 'unknown_source') as string),
+      truncate: truncation,
+    };
+    const nodeDescription = pyTruthy(updated.description) ? (updated.description as string) : (pyGet(currentRelationship, 'description', '') as string);
+    const nodeSourceId = updated.source_id as string;
+    const nodeFilePath = updated.file_path as string;
+    // upstream iterates the set literal {src, tgt}; the order only shows when both are missing
+    for (const nodeId of [...new Set([srcIn, tgtIn])]) {
+      if (await kg.has_node(nodeId)) continue;
+      await kg.upsert_node(nodeId, {
+        entity_id: nodeId,
+        source_id: nodeSourceId,
+        description: nodeDescription,
+        entity_type: 'UNKNOWN',
+        file_path: nodeFilePath,
+        created_at: ctx.clock(),
+        truncate: '',
+      });
+      if (ctx.entityChunksStorage && limited.length) {
+        await ctx.entityChunksStorage.upsert({ [nodeId]: { chunk_ids: limited, count: limited.length } });
+      }
+      if (ctx.entitiesVdb) {
+        const vdb = ctx.entitiesVdb;
+        const data = {
+          [computeMdhashId(nodeId, 'ent-')]: {
+            content: `${nodeId}\n${nodeDescription}`,
+            entity_name: nodeId,
+            source_id: nodeSourceId,
+            entity_type: 'UNKNOWN',
+            file_path: nodeFilePath,
+          },
+        };
+        await safeVdbOperationWithException(() => vdb.upsert(data), 'rebuild_added_entity_upsert', nodeId, 3, 0.1, (m) => log('warning', m));
+      }
+    }
+    await kg.upsert_edge(srcIn, tgtIn, updated);
+
+    let [src, tgt] = [srcIn, tgtIn];
+    if (pyCompare(src, tgt) > 0) [src, tgt] = [tgt, src];
+    try {
+      if (ctx.relationshipsVdb) {
+        const vdb = ctx.relationshipsVdb;
+        const relId = computeMdhashId(src + tgt, 'rel-');
+        try {
+          await vdb.delete([relId, computeMdhashId(tgt + src, 'rel-')]);
+        } catch (e) {
+          log('debug', `Could not delete old relationship vector records ${relId}, ${computeMdhashId(tgt + src, 'rel-')}: ${(e as Error)?.message ?? e}`);
+        }
+        const data = {
+          [relId]: {
+            src_id: src,
+            tgt_id: tgt,
+            source_id: updated.source_id,
+            content: `${combinedKeywords}\t${src}\n${tgt}\n${finalDescription}`,
+            keywords: combinedKeywords,
+            description: finalDescription,
+            weight,
+            file_path: updated.file_path,
+          },
+        };
+        await safeVdbOperationWithException(() => vdb.upsert(data), 'rebuild_relationship_upsert', `${src}-${tgt}`, 3, 0.2, (m) => log('warning', m));
+      } else {
+        // upstream calls relationships_vdb.delete on None: AttributeError, caught below
+        throw pyError('AttributeError', "'NoneType' object has no attribute 'upsert'");
+      }
+    } catch (e) {
+      log('error', `Failed to rebuild relationship storage for \`${src}-${tgt}\`: ${(e as Error)?.message ?? e}`);
+      throw e;
+    }
+
+    let msg = `Rebuild \`${src}\`~\`${tgt}\` from ${chunkIds.length} chunks`;
+    if (truncation) msg += ` (${truncation})`;
+    if (limited.length < chunkIds.length) msg += ` (${limitMethod}:${limited.length}/${chunkIds.length})`;
+    log('info', msg);
+    pushStatus(ctx.status, msg);
+  };
+  return { pre, commit };
 }

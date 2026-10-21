@@ -27,6 +27,7 @@ import pytest
 import lightrag.exceptions as lr_exceptions
 import lightrag.operate as lr_operate
 import lightrag.utils as lr_utils
+import lightrag.utils_graph as lr_utils_graph
 
 ROOT = Path(os.environ.get("LIGHTRAG_TS_ROOT", Path(__file__).resolve().parents[2]))
 MANIFEST = json.loads(Path(os.environ["LIGHTRAG_TS_MANIFEST"]).read_text(encoding="utf-8"))
@@ -162,12 +163,14 @@ BRIDGE = Bridge()
 
 
 def dec(v):
-    """TS typed arrays ({"$nd": ..., "dtype"}) back to numpy, the rest as is."""
+    """TS typed arrays ({"$nd": ..., "dtype"}) back to numpy, handles TS got from us ({"$ref"}) back to the object, the rest as is."""
     if isinstance(v, list):
         return [dec(x) for x in v]
     if isinstance(v, dict):
         if "$nd" in v:
             return np.array(v["$nd"], dtype=v.get("dtype") or None)
+        if "$ref" in v and len(v) == 1:
+            return BRIDGE.handles[v["$ref"]]
         return {k: dec(x) for k, x in v.items()}
     return v
 
@@ -272,6 +275,32 @@ async_adapter(lr_operate, "_handle_entity_relation_summary", _tuple)
 async_adapter(lr_operate, "_merge_nodes_then_upsert", pre=_drop("pipeline_status_lock"))
 async_adapter(lr_operate, "_merge_edges_then_upsert", _edges_post, _drop("pipeline_status_lock", "added_entities"))
 async_adapter(lr_operate, "_perform_kg_search", _kg_search_post)
+
+# utils_graph (B4). A test may monkeypatch the helpers these call by module
+# attribute (utils_graph._edit_entity_impl, get_entity_info, ...): whatever is
+# installed at call time and is not the adapter's own goes along as a hook, and
+# TS calls it back where the Python code would have looked it up.
+_GRAPH_HOOKS = ("_edit_entity_impl", "_merge_entities_impl", "get_entity_info", "get_relation_info")
+
+
+def _with_graph_hooks(p):
+    hooks = {n: getattr(lr_utils_graph, n) for n in _GRAPH_HOOKS if getattr(lr_utils_graph, n) is not _GRAPH_INSTALLED[n]}
+    if hooks:
+        p["__hooks"] = hooks
+    return p
+
+
+def _deletion_result(value, p):
+    from lightrag.base import DeletionResult
+
+    return DeletionResult(**value)
+
+
+for _name in ("aedit_entity", "aedit_relation", "acreate_entity", "acreate_relation", "_merge_entities_impl", "amerge_entities"):
+    async_adapter(lr_utils_graph, _name, pre=_with_graph_hooks)
+for _name in ("adelete_by_entity", "adelete_by_relation"):
+    async_adapter(lr_utils_graph, _name, _deletion_result, _with_graph_hooks)
+_GRAPH_INSTALLED = {n: getattr(lr_utils_graph, n) for n in _GRAPH_HOOKS}
 
 # --------------------------------------------------------------------------- selection
 

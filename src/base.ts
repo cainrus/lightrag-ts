@@ -348,3 +348,12 @@ export class QueryContextResult {
     return this.raw_data.data?.references ?? [];
   }
 }
+
+/** base.DeletionResult */
+export type DeletionResult = {
+  status: 'success' | 'not_found' | 'not_allowed' | 'fail';
+  doc_id: string;
+  message: string;
+  status_code: number;
+  file_path: string | null;
+};

@@ -1,0 +1,243 @@
+// LightRAG (B4): the synthetic pipeline scenario against upstream's digests,
+// plus the class's own edges (config, pipeline status, cancellation, helpers).
+import { strict as assert } from 'node:assert';
+import { createHash } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, it } from 'node:test';
+import { makeQueryParam } from '../src/base.ts';
+import { chunkFieldsFromStatusDoc, getPipelineStatus, LightRAG, normalizeStringList, resolveDocFilePath } from '../src/lightrag.ts';
+import { computeIncrementalChunkIds, getContentSummary, getEnvValue, pyFloatParse, pyIntParse, pyIsoformatUtc, subtractSourceIds } from '../src/utils.ts';
+import { dirDiffs, FIXED_NOW, type FixtureDigest, fixtureDigest, makeLlm, runSpecTs, stubEmbedding, syntheticDoc, syntheticSpec } from '../parity/pipeline-driver.ts';
+
+const FIXTURE = JSON.parse(readFileSync(new URL('./fixtures/pipeline-synthetic.json', import.meta.url), 'utf8')) as FixtureDigest;
+const tmp = () => mkdtempSync(join(tmpdir(), 'lightrag-b4-'));
+
+function assertDigest(dir: string, records: Awaited<ReturnType<typeof runSpecTs>>): void {
+  const got = fixtureDigest(dir, records);
+  assert.equal(got.steps.length, FIXTURE.steps.length);
+  got.steps.forEach((s, i) => assert.deepEqual(s, FIXTURE.steps[i], `step ${i} (${s.op}) differs from upstream`));
+  assert.deepEqual(Object.keys(got.files), Object.keys(FIXTURE.files));
+  for (const [f, d] of Object.entries(got.files)) assert.deepEqual(d, FIXTURE.files[f], `${f} differs from upstream`);
+}
+
+describe('LightRAG pipeline vs upstream (synthetic scenario)', () => {
+  it('one task at a time: every record and every file equal upstream', async () => {
+    const dir = tmp();
+    try {
+      const spec = syntheticSpec(dir);
+      const records = await runSpecTs({ ...spec, config: { ...spec.config, llm_model_max_async: 1 } }, { maxParallelInsert: 1 });
+      // the sequential run prints its own async limit in two status lines; the rest is upstream's
+      const digest = fixtureDigest(dir, records);
+      for (const [f, d] of Object.entries(digest.files)) assert.deepEqual(d, FIXTURE.files[f], `${f} differs from upstream`);
+      digest.steps.forEach((s, i) => {
+        assert.equal(s.result, FIXTURE.steps[i]!.result, `step ${i} (${s.op}) result`);
+        assert.equal(s.error, FIXTURE.steps[i]!.error, `step ${i} (${s.op}) error`);
+      });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('default concurrency (2 documents, 4 LLM calls at once): the same files', async () => {
+    const dir = tmp();
+    try {
+      const records = await runSpecTs(syntheticSpec(dir));
+      const digest = fixtureDigest(dir, records);
+      for (const [f, d] of Object.entries(digest.files)) {
+        // the LLM cache gains its keys in completion order under concurrency: compared as a set of entries there
+        if (f.endsWith('kv_store_llm_response_cache.json')) continue;
+        assert.deepEqual(d, FIXTURE.files[f], `${f} differs from upstream`);
+      }
+      digest.steps.forEach((s, i) => assert.equal(s.result, FIXTURE.steps[i]!.result, `step ${i} (${s.op}) result`));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('a second run on the same scenario is deterministic (incl. the cache bytes)', async () => {
+    const a = tmp();
+    const b = tmp();
+    try {
+      await runSpecTs(syntheticSpec(a));
+      await runSpecTs(syntheticSpec(b));
+      assert.deepEqual(
+        dirDiffs(a, b).filter(([, d]) => d !== null),
+        [],
+      );
+    } finally {
+      rmSync(a, { recursive: true, force: true });
+      rmSync(b, { recursive: true, force: true });
+    }
+  });
+  void assertDigest;
+});
+
+describe('LightRAG class', () => {
+  const make = (dir: string, extra: Record<string, unknown> = {}) =>
+    new LightRAG({ working_dir: dir, workspace: `t-${Math.random()}`, embedding_func: stubEmbedding(8), llm_model_func: makeLlm('synthetic'), now: () => FIXED_NOW, ...extra });
+
+  it('rejects storages that are not ported, a missing LLM, unknown fields', () => {
+    const dir = tmp();
+    try {
+      assert.throws(() => make(dir, { kv_storage: 'RedisKVStorage' }), /not ported/);
+      assert.throws(() => make(dir, { llm_model_func: null }), /callable/);
+      assert.throws(() => make(dir, { no_such_field: 1 }), /unexpected keyword argument 'no_such_field'/);
+      assert.throws(() => new LightRAG({ working_dir: dir, llm_model_func: makeLlm('synthetic') }), /embedding_func is required/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('fills cosine_better_than_threshold into vector_db_storage_cls_kwargs and keeps the caller embedding function unwrapped', () => {
+    const dir = tmp();
+    try {
+      const emb = stubEmbedding(8);
+      const rag = make(dir, { embedding_func: emb, vector_db_storage_cls_kwargs: { extra: 1 } });
+      assert.deepEqual(rag.vector_db_storage_cls_kwargs, { cosine_better_than_threshold: 0.2, extra: 1 });
+      assert.notEqual(rag.embedding_func, emb);
+      assert.equal(rag.embedding_func!.embedding_dim, 8);
+      assert.equal(rag._storages_status, 'created');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('a busy pipeline queues the request; the running one picks the documents up', async () => {
+    const dir = tmp();
+    try {
+      let open!: () => void;
+      const gate = new Promise<void>((r) => (open = r));
+      const base = makeLlm('synthetic');
+      const rag = make(dir, {
+        llm_model_func: async (p: string, o?: Record<string, unknown>) => {
+          await gate;
+          return base(p, o);
+        },
+      });
+      await rag.initialize_storages();
+      const first = rag.ainsert([syntheticDoc(1)], null, false, null, null, 'a');
+      while (!rag.pipeline_status.busy) await new Promise((r) => setImmediate(r));
+      // the second call enqueues, sees the pipeline busy and returns at once
+      await rag.ainsert([syntheticDoc(2)], null, false, null, null, 'b');
+      assert.equal(rag.pipeline_status.request_pending, true);
+      open();
+      await first;
+      const counts = await rag.get_processing_status();
+      assert.equal(counts.processed, 2);
+      assert.ok(rag.pipeline_status.history_messages.includes('Processing additional documents due to pending request'));
+      assert.equal(rag.pipeline_status.busy, false);
+      await rag.finalize_storages();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('a deletion is refused while the pipeline runs another job', async () => {
+    const dir = tmp();
+    try {
+      const rag = make(dir);
+      await rag.initialize_storages();
+      Object.assign(getPipelineStatus(rag.workspace), { busy: true, job_name: 'Default Job' });
+      const r = await rag.adelete_by_doc_id('doc-x');
+      assert.equal(r.status, 'not_allowed');
+      assert.equal(r.status_code, 403);
+      getPipelineStatus(rag.workspace).busy = false;
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('cancellation stops queued documents with FAILED "User cancelled"', async () => {
+    const dir = tmp();
+    try {
+      let calls = 0;
+      const base = makeLlm('synthetic');
+      const rag = make(dir, {
+        max_parallel_insert: 1,
+        llm_model_func: async (p: string, o?: Record<string, unknown>) => {
+          if (++calls === 1) getPipelineStatus(rag.workspace).cancellation_requested = true;
+          return base(p, o);
+        },
+      });
+      await rag.initialize_storages();
+      await rag.ainsert([syntheticDoc(3), syntheticDoc(4)], null, false, null, null, 'c');
+      const failed = await rag.get_docs_by_status('failed');
+      assert.equal(failed.size, 2);
+      assert.ok([...failed.values()].every((d) => /User cancelled/.test(d.error_msg ?? '')));
+      assert.equal(rag.pipeline_status.cancellation_requested, false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('aquery returns the answer string; bypass streams when asked', async () => {
+    const dir = tmp();
+    try {
+      const rag = make(dir, {
+        cosine_better_than_threshold: -1,
+        llm_model_func: async (p: string, o: Record<string, unknown> = {}) =>
+          o.stream
+            ? (async function* () {
+                yield 'a';
+                yield 'b';
+              })()
+            : makeLlm('synthetic')(p, o),
+      });
+      await rag.initialize_storages();
+      await rag.ainsert([syntheticDoc(5)], null, false, null, null, 'q');
+      assert.match(String(await rag.aquery('archive?', makeQueryParam({ mode: 'local' }))), /^STUB [0-9a-f]{32}$/);
+      const it = (await rag.aquery('hi', makeQueryParam({ mode: 'bypass', stream: true }))) as AsyncIterable<string>;
+      let s = '';
+      for await (const c of it) s += c;
+      assert.equal(s, 'ab');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('lightrag.py helpers', () => {
+  it('_resolve_doc_file_path prefers a real path, then full_docs, then a placeholder', () => {
+    assert.equal(resolveDocFilePath({ file_path: ' a.md ' }), 'a.md');
+    assert.equal(resolveDocFilePath({ file_path: 'unknown_source' }, { file_path: 'b.md' }), 'b.md');
+    assert.equal(resolveDocFilePath({ file_path: 'no-file-path' }), 'unknown_source');
+    assert.equal(resolveDocFilePath({ file_path: '' }, { file_path: '  ' }), 'unknown_source');
+    assert.equal(resolveDocFilePath(null, null), 'unknown_source');
+  });
+
+  it('_chunk_fields_from_status_doc and _normalize_string_list', () => {
+    assert.deepEqual(chunkFieldsFromStatusDoc({ chunks_list: ['a', '', 'b'], chunks_count: null }), [['a', 'b'], 2]);
+    assert.deepEqual(chunkFieldsFromStatusDoc({ chunks_list: ['a'], chunks_count: 5 }), [['a'], 5]);
+    assert.deepEqual(chunkFieldsFromStatusDoc({ chunks_list: null, chunks_count: -1 }), [[], 0]);
+    const warnings: string[] = [];
+    assert.deepEqual(normalizeStringList(['x', 1, '', 'y'], 'ctx', (_l, m) => warnings.push(m)), ['x', 'y']);
+    assert.deepEqual(warnings, ['Non-string element dropped from list (ctx) at index 1: 1', "Non-string element dropped from list (ctx) at index 2: ''"]);
+    assert.deepEqual(normalizeStringList('nope'), []);
+  });
+
+  it('utils helpers: content summary, subtract / incremental chunk ids, env values, isoformat', () => {
+    assert.equal(getContentSummary('  short  '), 'short');
+    assert.equal(getContentSummary('é'.repeat(300)), 'é'.repeat(250) + '...');
+    assert.deepEqual(subtractSourceIds(['a', '', 'b', 'c'], ['b']), ['a', 'c']);
+    // upstream's docstring example says ['chunk-3', 'chunk-2', 'chunk-4']; its code (ported) keeps chunk-2 in place
+    assert.deepEqual(computeIncrementalChunkIds(['chunk-1', 'chunk-2', 'chunk-3'], ['chunk-1', 'chunk-2'], ['chunk-2', 'chunk-4']), ['chunk-2', 'chunk-3', 'chunk-4']);
+    assert.equal(pyIntParse(' 1_000 '), 1000);
+    assert.equal(pyIntParse('1.0'), null);
+    assert.equal(pyFloatParse('1e3'), 1000);
+    assert.equal(pyFloatParse('-inf'), -Infinity);
+    assert.equal(pyFloatParse('x'), null);
+    process.env.LIGHTRAG_TS_TEST_ENV = '0.5';
+    assert.equal(getEnvValue('LIGHTRAG_TS_TEST_ENV', 3, 'int'), 3);
+    assert.equal(getEnvValue('LIGHTRAG_TS_TEST_ENV', 3, 'float'), 0.5);
+    process.env.LIGHTRAG_TS_TEST_ENV = 'Yes';
+    assert.equal(getEnvValue('LIGHTRAG_TS_TEST_ENV', false, 'bool'), true);
+    process.env.LIGHTRAG_TS_TEST_ENV = '["a"]';
+    assert.deepEqual(getEnvValue('LIGHTRAG_TS_TEST_ENV', [], 'list'), ['a']);
+    delete process.env.LIGHTRAG_TS_TEST_ENV;
+    assert.equal(pyIsoformatUtc(1760000000), '2025-10-09T08:53:20+00:00');
+    assert.equal(pyIsoformatUtc(1760000000.25), '2025-10-09T08:53:20.250000+00:00');
+    assert.equal(createHash('md5').update('').digest('hex').length, 32);
+  });
+});

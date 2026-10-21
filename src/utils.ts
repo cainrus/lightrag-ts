@@ -741,3 +741,95 @@ export async function updateChunkCacheList(chunkId: string, textChunksStorage: C
     // upstream: logger.warning and continue
   }
 }
+
+// ---------------------------------------------------------------------------
+// Pipeline helpers (lightrag.py, B4).
+// ---------------------------------------------------------------------------
+
+/** Python `int(s)` for a str: surrounding whitespace, a sign and `_` between digits allowed; null when it raises. */
+export function pyIntParse(s: string): number | null {
+  const t = s.trim();
+  if (!/^[+-]?\d+(?:_\d+)*$/.test(t)) return null;
+  return Number.parseInt(t.replaceAll('_', ''), 10);
+}
+
+/** Python `float(s)` for a str (decimal, exponent, inf / nan, `_` between digits); null when it raises. */
+export function pyFloatParse(s: string): number | null {
+  const t = s.trim().toLowerCase();
+  if (/^[+-]?(?:inf|infinity)$/.test(t)) return t.startsWith('-') ? -Infinity : Infinity;
+  if (/^[+-]?nan$/.test(t)) return Number.NaN;
+  const digits = String.raw`\d+(?:_\d+)*`;
+  if (!new RegExp(`^[+-]?(?:${digits}(?:\\.(?:${digits})?)?|\\.${digits})(?:e[+-]?${digits})?$`).test(t)) return null;
+  return Number(t.replaceAll('_', ''));
+}
+
+/** utils.get_env_value. `type` is the Python type the default would be converted with. */
+export function getEnvValue<T>(envKey: string, dflt: T, type: 'int' | 'float' | 'str' | 'bool' | 'list' = 'str', specialNone = false): T | null {
+  const value = process.env[envKey];
+  if (value === undefined) return dflt;
+  if (specialNone && value === 'None') return null;
+  if (type === 'bool') return ['true', '1', 'yes', 't', 'on'].includes(value.toLowerCase()) as T;
+  if (type === 'list') {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as T) : dflt;
+    } catch {
+      return dflt;
+    }
+  }
+  if (type === 'int') return (pyIntParse(value) ?? dflt) as T;
+  if (type === 'float') return (pyFloatParse(value) ?? dflt) as T;
+  return value as T;
+}
+
+const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+
+/**
+ * `datetime.fromtimestamp(t, timezone.utc).isoformat()` for epoch seconds `t`
+ * (what `datetime.now(timezone.utc).isoformat()` prints): microseconds only
+ * when non-zero, offset `+00:00`.
+ */
+export function pyIsoformatUtc(t: number): string {
+  let sec = Math.floor(t);
+  let us = Math.round((t - sec) * 1e6);
+  if (us >= 1e6) {
+    sec += 1;
+    us -= 1e6;
+  }
+  const d = new Date(sec * 1000);
+  const base = `${pad(d.getUTCFullYear(), 4)}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  return `${base}${us ? `.${pad(us, 6)}` : ''}+00:00`;
+}
+
+/** utils.generate_track_id: `{prefix}_{local YYYYmmdd_HHMMSS}_{8 hex of a uuid4}`. */
+export function generateTrackId(prefix = 'upload', now: () => number = () => Date.now() / 1000): string {
+  const d = new Date(now() * 1000);
+  const ts = `${pad(d.getFullYear(), 4)}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  return `${prefix}_${ts}_${crypto.randomUUID().slice(0, 8)}`;
+}
+
+/** utils.get_content_summary: stripped content, cut at `maxLength` code points plus "...". */
+export function getContentSummary(content: string, maxLength = 250): string {
+  const c = pyStrip(content);
+  if (pyLen(c) <= maxLength) return c;
+  return pySliceTo(c, maxLength) + '...';
+}
+
+/** utils.subtract_source_ids: order kept, empty ids dropped. */
+export function subtractSourceIds(sourceIds: Iterable<string>, idsToRemove: Iterable<string>): string[] {
+  const removal = new Set(idsToRemove);
+  const out: string[] = [];
+  for (const id of sourceIds) if (id && !removal.has(id)) out.push(id);
+  return out;
+}
+
+/** utils.compute_incremental_chunk_ids: drop what left the source ids, append what joined, order kept. */
+export function computeIncrementalChunkIds(existingFullChunkIds: readonly string[], oldChunkIds: readonly string[], newChunkIds: readonly string[]): string[] {
+  const oldSet = new Set(oldChunkIds);
+  const newSet = new Set(newChunkIds);
+  const toRemove = new Set([...oldSet].filter((c) => !newSet.has(c)));
+  const toAdd = new Set([...newSet].filter((c) => !oldSet.has(c)));
+  const updated = existingFullChunkIds.filter((c) => !toRemove.has(c));
+  for (const c of newChunkIds) if (toAdd.has(c) && !updated.includes(c)) updated.push(c);
+  return updated;
+}

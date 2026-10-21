@@ -24,6 +24,7 @@ import {
 import { makeQueryParam } from '../../src/base.ts';
 import { performKgSearch, type QueryGraphStorage, type QueryTextChunksStorage, type QueryVectorStorage } from '../../src/query.ts';
 import { removeThinkTags } from '../../src/utils.ts';
+import * as ug from '../../src/utils_graph.ts';
 
 // stdout carries the protocol; nothing else may write there
 console.log = (...a: unknown[]) => console.error(...a);
@@ -65,8 +66,14 @@ function enc(v: unknown): unknown {
   if (v instanceof Float32Array || v instanceof Float64Array) return { $nd: Array.from(v), dtype: v instanceof Float32Array ? 'float32' : 'float64' };
   if (v instanceof Map) return Object.fromEntries([...v].map(([k, x]) => [String(k), enc(x)]));
   if (Array.isArray(v)) return v.map(enc);
+  // a Python object handed over earlier goes back as itself, not as a copy
+  const ref = (v as { [HANDLE]?: number } | null)?.[HANDLE];
+  if (typeof ref === 'number') return { $ref: ref };
   if (v !== null && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, enc(x)]));
-  if (typeof v === 'function') return null;
+  if (typeof v === 'function') {
+    const fref = (v as { [HANDLE]?: number })[HANDLE];
+    return typeof fref === 'number' ? { $ref: fref } : null;
+  }
   return v;
 }
 
@@ -144,6 +151,43 @@ function queryVdb(h: any): QueryVectorStorage | null {
 }
 
 type P = Record<string, any>;
+
+/**
+ * utils_graph helpers a test monkeypatched on the Python module (the adapter
+ * sends them as `__hooks`): TS calls them back for the duration of the call,
+ * as the Python function would look them up.
+ */
+async function withGraphHooks<T>(p: P, fn: () => Promise<T>): Promise<T> {
+  const hooks = (p.__hooks ?? {}) as Record<string, unknown>;
+  const id = (k: string) => (hooks[k] as { [HANDLE]?: number } | undefined)?.[HANDLE];
+  const saved = { ...ug.utilsGraphHooks };
+  const h = ug.utilsGraphHooks as Record<string, unknown>;
+  if (id('_edit_entity_impl') !== undefined) {
+    h.editEntityImpl = (g: unknown, ev: unknown, rv: unknown, name: unknown, data: unknown, ecs: unknown, rcs: unknown) =>
+      callback(id('_edit_entity_impl')!, null, [g, ev, rv, name, data], { entity_chunks_storage: ecs ?? null, relation_chunks_storage: rcs ?? null });
+  }
+  if (id('_merge_entities_impl') !== undefined) {
+    h.mergeEntitiesImpl = (g: unknown, ev: unknown, rv: unknown, src: unknown, tgt: unknown, ms: unknown, ted: unknown, ecs: unknown, rcs: unknown) =>
+      callback(id('_merge_entities_impl')!, null, [g, ev, rv, src, tgt], {
+        merge_strategy: ms ?? null,
+        target_entity_data: ted ?? null,
+        entity_chunks_storage: ecs ?? null,
+        relation_chunks_storage: rcs ?? null,
+      });
+  }
+  if (id('get_entity_info') !== undefined) {
+    h.getEntityInfo = (g: unknown, ev: unknown, name: unknown, inc: unknown) => callback(id('get_entity_info')!, null, [g, ev, name], { include_vector_data: inc ?? false });
+  }
+  if (id('get_relation_info') !== undefined) {
+    h.getRelationInfo = (g: unknown, rv: unknown, s: unknown, t: unknown, inc: unknown) =>
+      callback(id('get_relation_info')!, null, [g, rv, s, t], { include_vector_data: inc ?? false });
+  }
+  try {
+    return await fn();
+  } finally {
+    Object.assign(ug.utilsGraphHooks, saved);
+  }
+}
 const FUNCS: Record<string, (p: P, log: MergeLog) => unknown> = {
   chunking_by_token_size: (p) =>
     chunkingByTokenSize(p.tokenizer, p.content, p.split_by_character, p.split_by_character_only, p.chunk_overlap_token_size, p.chunk_token_size),
@@ -183,6 +227,70 @@ const FUNCS: Record<string, (p: P, log: MergeLog) => unknown> = {
     const r = await performKgSearch(p.query, p.ll_keywords, p.hl_keywords, graph, queryVdb(p.entities_vdb)!, queryVdb(p.relationships_vdb)!, textChunks, makeQueryParam(qp), queryVdb(p.chunks_vdb));
     return enc(r);
   },
+  // utils_graph (B4)
+  adelete_by_entity: (p, log) =>
+    withGraphHooks(p, () =>
+      ug.adeleteByEntity(p.chunk_entity_relation_graph, p.entities_vdb, p.relationships_vdb, p.entity_name, p.entity_chunks_storage, p.relation_chunks_storage, { log }),
+    ),
+  adelete_by_relation: (p, log) =>
+    withGraphHooks(p, () => ug.adeleteByRelation(p.chunk_entity_relation_graph, p.relationships_vdb, p.source_entity, p.target_entity, p.relation_chunks_storage, { log })),
+  aedit_entity: (p, log) =>
+    withGraphHooks(p, () =>
+      ug.aeditEntity(
+        p.chunk_entity_relation_graph,
+        p.entities_vdb,
+        p.relationships_vdb,
+        p.entity_name,
+        p.updated_data,
+        p.allow_rename,
+        p.allow_merge,
+        p.entity_chunks_storage,
+        p.relation_chunks_storage,
+        { log },
+      ),
+    ),
+  aedit_relation: (p, log) =>
+    withGraphHooks(p, () =>
+      ug.aeditRelation(p.chunk_entity_relation_graph, p.entities_vdb, p.relationships_vdb, p.source_entity, p.target_entity, p.updated_data, p.relation_chunks_storage, { log }),
+    ),
+  acreate_entity: (p, log) =>
+    withGraphHooks(p, () =>
+      ug.acreateEntity(p.chunk_entity_relation_graph, p.entities_vdb, p.relationships_vdb, p.entity_name, p.entity_data, p.entity_chunks_storage, p.relation_chunks_storage, { log }),
+    ),
+  acreate_relation: (p, log) =>
+    withGraphHooks(p, () =>
+      ug.acreateRelation(p.chunk_entity_relation_graph, p.entities_vdb, p.relationships_vdb, p.source_entity, p.target_entity, p.relation_data, p.relation_chunks_storage, { log }),
+    ),
+  _merge_entities_impl: (p, log) =>
+    withGraphHooks(p, () =>
+      ug.utilsGraphHooks.mergeEntitiesImpl(
+        p.chunk_entity_relation_graph,
+        p.entities_vdb,
+        p.relationships_vdb,
+        p.source_entities,
+        p.target_entity,
+        p.merge_strategy,
+        p.target_entity_data,
+        p.entity_chunks_storage,
+        p.relation_chunks_storage,
+        log,
+      ),
+    ),
+  amerge_entities: (p, log) =>
+    withGraphHooks(p, () =>
+      ug.amergeEntities(
+        p.chunk_entity_relation_graph,
+        p.entities_vdb,
+        p.relationships_vdb,
+        p.source_entities,
+        p.target_entity,
+        p.merge_strategy,
+        p.target_entity_data,
+        p.entity_chunks_storage,
+        p.relation_chunks_storage,
+        { log },
+      ),
+    ),
   _merge_edges_then_upsert: async (p, log) => {
     const added: Record<string, unknown>[] = [];
     const value = await mergeEdgesThenUpsert(p.src_id, p.tgt_id, p.edges_data, p.knowledge_graph_inst, p.relationships_vdb, p.entity_vdb, withLlm(p.global_config) as never, {

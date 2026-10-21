@@ -9,19 +9,6 @@
     "tests/test_remove_think_tags.py": { "default": "ts" },
     "tests/test_extract_entities.py": { "default": "ts" },
     "tests/test_batch_embeddings.py": { "default": "ts" },
-    "tests/test_description_api_validation.py": {
-      "ts": [
-        "test_merge_nodes_then_upsert_handles_missing_legacy_description",
-        "test_handle_single_relationship_extraction_ignores_empty_description"
-      ],
-      "skip": {
-        "test_acreate_entity_rejects_empty_description": "utils_graph is ported in B4",
-        "test_acreate_relation_rejects_empty_description": "utils_graph is ported in B4",
-        "test_aedit_entity_rejects_empty_description": "utils_graph is ported in B4",
-        "test_aedit_relation_rejects_empty_description": "utils_graph is ported in B4",
-        "test_aedit_entity_allows_updates_without_description": "utils_graph is ported in B4",
-        "test_merge_entities_preserves_file_path_in_vector_updates": "utils_graph is ported in B4"
-      }
-    }
+    "tests/test_description_api_validation.py": { "default": "ts" }
   }
 }
