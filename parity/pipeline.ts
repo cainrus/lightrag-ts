@@ -242,6 +242,27 @@ async function storeReplay(storeDir: string): Promise<void> {
   }
   const r = await compare(spec, seed);
   report(r);
+  // equal files prove little if both sides failed the same way: a cache miss
+  // that ends two documents FAILED on both sides compares equal too
+  const deleted = new Set(steps.filter((s) => s.op === 'delete').map((s) => s.doc_id as string));
+  checkProcessed(
+    ['py', ...r.variants.map((v) => `ts-${v.name}`)].map((d) => join(WORK, d)),
+    picked.filter((d) => !deleted.has(d)),
+    ws,
+  );
+}
+
+/** Every document the run kept must have ended PROCESSED, on every side. */
+function checkProcessed(dirs: string[], expected: string[], ws: string): void {
+  for (const dir of dirs) {
+    const st = new Map<string, string>();
+    forEachJsonKv<{ status: string }>(kvStorePath(dir, NameSpace.DOC_STATUS, ws), (k, v) => void st.set(k, v.status));
+    const bad = expected.filter((d) => st.get(d) !== 'processed');
+    if (bad.length) {
+      log(`${dir}: ${bad.length} of ${expected.length} documents did not end processed: ${bad.slice(0, 5).map((d) => `${d}=${st.get(d) ?? 'missing'}`).join(', ')}`);
+      process.exitCode = 1;
+    } else log(`${dir}: all ${expected.length} kept documents processed`);
+  }
 }
 
 // ---------------------------------------------------------------- deletions on a full store copy
