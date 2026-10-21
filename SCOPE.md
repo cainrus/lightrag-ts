@@ -311,7 +311,10 @@ byte. TS runs twice: one task at a time (`llm_model_max_async=1`,
 `max_parallel_insert=1`), which must equal upstream file for file and message
 for message, and at the spec's own concurrency, which must give the same files
 (the LLM cache compared as a map: its new keys follow completion order) and the
-same results.
+same results. In that second run the LLM and embedding stand-ins answer after
+a seeded 0-4 ms delay (md5 of the input), so concurrent calls finish out of
+call order as a provider's latency makes them; `test/lightrag.test.ts` checks
+that completions really were reordered.
 
 To get one reproducible upstream run the harness changes upstream's process,
 not its code, and the port follows the same order:
