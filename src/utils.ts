@@ -387,14 +387,14 @@ export function removeThinkTags(text: string): string {
 
 /** The slice of BaseKVStorage the LLM cache path uses. */
 export type LlmResponseCache = {
-  global_config: { enable_llm_cache?: boolean; enable_llm_cache_for_entity_extract?: boolean };
+  global_config: { enable_llm_cache?: unknown; enable_llm_cache_for_entity_extract?: unknown; [k: string]: unknown };
   get_by_id(id: string): Promise<Record<string, unknown> | null>;
   upsert(data: Record<string, Record<string, unknown>>): Promise<void>;
 };
 
 export type LlmFunc = (
   prompt: string,
-  opts: { system_prompt?: string | null; history_messages?: ChatMessage[]; max_tokens?: number },
+  opts: { system_prompt?: string | null; history_messages?: ChatMessage[]; max_tokens?: number; _priority?: number },
 ) => Promise<string>;
 
 /** utils.handle_cache */
@@ -489,6 +489,126 @@ export async function useLlmFuncWithCache(
     throw e;
   }
   return [removeThinkTags(res), now()];
+}
+
+// ---------------------------------------------------------------------------
+// Merge helpers (operate.merge_nodes_and_edges and friends).
+// ---------------------------------------------------------------------------
+
+/** utils.truncate_list_by_token_size: the longest prefix whose summed token counts stay within the budget. */
+export function truncateListByTokenSize<T>(listData: readonly T[], key: (x: T) => string, maxTokenSize: number, tokenizer: Tokenizer): T[] {
+  if (maxTokenSize <= 0) return [];
+  let tokens = 0;
+  for (let i = 0; i < listData.length; i++) {
+    tokens += tokenizer.encode(key(listData[i]!)).length;
+    if (tokens > maxTokenSize) return listData.slice(0, i);
+  }
+  return [...listData];
+}
+
+/** utils.normalize_source_ids_limit_method */
+export function normalizeSourceIdsLimitMethod(method: string | null | undefined): 'FIFO' | 'KEEP' {
+  if (!method) return 'FIFO';
+  const m = method.toUpperCase();
+  return m === 'KEEP' || m === 'FIFO' ? m : 'FIFO';
+}
+
+/** utils.merge_source_ids: order-preserving union, empty ids dropped. */
+export function mergeSourceIds(existingIds: Iterable<string> | null | undefined, newIds: Iterable<string> | null | undefined): string[] {
+  const merged: string[] = [];
+  const seen = new Set<string>();
+  for (const seq of [existingIds, newIds]) {
+    if (!seq) continue;
+    for (const id of seq) {
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      merged.push(id);
+    }
+  }
+  return merged;
+}
+
+/** utils.apply_source_ids_limit: FIFO keeps the newest (tail), KEEP the oldest (head). */
+export function applySourceIdsLimit(sourceIds: readonly string[], limit: number, method: string | null | undefined): string[] {
+  if (limit <= 0) return [];
+  if (sourceIds.length <= limit) return [...sourceIds];
+  return normalizeSourceIdsLimitMethod(method) === 'FIFO' ? sourceIds.slice(-limit) : sourceIds.slice(0, limit);
+}
+
+/** utils.make_relation_chunk_key: the pair sorted (code point order) and joined with GRAPH_FIELD_SEP. */
+export function makeRelationChunkKey(src: string, tgt: string): string {
+  return [src, tgt].sort(pyCompare).join('<SEP>');
+}
+
+/** utils.parse_relation_chunk_key */
+export function parseRelationChunkKey(key: string): [string, string] {
+  const parts = key.split('<SEP>');
+  if (parts.length !== 2) throw new Error(`Invalid relation chunk key: ${key}`);
+  return [parts[0]!, parts[1]!];
+}
+
+/**
+ * Builtin `sum()` of Python 3.12 over floats, start 0: the first item is added
+ * to int 0 exactly, the rest with Neumaier compensation (CPython bltinmodule.c).
+ * A plain left-to-right `+` can differ in the last bit.
+ */
+export function pySumFloats(xs: readonly number[]): number {
+  if (xs.length === 0) return 0;
+  let f = 0 + xs[0]!;
+  let c = 0;
+  for (let i = 1; i < xs.length; i++) {
+    const x = xs[i]!;
+    const t = f + x;
+    if (Math.abs(f) >= Math.abs(x)) c += f - t + x;
+    else c += x - t + f;
+    f = t;
+  }
+  if (c !== 0 && Number.isFinite(c)) f += c;
+  return f;
+}
+
+/** Python `repr()` of a str, close enough for messages: quote choice and the common escapes. */
+export function pyReprStr(s: string): string {
+  const q = s.includes("'") && !s.includes('"') ? '"' : "'";
+  let out = q;
+  for (const ch of s) {
+    const cp = ch.codePointAt(0)!;
+    if (ch === '\\' || ch === q) out += '\\' + ch;
+    else if (ch === '\n') out += '\\n';
+    else if (ch === '\r') out += '\\r';
+    else if (ch === '\t') out += '\\t';
+    else if (cp < 0x20 || cp === 0x7f) out += '\\x' + cp.toString(16).padStart(2, '0');
+    else out += ch;
+  }
+  return out + q;
+}
+
+/**
+ * utils.safe_vdb_operation_with_exception: retry, then raise
+ * `VDB {operation} failed for {name} after {n} attempts: {e}`.
+ */
+export async function safeVdbOperationWithException(
+  operation: () => Promise<unknown>,
+  operationName: string,
+  entityName = '',
+  maxRetries = 3,
+  retryDelay = 0.2,
+  log: (msg: string) => void = () => {},
+): Promise<void> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      await operation();
+      return;
+    } catch (e) {
+      if (attempt >= maxRetries - 1) {
+        const msg = `VDB ${operationName} failed for ${entityName} after ${maxRetries} attempts: ${(e as Error)?.message ?? e}`;
+        log(msg);
+        throw new Error(msg, { cause: e });
+      }
+      log(`VDB ${operationName} attempt ${attempt + 1} failed for ${entityName}: ${(e as Error)?.message ?? e}, retrying...`);
+      if (retryDelay > 0) await new Promise((r) => setTimeout(r, retryDelay * 1000));
+    }
+  }
 }
 
 /** The slice of BaseKVStorage update_chunk_cache_list uses. */

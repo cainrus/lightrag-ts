@@ -54,10 +54,12 @@ export interface BaseKVStorage extends StorageNameSpace {
 export type VectorQueryResult = Record<string, unknown> & { id: string; distance: number; created_at: number | null };
 
 export interface BaseVectorStorage extends StorageNameSpace {
+  readonly embedding_func: EmbeddingFunc;
   readonly cosine_better_than_threshold: number;
   readonly meta_fields: ReadonlySet<string>;
   query(query: string, top_k: number, query_embedding?: ArrayLike<number> | null): Promise<VectorQueryResult[]>;
-  upsert(data: Record<string, KvRecord>): Promise<unknown>;
+  /** `opts.embeddings` (port-only): precomputed vectors for the entries, in order. */
+  upsert(data: Record<string, KvRecord>, opts?: { embeddings?: ArrayLike<ArrayLike<number>> }): Promise<unknown>;
   delete_entity(entity_name: string): Promise<void>;
   delete_entity_relation(entity_name: string): Promise<void>;
   get_by_id(id: string): Promise<KvRecord | null>;

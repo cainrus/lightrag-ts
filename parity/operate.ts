@@ -3,6 +3,15 @@
 //   node parity/operate.ts <store-dir> [--work <dir>] [--phase chunk,...]
 //
 // The store is only read; upstream writes its JSON Lines under <work>.
+//   merge  merge_nodes_and_edges over whole documents replayed from the cache
+//          (--select processed|unmerged, --docs N, --offset K, --base empty|graph,
+//          --vdb, --dim D): both sides start from the same files, extract each
+//          chunk from the cache, merge doc by doc with a fixed clock, a summary
+//          stub for cache misses and a hash embedding; every file they write
+//          must be byte-identical. Upstream runs its merge tasks one at a time
+//          (see SCOPE.md); --concurrency-check reruns TS with the default
+//          concurrency, --py-concurrent measures how far upstream's own
+//          concurrent run drifts from its sequential one.
 //   chunk  chunking_by_token_size for every doc in full_docs: token ids (md5),
 //          chunk ids, tokens, content equal upstream's for the same doc; with the
 //          default settings also equal to what kv_store_text_chunks holds.
@@ -11,17 +20,26 @@
 // Exit code 1 on any mismatch. Upstream side: tools/upstream/operate_parity.py in the rag-venv.
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { isDeepStrictEqual } from 'node:util';
 import { kvStorePath, readJsonKv } from '../src/kg/json_kv_impl.ts';
+import { type GraphmlGraph, readGraphml } from '../src/kg/networkx_impl.ts';
 import { NameSpace } from '../src/namespace.ts';
 import { DEFAULT_ENTITY_TYPES, DEFAULT_MAX_EXTRACT_INPUT_TOKENS } from '../src/constants.ts';
-import { chunkingByTokenSize, edgeKeyParts, extractEntities, type ExtractChunk, processExtractionResult } from '../src/operate.ts';
+import {
+  chunkingByTokenSize,
+  edgeKeyParts,
+  extractEntities,
+  type ExtractChunk,
+  type MergeConfig,
+  processExtractionResult,
+} from '../src/operate.ts';
 import { PROMPTS } from '../src/prompt.ts';
 import { computeMdhashId, pyFormat, TiktokenTokenizer } from '../src/utils.ts';
+import { CacheMiss, fileDiff, type MergeDoc, mergeDirDiffs, MERGE_FILES, type MergeRec, tsMergeDocs } from './merge-driver.ts';
 
 const PY = process.env.LIGHTRAG_PY ?? join(process.env.HOME!, '.claude-home/rag-venv/bin/python');
 const PY_TOOL = resolve(import.meta.dirname, '../tools/upstream/operate_parity.py');
@@ -32,6 +50,17 @@ const { positionals, values } = parseArgs({
     work: { type: 'string' },
     phase: { type: 'string', default: 'chunk' },
     model: { type: 'string', default: 'gpt-4o-mini' },
+    // merge phase
+    select: { type: 'string', default: 'processed' },
+    base: { type: 'string', default: 'empty' },
+    docs: { type: 'string', default: '200' },
+    offset: { type: 'string', default: '0' },
+    vdb: { type: 'boolean', default: false },
+    dim: { type: 'string', default: '8' },
+    'concurrency-check': { type: 'boolean', default: false },
+    'py-concurrent': { type: 'boolean', default: false },
+    gc: { type: 'string', default: '{}' },
+    'ts-only': { type: 'boolean', default: false },
   },
 });
 const SRC = positionals[0];
@@ -189,10 +218,6 @@ function memKv(data: Map<string, Record<string, unknown>>, globalConfig = {}) {
       for (const [k, v] of Object.entries(d)) data.set(k, v);
     },
   };
-}
-
-class CacheMiss extends Error {
-  override name = 'CacheMiss';
 }
 
 export async function tsExtractRecs(
@@ -360,6 +385,201 @@ function phaseFixture(): void {
   log(`fixture: ${corpus.length} cases -> ${file}`);
 }
 
+// ---------------------------------------------------------------- merge
+
+function selectMergeDocs(): MergeDoc[] {
+  const status = readJsonKv<{ status: string; updated_at: string; file_path?: string; chunks_list?: string[] }>(
+    kvStorePath(SRC!, NameSpace.DOC_STATUS, ''),
+  );
+  const chunks = readJsonKv<{ chunk_order_index: number }>(kvStorePath(SRC!, NameSpace.KV_STORE_TEXT_CHUNKS, ''));
+  const want = values.select === 'processed' ? (s: string) => s === 'processed' : (s: string) => s !== 'processed';
+  const docs: (MergeDoc & { at: string })[] = [];
+  for (const [id, s] of status) {
+    const list = s.chunks_list ?? [];
+    if (!want(s.status) || !list.length || !list.every((c) => chunks.has(c))) continue;
+    const ordered = [...list].sort((a, b) => chunks.get(a)!.chunk_order_index - chunks.get(b)!.chunk_order_index);
+    docs.push({ id, file_path: s.file_path ?? 'unknown_source', chunks: ordered, at: s.updated_at });
+  }
+  docs.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : a.id < b.id ? -1 : 1));
+  const offset = Number(values.offset);
+  return docs.slice(offset, offset + Number(values.docs)).map(({ at: _, ...d }) => d);
+}
+
+/** A fresh work dir holding the starting files (APFS clones of the store copy). */
+function seedWorkDir(dir: string): void {
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  const seed = values.base === 'graph' ? MERGE_FILES.slice(0, 6) : MERGE_FILES.slice(0, 1);
+  for (const f of seed) if (existsSync(join(SRC!, f))) execFileSync('cp', ['-c', join(SRC!, f), join(dir, f)]);
+}
+
+function compareMergeDirs(label: string, py: string, ts: string, opts: { cacheAsMap?: boolean } = {}): void {
+  for (const [f, diff] of mergeDirDiffs(py, ts, { vdb: values.vdb!, ...opts })) {
+    const size = existsSync(join(ts, f)) ? statSync(join(ts, f)).size : 0;
+    check(`${label}: ${f}${opts.cacheAsMap && f.includes('cache') ? ' (as a map)' : ''}`, diff === null, diff ?? `${size} bytes identical`);
+  }
+}
+
+const mergeOpts = () => ({ vdb: values.vdb!, dim: Number(values.dim), gc: JSON.parse(values.gc!) as Partial<MergeConfig>, model: values.model! });
+
+/** Summary calls answered by the store's own cache (TS rebuilt upstream's historical prompt) vs sent to the stub. */
+function mergeStats(tsDir: string, summaryHits: Set<string>, recs: MergeRec[]): void {
+  const cacheAfter = readJsonKv<{ cache_type?: string }>(join(tsDir, 'kv_store_llm_response_cache.json'));
+  const cacheBefore = readJsonKv<{ cache_type?: string }>(join(SRC!, 'kv_store_llm_response_cache.json'));
+  let stub = 0;
+  let stored = 0;
+  for (const [k, e] of cacheAfter) if (e.cache_type === 'summary' && !cacheBefore.has(k)) stub++;
+  for (const e of cacheBefore.values()) if (e.cache_type === 'summary') stored++;
+  const storeHits = [...summaryHits].filter((k) => cacheBefore.has(k)).length;
+  const llmMerges = recs.reduce((n, r) => n + (r.messages?.filter((m) => m.startsWith('LLMmrg')).length ?? 0), 0);
+  log(`merge: ${llmMerges} LLM merges; summary calls: ${storeHits} distinct store entries hit (of ${stored} summary entries in the store), ${stub} went to the stub`);
+}
+
+async function phaseMerge(): Promise<void> {
+  const docs = selectMergeDocs();
+  const gcTag = values.gc === '{}' ? '' : `-gc${createHash('md5').update(values.gc!).digest('hex').slice(0, 6)}`;
+  const base = join(WORK, `merge-${values.select}-${values.base}-${values.offset}-${docs.length}${values.vdb ? '-vdb' : ''}${gcTag}`);
+  mkdirSync(base, { recursive: true });
+  const docsFile = join(base, 'docs.json');
+  writeFileSync(docsFile, JSON.stringify(docs));
+  const nChunks = docs.reduce((n, d) => n + (d.chunks?.length ?? 0), 0);
+  log(
+    `merge: ${docs.length} ${values.select} docs (${nChunks} chunks) onto ${values.base === 'graph' ? 'the store graph' : 'an empty store'}${values.vdb ? `, vdb dim ${values.dim}` : ', no vdb'}${values.gc === '{}' ? '' : `, config ${values.gc}`}`,
+  );
+
+  const pyDir = join(base, 'py');
+  const pyArgs = ['merge', SRC!, '--work', pyDir, '--docs', docsFile, '--out', join(base, 'py-merge.jsonl'), '--dim', values.dim!, '--gc', values.gc!, '--sequential'];
+  if (values.vdb) pyArgs.push('--vdb');
+  if (!values['ts-only']) {
+    seedWorkDir(pyDir);
+    py(pyArgs);
+    log('merge: upstream done');
+  }
+
+  const chunks = readJsonKv<Record<string, unknown>>(kvStorePath(SRC!, NameSpace.KV_STORE_TEXT_CHUNKS, ''));
+  const tsDir = join(base, 'ts');
+  seedWorkDir(tsDir);
+  const summaryHits = new Set<string>();
+  const tsRecs = await tsMergeDocs(tsDir, docs, {
+    ...mergeOpts(),
+    chunks,
+    maxConcurrency: 1,
+    onCacheHit: (k) => k.startsWith('default:summary:') && summaryHits.add(k),
+  });
+  log('merge: TS done');
+  if (values['ts-only']) return mergeStats(tsDir, summaryHits, tsRecs);
+  const pyRecs = readJsonl<MergeRec>(join(base, 'py-merge.jsonl'));
+  const merged = pyRecs.filter((r) => !r.skipped && !r.error).length;
+  const skipped = pyRecs.filter((r) => r.skipped).length;
+  const errors = pyRecs.filter((r) => r.error).length;
+  const msgs = pyRecs.reduce((n, r) => n + (r.messages?.length ?? 0), 0);
+  const llmMerges = pyRecs.reduce((n, r) => n + (r.messages?.filter((m) => m.startsWith('LLMmrg')).length ?? 0), 0);
+  let same = 0;
+  const bad: string[] = [];
+  pyRecs.forEach((p, i) => {
+    if (isDeepStrictEqual(p, tsRecs[i])) same++;
+    else if (bad.length < 2) bad.push(`py=${JSON.stringify(p).slice(0, 600)} ts=${JSON.stringify(tsRecs[i]).slice(0, 600)}`);
+  });
+  check(
+    'merge: per-doc outcome and pipeline messages == upstream',
+    same === pyRecs.length,
+    `${same}/${pyRecs.length} docs (${merged} merged, ${skipped} skipped on a cache miss, ${errors} failed; ${msgs} messages, ${llmMerges} LLM merges)${bad.length ? `; ${bad.join(' | ')}` : ''}`,
+  );
+  compareMergeDirs('merge sequential', pyDir, tsDir);
+
+  mergeStats(tsDir, summaryHits, tsRecs);
+
+  if (values['concurrency-check']) {
+    const ts8 = join(base, 'ts-concurrent');
+    seedWorkDir(ts8);
+    const recs8 = await tsMergeDocs(ts8, docs, { ...mergeOpts(), chunks });
+    check('merge TS concurrent: per-doc outcome and messages == sequential', isDeepStrictEqual(recs8, tsRecs));
+    compareMergeDirs('merge TS concurrent vs upstream sequential', pyDir, ts8, { cacheAsMap: true });
+  }
+  if (values['py-concurrent']) {
+    const pyc = join(base, 'py-concurrent');
+    seedWorkDir(pyc);
+    const args = pyArgs
+      .filter((a) => a !== '--sequential')
+      .map((a) => (a === pyDir ? pyc : a === join(base, 'py-merge.jsonl') ? join(base, 'pyc-merge.jsonl') : a));
+    py(args);
+    const g1 = readGraphml(join(pyDir, 'graph_chunk_entity_relation.graphml'));
+    const g2 = readGraphml(join(pyc, 'graph_chunk_entity_relation.graphml'));
+    let nodeDiff = 0;
+    for (const [id, a] of g1.nodes) if (!isDeepStrictEqual(a, g2.nodes.get(id))) nodeDiff++;
+    const edgeMap = (g: GraphmlGraph) => new Map([...g.edges.values()].map((e) => [[e.source, e.target].sort().join('\u0000'), e.attrs]));
+    const e1 = edgeMap(g1);
+    const e2 = edgeMap(g2);
+    let edgeDiff = 0;
+    for (const [k, a] of e1) if (!isDeepStrictEqual(a, e2.get(k))) edgeDiff++;
+    const sameBytes = fileDiff(join(pyDir, 'graph_chunk_entity_relation.graphml'), join(pyc, 'graph_chunk_entity_relation.graphml')) === null;
+    log(
+      `merge: upstream concurrent vs sequential: graph bytes ${sameBytes ? 'identical' : 'differ'}; ${nodeDiff}/${g1.nodes.size} nodes and ${edgeDiff}/${e1.size} edges differ in attributes (${g2.nodes.size} nodes, ${e2.size} edges)`,
+    );
+  }
+}
+
+/**
+ * test/fixtures/merge-cases: upstream's merge of public input - the parsed
+ * extraction answers in parse-cases.json (fuzzed prompt examples), grouped
+ * into documents - under a few configs, recorded for test/merge.test.ts.
+ */
+function phaseMergeFixture(): void {
+  type Case = { nodes: [string, Record<string, unknown>[]][]; edges: [[string, string], Record<string, unknown>[]][] };
+  const cases = (JSON.parse(readFileSync(resolve(import.meta.dirname, '../test/fixtures/parse-cases.json'), 'utf8')) as Case[]).filter(
+    (c) => c.nodes.length || c.edges.length,
+  );
+  const docs: MergeDoc[] = [];
+  const perDoc = 4;
+  for (let d = 0; d * perDoc < Math.min(cases.length, 160); d++) {
+    const id = `doc-${String(d).padStart(3, '0')}`;
+    const results = cases.slice(d * perDoc, (d + 1) * perDoc).map((c, j) => {
+      const i = d * perDoc + j;
+      const chunk = `chunk-${String(i).padStart(4, '0')}`;
+      // pairs of chunks share a timestamp, so the (timestamp, -length) order meets ties
+      const stamp = (r: Record<string, unknown>) => ({ ...r, source_id: chunk, file_path: `${id}.md`, timestamp: 1000 + Math.floor(i / 2) });
+      return { nodes: c.nodes.map(([k, v]) => [k, v.map(stamp)]), edges: c.edges.map(([k, v]) => [k, v.map(stamp)]) };
+    });
+    docs.push({ id, file_path: `${id}.md`, results: results as NonNullable<MergeDoc['results']> });
+  }
+  const root = resolve(import.meta.dirname, '../test/fixtures/merge-cases');
+  rmSync(root, { recursive: true, force: true });
+  mkdirSync(root, { recursive: true });
+  writeFileSync(join(root, 'docs.json'), JSON.stringify(docs) + '\n');
+  const variants: Record<string, Record<string, unknown>> = {
+    default: {},
+    'keep-small': {
+      source_ids_limit_method: 'KEEP',
+      max_source_ids_per_entity: 3,
+      max_source_ids_per_relation: 2,
+      max_file_paths: 2,
+      force_llm_summary_on_merge: 3,
+      summary_max_tokens: 100,
+      summary_context_size: 150,
+    },
+    'fifo-small': {
+      source_ids_limit_method: 'FIFO',
+      max_source_ids_per_entity: 3,
+      max_source_ids_per_relation: 2,
+      max_file_paths: 2,
+      force_llm_summary_on_merge: 4,
+      summary_max_tokens: 120,
+      summary_context_size: 200,
+    },
+  };
+  for (const [name, gc] of Object.entries(variants)) {
+    const dir = join(root, name);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'gc.json'), JSON.stringify(gc) + '\n');
+    py(['merge', SRC!, '--work', dir, '--docs', join(root, 'docs.json'), '--out', join(dir, 'messages.jsonl'), '--dim', '4', '--gc', JSON.stringify(gc), '--sequential', '--vdb']);
+    const recs = readJsonl<MergeRec>(join(dir, 'messages.jsonl'));
+    const llm = recs.reduce((n, r) => n + (r.messages?.filter((m) => m.startsWith('LLMmrg')).length ?? 0), 0);
+    log(`merge-fixture ${name}: ${recs.length} docs, ${llm} LLM merges, errors ${recs.filter((r) => r.error).length} -> ${dir}`);
+  }
+}
+
+if (PHASES.has('merge')) await phaseMerge();
+if (PHASES.has('merge-fixture')) phaseMergeFixture();
 if (PHASES.has('fixture')) phaseFixture();
 if (PHASES.has('chunk')) phaseChunk();
 if (PHASES.has('extract')) await phaseExtract();

@@ -38,12 +38,14 @@
   ],
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "@types/pako": "^2.0.4",
     "graphology-types": "^0.24.8",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "graphology": "^0.26.0",
     "js-tiktoken": "1.0.21",
+    "pako": "2.1.0",
     "saxes": "^6.0.0"
   }
 }

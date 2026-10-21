@@ -16,6 +16,11 @@ TS port and diffs them. Nothing under <dir> is written.
       {chunk, nodes: [[name, [entity]]], edges: [[[src, tgt], [relation]]],
        llm_cache_list} | {chunk, error}
 
+  merge <dir> --work <dir> --docs <file> --out <file> [--dim 8] [--vdb] [--sequential]
+      merge_nodes_and_edges for each doc of --docs ([{id, file_path, chunks}]),
+      its chunks extracted one at a time from the cache, on LightRAG's own
+      storages under --work (seeded by the caller); see cmd_merge.
+
   parse <dir> --in <file> --out <file>
       _process_extraction_result over {result} lines (a fuzz corpus the TS side
       builds from cached responses): {nodes, edges}
@@ -147,9 +152,156 @@ def cmd_parse(a):
     print("{}")
 
 
+FIXED_NOW = 1760000000
+_CLOCKED = {"lightrag.operate", "lightrag.utils", "lightrag.kg.json_kv_impl", "lightrag.kg.nano_vector_db_impl"}
+
+
+def freeze_merge_clock():
+    """time.time() is FIXED_NOW for the merge path (created_at, cache and vdb stamps), real elsewhere.
+
+    json_kv_impl imports time inside upsert(), so patching a module attribute
+    is not enough; the caller's module decides instead.
+    """
+    import time as _time
+
+    real = _time.time
+
+    def fake():
+        return float(FIXED_NOW) if sys._getframe(1).f_globals.get("__name__") in _CLOCKED else real()
+
+    _time.time = fake
+
+
+def stub_vector(text, dim):
+    d = hashlib.md5(text.encode("utf-8", errors="replace")).digest()
+    return [(d[j] - 128) / 128.0 for j in range(dim)]
+
+
+SUMMARY_PROMPT_HEAD = "---Role---\nYou are a Knowledge Graph Specialist, proficient in data curation and synthesis."
+
+
+def merge_llm_stub(prompt, system_prompt=None, **kw):
+    """Cache misses: a summary prompt gets a deterministic stand-in, anything else is an error."""
+    if prompt.startswith(SUMMARY_PROMPT_HEAD):
+        return "Stub summary " + hashlib.md5(prompt.encode("utf-8", errors="replace")).hexdigest()
+    raise CacheMiss("cache miss: the parity run never calls an LLM")
+
+
+def as_relation(rec):
+    """JSON from the TS side writes 1.0 as 1; extraction always yields a float weight."""
+    return {**rec, "weight": float(rec["weight"])}
+
+
+def cmd_merge(a):
+    """Upstream merge_nodes_and_edges over docs replayed from the cache, on LightRAG's own storages.
+
+    <work> already holds the starting files (the TS side clones them); every
+    storage is flushed there at the end. One JSON line per doc goes to --out.
+    """
+    freeze_merge_clock()
+    import numpy as np
+    from dataclasses import asdict
+    from lightrag import LightRAG
+    from lightrag import operate
+    from lightrag.operate import merge_nodes_and_edges
+    from lightrag.utils import EmbeddingFunc, logger
+
+    logger.setLevel("WARNING")
+    if a.sequential:
+        import types
+
+        shim = types.ModuleType("asyncio_sequential")
+        shim.__dict__.update(asyncio.__dict__)
+        shim.Semaphore = lambda value=1: asyncio.Semaphore(1)
+        operate.asyncio = shim
+
+    async def embed(texts, **kw):
+        return np.array([stub_vector(t, a.dim) for t in texts], dtype=np.float32)
+
+    async def llm(prompt, system_prompt=None, history_messages=None, **kw):
+        return merge_llm_stub(prompt, system_prompt)
+
+    with open(a.docs, encoding="utf-8") as f:
+        docs = json.load(f)
+    # docs either name chunks to extract from the store's cache, or carry the
+    # extraction results themselves ({"results": [{"nodes", "edges"}]}, public fixtures)
+    chunks = load_kv(a.dir, "text_chunks") if any("chunks" in d for d in docs) else {}
+
+    async def run():
+        rag = LightRAG(
+            working_dir=a.work,
+            workspace="",
+            embedding_func=EmbeddingFunc(embedding_dim=a.dim, func=embed),
+            llm_model_func=llm,
+        )
+        await rag.initialize_storages()
+        tok = rag.tokenizer
+        gc = asdict(rag)  # upstream builds it per document; the values do not change between them
+        gc.update(json.loads(a.gc))
+        with open(a.out, "w", encoding="utf-8") as out:
+            for n, d in enumerate(docs, start=1):
+                rec = {"doc": d["id"]}
+                status = {"history_messages": [], "latest_message": ""}
+                lock = asyncio.Lock()
+                results = [
+                    ({k: v for k, v in r["nodes"]}, {tuple(k): [as_relation(x) for x in v] for k, v in r["edges"]})
+                    for r in d.get("results", [])
+                ]
+                try:
+                    for cid in d.get("chunks", []):
+                        [r] = await operate.extract_entities(
+                            {cid: chunks[cid]}, gc, llm_response_cache=rag.llm_response_cache
+                        )
+                        results.append(r)
+                except Exception as e:
+                    rec["skipped"] = f"{type(e).__name__}: {e}"
+                    out.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                    continue
+                try:
+                    await merge_nodes_and_edges(
+                        chunk_results=results,
+                        knowledge_graph_inst=rag.chunk_entity_relation_graph,
+                        entity_vdb=rag.entities_vdb if a.vdb else None,
+                        relationships_vdb=rag.relationships_vdb if a.vdb else None,
+                        global_config=gc,
+                        full_entities_storage=rag.full_entities,
+                        full_relations_storage=rag.full_relations,
+                        doc_id=d["id"],
+                        pipeline_status=status,
+                        pipeline_status_lock=lock,
+                        llm_response_cache=rag.llm_response_cache,
+                        entity_chunks_storage=rag.entity_chunks,
+                        relation_chunks_storage=rag.relation_chunks,
+                        current_file_number=n,
+                        total_files=len(docs),
+                        file_path=d.get("file_path", "unknown_source"),
+                    )
+                except Exception as e:
+                    rec["error"] = f"{type(e).__name__}: {e}"
+                rec["messages"] = status["history_messages"]
+                out.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        for s in (rag.llm_response_cache, rag.entity_chunks, rag.relation_chunks, rag.full_entities,
+                  rag.full_relations, rag.chunk_entity_relation_graph, rag.entities_vdb, rag.relationships_vdb):
+            await s.index_done_callback()
+        await rag.finalize_storages()
+        return tok
+
+    asyncio.run(run())
+    print(json.dumps({"docs": len(docs)}))
+
+
 def main():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
+    m = sub.add_parser("merge")
+    m.add_argument("dir")
+    m.add_argument("--work", required=True)
+    m.add_argument("--docs", required=True)
+    m.add_argument("--out", required=True)
+    m.add_argument("--dim", type=int, default=8)
+    m.add_argument("--vdb", action="store_true")
+    m.add_argument("--sequential", action="store_true")
+    m.add_argument("--gc", default="{}", help="JSON overrides for global_config")
     pa = sub.add_parser("parse")
     pa.add_argument("dir")
     pa.add_argument("--in", dest="inp", required=True)
@@ -171,7 +323,7 @@ def main():
     c.add_argument("--split-only", action="store_true")
     c.add_argument("--sample", type=int, default=0)
     a = p.parse_args()
-    {"chunk": cmd_chunk, "extract": cmd_extract, "parse": cmd_parse}[a.cmd](a)
+    {"chunk": cmd_chunk, "extract": cmd_extract, "parse": cmd_parse, "merge": cmd_merge}[a.cmd](a)
 
 
 if __name__ == "__main__":

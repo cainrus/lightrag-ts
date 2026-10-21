@@ -1,0 +1,783 @@
+{
+  "doc-000": {
+    "entity_names": [
+      "100m Sprint Record",
+      "Federal Reserve Policy Announcement",
+      "Crude Oil",
+      "Carbon-Fiber Spikes",
+      "World Athletics Champi,onship",
+      "Alex",
+      "3.4% Decline",
+      "World Athletics Championship",
+      "Cruz",
+      "Global Tech Index",
+      "Tokyo",
+      "Taylor",
+      "Omega Energy",
+      "Nexon Technologies",
+      "The Device",
+      "Gold Futures",
+      "Jordan",
+      "Noah Carter",
+      "Market Selloff"
+    ],
+    "count": 19,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-000"
+  },
+  "doc-001": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Cruz",
+      "Jor<think>x</think>dan",
+      "Global Tech Index",
+      "100m Sprint Record",
+      "Tokyo",
+      "Taylor",
+      "Jordan",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Alex"
+    ],
+    "count": 13,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-001"
+  },
+  "doc-002": {
+    "entity_names": [
+      "World Athletics Championship",
+      "Global Tech Index",
+      "Alex"
+    ],
+    "count": 3,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-002"
+  },
+  "doc-003": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Cruz",
+      "Global Tech Index",
+      "100m Sprint Record",
+      "Nexon Technologies",
+      "Tokyo",
+      "Taylor",
+      "Jordan",
+      "World Athletics Cha²mpionshipHello",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Alex"
+    ],
+    "count": 14,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-003"
+  },
+  "doc-004": {
+    "entity_names": [
+      "World Athleticqs Championship",
+      "World Athletics Championship",
+      "NoaA中h Carter",
+      "100m Sprint Record",
+      "Tokyo",
+      "Carbon-Fibe《书》r Spikes",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "0100m Sprint Record",
+      "Alex"
+    ],
+    "count": 10,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-004"
+  },
+  "doc-005": {
+    "entity_names": [
+      "The Device",
+      "Cruz",
+      "Gold Futures",
+      "Global Tech Index",
+      "�>Omega Energy",
+      "Taylor",
+      "Jordan",
+      "Alex"
+    ],
+    "count": 8,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-005"
+  },
+  "doc-006": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "100m Sp123rint Record",
+      "Cruz",
+      "100m Sprint Record",
+      "Tokyo",
+      "World Athletics Championship",
+      "Taylor",
+      "Jordan",
+      "Noah Carter",
+      "Carbon-Fiber Spqikes",
+      "Alex"
+    ],
+    "count": 12,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-006"
+  },
+  "doc-007": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Cruz",
+      "100m Sprint Record",
+      "Tokyo",
+      "Taylor",
+      "Jordan",
+      "Global\" Tech Index",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Alex"
+    ],
+    "count": 12,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-007"
+  },
+  "doc-008": {
+    "entity_names": [
+      "World Athletics Championship",
+      "Gold Futures",
+      "Global Tech Index",
+      "100m Sprint Record",
+      "Glob﻿al Tech Index",
+      "Alex",
+      "Taylor",
+      "Tokyo",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Crude Oil",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Market Selloff",
+      "Nexon Technologies"
+    ],
+    "count": 16,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-008"
+  },
+  "doc-009": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Cruz",
+      "100m Sprint Record",
+      "Tokyo",
+      "Taylor",
+      "Jordan",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Alex"
+    ],
+    "count": 11,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-009"
+  },
+  "doc-010": {
+    "entity_names": [
+      "The Device",
+      "Cruz",
+      "Gold Futures",
+      "Nexon Technologies",
+      "Global Tech Index",
+      "Taylor",
+      "Omega Energy",
+      "Jordan",
+      "Market Selloff",
+      "Alex"
+    ],
+    "count": 10,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-010"
+  },
+  "doc-011": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Cruz",
+      "entity",
+      "100m Sprint Record",
+      "Tokyo",
+      "Taylor",
+      "Jordan",
+      "Alex"
+    ],
+    "count": 9,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-011"
+  },
+  "doc-012": {
+    "entity_names": [
+      "The Device",
+      "Gold Futures",
+      "Cruz",
+      "Global Tech Index",
+      "Alex",
+      "Taylor",
+      "Omega Energy",
+      "Jordan",
+      "Jord123an",
+      "Nexon Technologies"
+    ],
+    "count": 10,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-012"
+  },
+  "doc-013": {
+    "entity_names": [
+      "The Device",
+      "Cruz",
+      "the dynamics among other characters.entity",
+      "Taylor",
+      "Jordan",
+      "Alex<|COMPL1 ETE|>",
+      "Alex"
+    ],
+    "count": 7,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-013"
+  },
+  "doc-014": {
+    "entity_names": [
+      "World Athletics Championship",
+      "Global Tech Index",
+      "100m Sprint Record",
+      "G|lobal Tech Index",
+      "Tokyo",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Nexon Technologies"
+    ],
+    "count": 9,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-014"
+  },
+  "doc-015": {
+    "entity_names": [
+      "World Athletics Championship",
+      "Gold Futures",
+      "Global Tech Index",
+      "Nexon Technologies",
+      "Taylor",
+      "Crude Oil",
+      "Alex"
+    ],
+    "count": 7,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-015"
+  },
+  "doc-016": {
+    "entity_names": [
+      "The Device",
+      "Cruz",
+      "Global Tech Index",
+      "Nexon Technologies",
+      "Taylor",
+      "Jordan",
+      "Alex"
+    ],
+    "count": 7,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-016"
+  },
+  "doc-017": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "3.4% Decline",
+      "Cruz",
+      "Gold Futures",
+      "Global Tech Index",
+      "Nexon Technologies",
+      "Taylor",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Jordan",
+      "Crude Oil",
+      "Market Selloff",
+      "Alex"
+    ],
+    "count": 14,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-017"
+  },
+  "doc-018": {
+    "entity_names": [
+      "The Device",
+      "Cruz",
+      "Global Tech Index",
+      "Alex",
+      "Taylor",
+      "Jordan",
+      "GlΑΣobal TechΑΣ Index",
+      "Nexon Technologies"
+    ],
+    "count": 8,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-018"
+  },
+  "doc-019": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Gold Futures",
+      "Cruz",
+      "Global Tech Index",
+      "Nexon Technologies",
+      "Alex",
+      "Taylor",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Jordan",
+      "Crude Oil",
+      "Market Selloff",
+      "3.4% Decline"
+    ],
+    "count": 14,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-019"
+  },
+  "doc-020": {
+    "entity_names": [
+      "Cruz",
+      "Gold Futures",
+      "Global Tech Index",
+      "Omega EnergyΑΣ",
+      "Tokyo",
+      "Alex",
+      "Crude Oil",
+      "Market Selloff",
+      "Nexon Technologies"
+    ],
+    "count": 9,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-020"
+  },
+  "doc-021": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Gold Futures",
+      "Cruz",
+      "Global Tech Index",
+      "100m Sprint Record",
+      "Tokyo",
+      "Alex",
+      "Taylor",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Jordan",
+      "Crude Oil",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Market Selloff",
+      "Nexon Technologies"
+    ],
+    "count": 18,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-021"
+  },
+  "doc-022": {
+    "entity_names": [
+      "Crude +3.5Oil",
+      "World Athletics Championship",
+      "Gold Futures",
+      "Global Tech Index",
+      "100m Sprint Record",
+      "Nexon Technologies",
+      "Tokyo",
+      "Alex",
+      "Taylor",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Market Selloff",
+      "3.4% Decline"
+    ],
+    "count": 16,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-022"
+  },
+  "doc-023": {
+    "entity_names": [
+      "World Athletics Championship",
+      "Gold Futures",
+      "100m Sprint Record",
+      "Global Tech Index0",
+      "Tokyo",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Market Selloff",
+      "Nexon Technologies"
+    ],
+    "count": 12,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-023"
+  },
+  "doc-024": {
+    "entity_names": [
+      "100m Sprint Record",
+      "Federal Reserve Policy Announcement",
+      "Crude Oil",
+      "Carbon-Fiber Spikes",
+      "3.4% Decline",
+      "Alex",
+      "World Athletics Championship",
+      "Cruz",
+      "Global Tech Index",
+      "Tokyo",
+      "Taylor",
+      "Omega Energy",
+      "World Athletics Federation",
+      "Nexon Technologies",
+      "The Device",
+      "Gold Futures",
+      "Jordan",
+      "Tay)lor",
+      "Noah Carter",
+      "Market Selloff"
+    ],
+    "count": 20,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-024"
+  },
+  "doc-025": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Cruz",
+      "100m Sprint Record",
+      "T he Device",
+      "Tokyo",
+      "Taylor",
+      "Jordan",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Alex"
+    ],
+    "count": 12,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-025"
+  },
+  "doc-026": {
+    "entity_names": [
+      "World Athletics Championship",
+      "3.4% Decline",
+      "Gold Futures",
+      "Global Tech Index",
+      "Global Tech Indßex",
+      "Alex",
+      "Taylor",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Jordan",
+      "Al(ex",
+      "Crude Oil",
+      "Market Selloff",
+      "Nexon Technologies"
+    ],
+    "count": 14,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-026"
+  },
+  "doc-027": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Cruz",
+      "Global Tech Index",
+      "Tokyo",
+      "Taylor",
+      "Jordan",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "Alex"
+    ],
+    "count": 10,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-027"
+  },
+  "doc-028": {
+    "entity_names": [
+      "Gold Futures",
+      "Global Tech Index",
+      "100m Sprint Record",
+      "Nexon Technologies",
+      "Tokyo",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "(Noah Carter",
+      "Crude Oil",
+      "World Ath1.2letics Championship",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Market Selloff",
+      "Alex"
+    ],
+    "count": 14,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-028"
+  },
+  "doc-029": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Cruz",
+      "Gold Futures",
+      "Global Tech Index",
+      "Nexon Technologies",
+      "Alex",
+      "Taylor",
+      "Omega Energy",
+      "Federal Reserve Policy Ann12ouncement",
+      "Jordan",
+      "Taylxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "Crude Oil",
+      "Carbon-Fiber S123pikes",
+      "Market Selloff",
+      "3.4% Decline"
+    ],
+    "count": 16,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-029"
+  },
+  "doc-030": {
+    "entity_names": [
+      "Crude  Oil",
+      "The Device",
+      "Cruz",
+      "Gold Futures",
+      "Global Tech Index",
+      "Alex﻿",
+      "Alex",
+      "Taylor",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Jordan",
+      "Market Selloff",
+      "Nexon Technologies"
+    ],
+    "count": 13,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-030"
+  },
+  "doc-031": {
+    "entity_names": [
+      "The Device",
+      "Gold Futures",
+      "Cruz",
+      "Global Tech Index",
+      "Nexon Technologies",
+      "Taylor",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Jordan",
+      "Crude Oil",
+      "3.4% Decline"
+    ],
+    "count": 11,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-031"
+  },
+  "doc-032": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "3.4% Decline",
+      "Gold Futures",
+      "Jor﻿dan",
+      "Cruz",
+      "Global Tech Index",
+      "Taylor",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Jordan",
+      "Crude Oil",
+      "Market Selloff",
+      "Alex"
+    ],
+    "count": 14,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-032"
+  },
+  "doc-033": {
+    "entity_names": [
+      "3.4% Decline",
+      "Gold Futures",
+      "Global Tech Index",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "World Athletics� Championship",
+      "Crude Oil",
+      "Market Selloff",
+      "Nexon Technologies"
+    ],
+    "count": 9,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-033"
+  },
+  "doc-034": {
+    "entity_names": [
+      "The Device",
+      "Ale《书》x",
+      "Cruz",
+      "Gold Futures",
+      "Global Tech Index",
+      "Taylor",
+      "Alex<1",
+      "Jordan",
+      "Alex"
+    ],
+    "count": 9,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-034"
+  },
+  "doc-035": {
+    "entity_names": [
+      "World Athletics Championship",
+      "Gold Futures",
+      "Nexon Technologies",
+      "Global12 Tech Index",
+      "100m Sprint Record",
+      "Tokyo",
+      "Omega Energy",
+      "Federal Reserve Policy Announcement",
+      "Crude Oil",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation",
+      "Market Selloff",
+      "3.4% Decline"
+    ],
+    "count": 14,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-035"
+  },
+  "doc-036": {
+    "entity_names": [
+      "100m Spri&nt Record",
+      "World Athletics Championship",
+      "100m Sprint Record",
+      "Tokyo",
+      "W+3.5orld Athletics Championship",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "World Athletics Federation"
+    ],
+    "count": 8,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-036"
+  },
+  "doc-037": {
+    "entity_names": [
+      "The Device",
+      "World Athletics Championship",
+      "Cruz",
+      "Taylor",
+      "Jordan",
+      "Noah Carter",
+      "Alex"
+    ],
+    "count": 7,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-037"
+  },
+  "doc-038": {
+    "entity_names": [
+      "The Device",
+      "Gold Futures",
+      "Cruz",
+      "Global Tech Index",
+      "100m Sprint Record",
+      "Tokyo",
+      "Alex",
+      "Taylor",
+      "Omega Energy",
+      "Jordan",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "Nexon Technologies"
+    ],
+    "count": 13,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-038"
+  },
+  "doc-039": {
+    "entity_names": [
+      "Gold Futures",
+      "Global Tech Index",
+      "100m Sprint Record",
+      "Tokyo",
+      "Omega Energy",
+      "Crude Oil",
+      "Noah Carter",
+      "Carbon-Fiber Spikes",
+      "Nexon Technologies"
+    ],
+    "count": 9,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-039"
+  }
+}

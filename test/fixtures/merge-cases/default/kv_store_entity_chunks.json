@@ -1,0 +1,1081 @@
+{
+  "Global Tech Index": {
+    "chunk_ids": [
+      "chunk-0000",
+      "chunk-0006",
+      "chunk-0008",
+      "chunk-0011",
+      "chunk-0013",
+      "chunk-0020",
+      "chunk-0035",
+      "chunk-0036",
+      "chunk-0040",
+      "chunk-0043",
+      "chunk-0048",
+      "chunk-0056",
+      "chunk-0057",
+      "chunk-0059",
+      "chunk-0060",
+      "chunk-0062",
+      "chunk-0065",
+      "chunk-0066",
+      "chunk-0071",
+      "chunk-0075",
+      "chunk-0078",
+      "chunk-0079",
+      "chunk-0081",
+      "chunk-0087",
+      "chunk-0090",
+      "chunk-0097",
+      "chunk-0099",
+      "chunk-0107",
+      "chunk-0108",
+      "chunk-0112",
+      "chunk-0114",
+      "chunk-0119",
+      "chunk-0120",
+      "chunk-0121",
+      "chunk-0124",
+      "chunk-0125",
+      "chunk-0128",
+      "chunk-0132",
+      "chunk-0133",
+      "chunk-0135",
+      "chunk-0136",
+      "chunk-0142",
+      "chunk-0143",
+      "chunk-0153",
+      "chunk-0156",
+      "chunk-0157",
+      "chunk-0159"
+    ],
+    "count": 47,
+    "update_time": 1760000000,
+    "_id": "Global Tech Index"
+  },
+  "Nexon Technologies": {
+    "chunk_ids": [
+      "chunk-0000",
+      "chunk-0006",
+      "chunk-0013",
+      "chunk-0035",
+      "chunk-0036",
+      "chunk-0043",
+      "chunk-0048",
+      "chunk-0056",
+      "chunk-0059",
+      "chunk-0060",
+      "chunk-0064",
+      "chunk-0071",
+      "chunk-0075",
+      "chunk-0079",
+      "chunk-0081",
+      "chunk-0087",
+      "chunk-0090",
+      "chunk-0093",
+      "chunk-0097",
+      "chunk-0099",
+      "chunk-0107",
+      "chunk-0114",
+      "chunk-0119",
+      "chunk-0120",
+      "chunk-0124",
+      "chunk-0125",
+      "chunk-0135",
+      "chunk-0143",
+      "chunk-0142",
+      "chunk-0153",
+      "chunk-0156",
+      "chunk-0159"
+    ],
+    "count": 32,
+    "update_time": 1760000000,
+    "_id": "Nexon Technologies"
+  },
+  "Omega Energy": {
+    "chunk_ids": [
+      "chunk-0000",
+      "chunk-0035",
+      "chunk-0043",
+      "chunk-0048",
+      "chunk-0071",
+      "chunk-0079",
+      "chunk-0087",
+      "chunk-0090",
+      "chunk-0093",
+      "chunk-0097",
+      "chunk-0099",
+      "chunk-0107",
+      "chunk-0114",
+      "chunk-0119",
+      "chunk-0120",
+      "chunk-0124",
+      "chunk-0125",
+      "chunk-0128",
+      "chunk-0135",
+      "chunk-0143",
+      "chunk-0153",
+      "chunk-0156"
+    ],
+    "count": 22,
+    "update_time": 1760000000,
+    "_id": "Omega Energy"
+  },
+  "Gold Futures": {
+    "chunk_ids": [
+      "chunk-0000",
+      "chunk-0006",
+      "chunk-0020",
+      "chunk-0035",
+      "chunk-0036",
+      "chunk-0043",
+      "chunk-0048",
+      "chunk-0060",
+      "chunk-0071",
+      "chunk-0079",
+      "chunk-0081",
+      "chunk-0087",
+      "chunk-0090",
+      "chunk-0093",
+      "chunk-0097",
+      "chunk-0099",
+      "chunk-0107",
+      "chunk-0114",
+      "chunk-0119",
+      "chunk-0120",
+      "chunk-0124",
+      "chunk-0125",
+      "chunk-0128",
+      "chunk-0135",
+      "chunk-0136",
+      "chunk-0143",
+      "chunk-0142",
+      "chunk-0153",
+      "chunk-0156",
+      "chunk-0159"
+    ],
+    "count": 30,
+    "update_time": 1760000000,
+    "_id": "Gold Futures"
+  },
+  "Crude Oil": {
+    "chunk_ids": [
+      "chunk-0000",
+      "chunk-0035",
+      "chunk-0060",
+      "chunk-0071",
+      "chunk-0079",
+      "chunk-0081",
+      "chunk-0087",
+      "chunk-0097",
+      "chunk-0099",
+      "chunk-0107",
+      "chunk-0114",
+      "chunk-0119",
+      "chunk-0124",
+      "chunk-0128",
+      "chunk-0135",
+      "chunk-0143",
+      "chunk-0156"
+    ],
+    "count": 17,
+    "update_time": 1760000000,
+    "_id": "Crude Oil"
+  },
+  "Market Selloff": {
+    "chunk_ids": [
+      "chunk-0000",
+      "chunk-0006",
+      "chunk-0035",
+      "chunk-0036",
+      "chunk-0043",
+      "chunk-0059",
+      "chunk-0071",
+      "chunk-0079",
+      "chunk-0081",
+      "chunk-0087",
+      "chunk-0090",
+      "chunk-0093",
+      "chunk-0097",
+      "chunk-0099",
+      "chunk-0107",
+      "chunk-0114",
+      "chunk-0119",
+      "chunk-0120",
+      "chunk-0125",
+      "chunk-0128",
+      "chunk-0135",
+      "chunk-0143",
+      "chunk-0142",
+      "chunk-0159"
+    ],
+    "count": 24,
+    "update_time": 1760000000,
+    "_id": "Market Selloff"
+  },
+  "Federal Reserve Policy Announcement": {
+    "chunk_ids": [
+      "chunk-0000",
+      "chunk-0035",
+      "chunk-0071",
+      "chunk-0079",
+      "chunk-0087",
+      "chunk-0090",
+      "chunk-0093",
+      "chunk-0097",
+      "chunk-0099",
+      "chunk-0107",
+      "chunk-0114",
+      "chunk-0120",
+      "chunk-0125",
+      "chunk-0128",
+      "chunk-0135",
+      "chunk-0143",
+      "chunk-0142"
+    ],
+    "count": 17,
+    "update_time": 1760000000,
+    "_id": "Federal Reserve Policy Announcement"
+  },
+  "3.4% Decline": {
+    "chunk_ids": [
+      "chunk-0000",
+      "chunk-0071",
+      "chunk-0079",
+      "chunk-0090",
+      "chunk-0097",
+      "chunk-0099",
+      "chunk-0107",
+      "chunk-0119",
+      "chunk-0125",
+      "chunk-0128",
+      "chunk-0135",
+      "chunk-0143"
+    ],
+    "count": 12,
+    "update_time": 1760000000,
+    "_id": "3.4% Decline"
+  },
+  "World Athletics Championship": {
+    "chunk_ids": [
+      "chunk-0001",
+      "chunk-0005",
+      "chunk-0010",
+      "chunk-0015",
+      "chunk-0017",
+      "chunk-0019",
+      "chunk-0024",
+      "chunk-0029",
+      "chunk-0030",
+      "chunk-0033",
+      "chunk-0037",
+      "chunk-0046",
+      "chunk-0058",
+      "chunk-0061",
+      "chunk-0070",
+      "chunk-0077",
+      "chunk-0084",
+      "chunk-0089",
+      "chunk-0092",
+      "chunk-0094",
+      "chunk-0095",
+      "chunk-0098",
+      "chunk-0101",
+      "chunk-0106",
+      "chunk-0110",
+      "chunk-0113",
+      "chunk-0117",
+      "chunk-0127",
+      "chunk-0129",
+      "chunk-0137",
+      "chunk-0140",
+      "chunk-0141",
+      "chunk-0144",
+      "chunk-0145",
+      "chunk-0146",
+      "chunk-0147",
+      "chunk-0149"
+    ],
+    "count": 37,
+    "update_time": 1760000000,
+    "_id": "World Athletics Championship"
+  },
+  "World Athletics Champi,onship": {
+    "chunk_ids": [
+      "chunk-0002"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "World Athletics Champi,onship"
+  },
+  "Tokyo": {
+    "chunk_ids": [
+      "chunk-0002",
+      "chunk-0005",
+      "chunk-0015",
+      "chunk-0017",
+      "chunk-0019",
+      "chunk-0024",
+      "chunk-0026",
+      "chunk-0029",
+      "chunk-0030",
+      "chunk-0033",
+      "chunk-0037",
+      "chunk-0046",
+      "chunk-0058",
+      "chunk-0083",
+      "chunk-0084",
+      "chunk-0089",
+      "chunk-0092",
+      "chunk-0094",
+      "chunk-0098",
+      "chunk-0101",
+      "chunk-0106",
+      "chunk-0110",
+      "chunk-0113",
+      "chunk-0117",
+      "chunk-0127",
+      "chunk-0137",
+      "chunk-0141",
+      "chunk-0144",
+      "chunk-0146",
+      "chunk-0147",
+      "chunk-0145",
+      "chunk-0154",
+      "chunk-0158"
+    ],
+    "count": 33,
+    "update_time": 1760000000,
+    "_id": "Tokyo"
+  },
+  "Noah Carter": {
+    "chunk_ids": [
+      "chunk-0002",
+      "chunk-0005",
+      "chunk-0015",
+      "chunk-0017",
+      "chunk-0019",
+      "chunk-0024",
+      "chunk-0026",
+      "chunk-0029",
+      "chunk-0030",
+      "chunk-0033",
+      "chunk-0037",
+      "chunk-0058",
+      "chunk-0084",
+      "chunk-0089",
+      "chunk-0092",
+      "chunk-0094",
+      "chunk-0095",
+      "chunk-0098",
+      "chunk-0101",
+      "chunk-0106",
+      "chunk-0110",
+      "chunk-0117",
+      "chunk-0127",
+      "chunk-0141",
+      "chunk-0146",
+      "chunk-0147",
+      "chunk-0144",
+      "chunk-0145",
+      "chunk-0149",
+      "chunk-0154",
+      "chunk-0158"
+    ],
+    "count": 31,
+    "update_time": 1760000000,
+    "_id": "Noah Carter"
+  },
+  "100m Sprint Record": {
+    "chunk_ids": [
+      "chunk-0002",
+      "chunk-0005",
+      "chunk-0015",
+      "chunk-0017",
+      "chunk-0026",
+      "chunk-0029",
+      "chunk-0030",
+      "chunk-0033",
+      "chunk-0037",
+      "chunk-0046",
+      "chunk-0058",
+      "chunk-0084",
+      "chunk-0089",
+      "chunk-0094",
+      "chunk-0095",
+      "chunk-0098",
+      "chunk-0101",
+      "chunk-0106",
+      "chunk-0113",
+      "chunk-0117",
+      "chunk-0141",
+      "chunk-0146",
+      "chunk-0147",
+      "chunk-0144",
+      "chunk-0154",
+      "chunk-0158"
+    ],
+    "count": 26,
+    "update_time": 1760000000,
+    "_id": "100m Sprint Record"
+  },
+  "Carbon-Fiber Spikes": {
+    "chunk_ids": [
+      "chunk-0002",
+      "chunk-0005",
+      "chunk-0015",
+      "chunk-0017",
+      "chunk-0029",
+      "chunk-0030",
+      "chunk-0033",
+      "chunk-0037",
+      "chunk-0058",
+      "chunk-0084",
+      "chunk-0089",
+      "chunk-0094",
+      "chunk-0095",
+      "chunk-0098",
+      "chunk-0101",
+      "chunk-0106",
+      "chunk-0110",
+      "chunk-0113",
+      "chunk-0127",
+      "chunk-0141",
+      "chunk-0146",
+      "chunk-0147",
+      "chunk-0144",
+      "chunk-0154",
+      "chunk-0158"
+    ],
+    "count": 25,
+    "update_time": 1760000000,
+    "_id": "Carbon-Fiber Spikes"
+  },
+  "Alex": {
+    "chunk_ids": [
+      "chunk-0003",
+      "chunk-0004",
+      "chunk-0007",
+      "chunk-0009",
+      "chunk-0012",
+      "chunk-0016",
+      "chunk-0018",
+      "chunk-0021",
+      "chunk-0022",
+      "chunk-0023",
+      "chunk-0025",
+      "chunk-0027",
+      "chunk-0028",
+      "chunk-0032",
+      "chunk-0038",
+      "chunk-0039",
+      "chunk-0041",
+      "chunk-0042",
+      "chunk-0044",
+      "chunk-0047",
+      "chunk-0050",
+      "chunk-0051",
+      "chunk-0049",
+      "chunk-0053",
+      "chunk-0054",
+      "chunk-0055",
+      "chunk-0063",
+      "chunk-0067",
+      "chunk-0068",
+      "chunk-0069",
+      "chunk-0072",
+      "chunk-0073",
+      "chunk-0076",
+      "chunk-0080",
+      "chunk-0085",
+      "chunk-0086",
+      "chunk-0088",
+      "chunk-0091",
+      "chunk-0096",
+      "chunk-0100",
+      "chunk-0102",
+      "chunk-0103",
+      "chunk-0104",
+      "chunk-0109",
+      "chunk-0111",
+      "chunk-0115",
+      "chunk-0116",
+      "chunk-0118",
+      "chunk-0122",
+      "chunk-0123",
+      "chunk-0126",
+      "chunk-0130",
+      "chunk-0131",
+      "chunk-0138",
+      "chunk-0139",
+      "chunk-0148",
+      "chunk-0150",
+      "chunk-0151",
+      "chunk-0152",
+      "chunk-0155"
+    ],
+    "count": 60,
+    "update_time": 1760000000,
+    "_id": "Alex"
+  },
+  "Taylor": {
+    "chunk_ids": [
+      "chunk-0003",
+      "chunk-0004",
+      "chunk-0007",
+      "chunk-0012",
+      "chunk-0022",
+      "chunk-0023",
+      "chunk-0025",
+      "chunk-0027",
+      "chunk-0028",
+      "chunk-0032",
+      "chunk-0038",
+      "chunk-0041",
+      "chunk-0044",
+      "chunk-0047",
+      "chunk-0049",
+      "chunk-0051",
+      "chunk-0054",
+      "chunk-0053",
+      "chunk-0055",
+      "chunk-0063",
+      "chunk-0067",
+      "chunk-0068",
+      "chunk-0069",
+      "chunk-0072",
+      "chunk-0073",
+      "chunk-0076",
+      "chunk-0085",
+      "chunk-0086",
+      "chunk-0091",
+      "chunk-0088",
+      "chunk-0096",
+      "chunk-0100",
+      "chunk-0102",
+      "chunk-0103",
+      "chunk-0104",
+      "chunk-0109",
+      "chunk-0111",
+      "chunk-0116",
+      "chunk-0118",
+      "chunk-0123",
+      "chunk-0126",
+      "chunk-0130",
+      "chunk-0131",
+      "chunk-0138",
+      "chunk-0139",
+      "chunk-0151",
+      "chunk-0152",
+      "chunk-0155"
+    ],
+    "count": 48,
+    "update_time": 1760000000,
+    "_id": "Taylor"
+  },
+  "Jordan": {
+    "chunk_ids": [
+      "chunk-0003",
+      "chunk-0004",
+      "chunk-0012",
+      "chunk-0022",
+      "chunk-0023",
+      "chunk-0025",
+      "chunk-0027",
+      "chunk-0028",
+      "chunk-0038",
+      "chunk-0041",
+      "chunk-0044",
+      "chunk-0047",
+      "chunk-0049",
+      "chunk-0051",
+      "chunk-0054",
+      "chunk-0055",
+      "chunk-0067",
+      "chunk-0068",
+      "chunk-0069",
+      "chunk-0072",
+      "chunk-0073",
+      "chunk-0076",
+      "chunk-0085",
+      "chunk-0086",
+      "chunk-0088",
+      "chunk-0096",
+      "chunk-0102",
+      "chunk-0103",
+      "chunk-0104",
+      "chunk-0111",
+      "chunk-0116",
+      "chunk-0118",
+      "chunk-0123",
+      "chunk-0126",
+      "chunk-0131",
+      "chunk-0138",
+      "chunk-0139",
+      "chunk-0151",
+      "chunk-0155"
+    ],
+    "count": 39,
+    "update_time": 1760000000,
+    "_id": "Jordan"
+  },
+  "Cruz": {
+    "chunk_ids": [
+      "chunk-0003",
+      "chunk-0004",
+      "chunk-0012",
+      "chunk-0023",
+      "chunk-0025",
+      "chunk-0027",
+      "chunk-0028",
+      "chunk-0038",
+      "chunk-0041",
+      "chunk-0044",
+      "chunk-0047",
+      "chunk-0045",
+      "chunk-0049",
+      "chunk-0051",
+      "chunk-0054",
+      "chunk-0055",
+      "chunk-0067",
+      "chunk-0068",
+      "chunk-0069",
+      "chunk-0073",
+      "chunk-0076",
+      "chunk-0082",
+      "chunk-0086",
+      "chunk-0088",
+      "chunk-0096",
+      "chunk-0102",
+      "chunk-0103",
+      "chunk-0111",
+      "chunk-0116",
+      "chunk-0118",
+      "chunk-0123",
+      "chunk-0126",
+      "chunk-0130",
+      "chunk-0131",
+      "chunk-0138",
+      "chunk-0151",
+      "chunk-0155"
+    ],
+    "count": 37,
+    "update_time": 1760000000,
+    "_id": "Cruz"
+  },
+  "The Device": {
+    "chunk_ids": [
+      "chunk-0003",
+      "chunk-0004",
+      "chunk-0012",
+      "chunk-0023",
+      "chunk-0027",
+      "chunk-0028",
+      "chunk-0038",
+      "chunk-0041",
+      "chunk-0044",
+      "chunk-0047",
+      "chunk-0049",
+      "chunk-0051",
+      "chunk-0054",
+      "chunk-0055",
+      "chunk-0067",
+      "chunk-0068",
+      "chunk-0069",
+      "chunk-0073",
+      "chunk-0076",
+      "chunk-0086",
+      "chunk-0088",
+      "chunk-0096",
+      "chunk-0103",
+      "chunk-0111",
+      "chunk-0116",
+      "chunk-0118",
+      "chunk-0123",
+      "chunk-0126",
+      "chunk-0131",
+      "chunk-0138",
+      "chunk-0151",
+      "chunk-0155"
+    ],
+    "count": 32,
+    "update_time": 1760000000,
+    "_id": "The Device"
+  },
+  "World Athletics Federation": {
+    "chunk_ids": [
+      "chunk-0005",
+      "chunk-0015",
+      "chunk-0017",
+      "chunk-0029",
+      "chunk-0030",
+      "chunk-0033",
+      "chunk-0037",
+      "chunk-0058",
+      "chunk-0084",
+      "chunk-0089",
+      "chunk-0094",
+      "chunk-0098",
+      "chunk-0101",
+      "chunk-0113",
+      "chunk-0141",
+      "chunk-0146",
+      "chunk-0147"
+    ],
+    "count": 17,
+    "update_time": 1760000000,
+    "_id": "World Athletics Federation"
+  },
+  "Jor<think>x</think>dan": {
+    "chunk_ids": [
+      "chunk-0007"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Jor<think>x</think>dan"
+  },
+  "World Athletics Cha²mpionshipHello": {
+    "chunk_ids": [
+      "chunk-0014"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "World Athletics Cha²mpionshipHello"
+  },
+  "NoaA中h Carter": {
+    "chunk_ids": [
+      "chunk-0017"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "NoaA中h Carter"
+  },
+  "World Athleticqs Championship": {
+    "chunk_ids": [
+      "chunk-0017"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "World Athleticqs Championship"
+  },
+  "0100m Sprint Record": {
+    "chunk_ids": [
+      "chunk-0017"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "0100m Sprint Record"
+  },
+  "Carbon-Fibe《书》r Spikes": {
+    "chunk_ids": [
+      "chunk-0017"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Carbon-Fibe《书》r Spikes"
+  },
+  "�>Omega Energy": {
+    "chunk_ids": [
+      "chunk-0020"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "�>Omega Energy"
+  },
+  "100m Sp123rint Record": {
+    "chunk_ids": [
+      "chunk-0024"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "100m Sp123rint Record"
+  },
+  "Carbon-Fiber Spqikes": {
+    "chunk_ids": [
+      "chunk-0024"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Carbon-Fiber Spqikes"
+  },
+  "World Athletics Championship": {
+    "chunk_ids": [
+      "chunk-0026"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "World Athletics Championship"
+  },
+  "Global\" Tech Index": {
+    "chunk_ids": [
+      "chunk-0031"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Global\" Tech Index"
+  },
+  "Glob﻿al Tech Index": {
+    "chunk_ids": [
+      "chunk-0034"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Glob﻿al Tech Index"
+  },
+  "entity": {
+    "chunk_ids": [
+      "chunk-0045"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "entity"
+  },
+  "Jord123an": {
+    "chunk_ids": [
+      "chunk-0051"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Jord123an"
+  },
+  "Alex<|COMPL1 ETE|>": {
+    "chunk_ids": [
+      "chunk-0052"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Alex<|COMPL1 ETE|>"
+  },
+  "the dynamics among other characters.entity": {
+    "chunk_ids": [
+      "chunk-0053"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "the dynamics among other characters.entity"
+  },
+  "G|lobal Tech Index": {
+    "chunk_ids": [
+      "chunk-0059"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "G|lobal Tech Index"
+  },
+  "GlΑΣobal TechΑΣ Index": {
+    "chunk_ids": [
+      "chunk-0074"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "GlΑΣobal TechΑΣ Index"
+  },
+  "Omega EnergyΑΣ": {
+    "chunk_ids": [
+      "chunk-0081"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Omega EnergyΑΣ"
+  },
+  "Crude +3.5Oil": {
+    "chunk_ids": [
+      "chunk-0090"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Crude +3.5Oil"
+  },
+  "Global Tech Index0": {
+    "chunk_ids": [
+      "chunk-0093"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Global Tech Index0"
+  },
+  "Tay)lor": {
+    "chunk_ids": [
+      "chunk-0096"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Tay)lor"
+  },
+  "T he Device": {
+    "chunk_ids": [
+      "chunk-0102"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "T he Device"
+  },
+  "Al(ex": {
+    "chunk_ids": [
+      "chunk-0105"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Al(ex"
+  },
+  "Global Tech Indßex": {
+    "chunk_ids": [
+      "chunk-0107"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Global Tech Indßex"
+  },
+  "World Ath1.2letics Championship": {
+    "chunk_ids": [
+      "chunk-0113"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "World Ath1.2letics Championship"
+  },
+  "(Noah Carter": {
+    "chunk_ids": [
+      "chunk-0113"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "(Noah Carter"
+  },
+  "Taylxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": {
+    "chunk_ids": [
+      "chunk-0118"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Taylxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "Federal Reserve Policy Ann12ouncement": {
+    "chunk_ids": [
+      "chunk-0119"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Federal Reserve Policy Ann12ouncement"
+  },
+  "Carbon-Fiber S123pikes": {
+    "chunk_ids": [
+      "chunk-0117"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Carbon-Fiber S123pikes"
+  },
+  "Crude  Oil": {
+    "chunk_ids": [
+      "chunk-0120"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Crude  Oil"
+  },
+  "Alex﻿": {
+    "chunk_ids": [
+      "chunk-0123"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Alex﻿"
+  },
+  "Jor﻿dan": {
+    "chunk_ids": [
+      "chunk-0130"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Jor﻿dan"
+  },
+  "World Athletics� Championship": {
+    "chunk_ids": [
+      "chunk-0134"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "World Athletics� Championship"
+  },
+  "Alex<1": {
+    "chunk_ids": [
+      "chunk-0139"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Alex<1"
+  },
+  "Ale《书》x": {
+    "chunk_ids": [
+      "chunk-0139"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Ale《书》x"
+  },
+  "Global12 Tech Index": {
+    "chunk_ids": [
+      "chunk-0143"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "Global12 Tech Index"
+  },
+  "W+3.5orld Athletics Championship": {
+    "chunk_ids": [
+      "chunk-0147"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "W+3.5orld Athletics Championship"
+  },
+  "100m Spri&nt Record": {
+    "chunk_ids": [
+      "chunk-0145"
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "100m Spri&nt Record"
+  }
+}
