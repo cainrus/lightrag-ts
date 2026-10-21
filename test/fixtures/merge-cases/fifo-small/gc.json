@@ -1,0 +1,1 @@
+{"source_ids_limit_method":"FIFO","max_source_ids_per_entity":3,"max_source_ids_per_relation":2,"max_file_paths":2,"force_llm_summary_on_merge":4,"summary_max_tokens":120,"summary_context_size":200}

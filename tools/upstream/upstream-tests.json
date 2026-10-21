@@ -1,0 +1,26 @@
+{
+  "upstream": "v1.4.16",
+  "note": "Upstream's own tests, run unchanged against lightrag-ts by tools/upstream/run-upstream-tests.ts (d11). Every test of a listed file is either `ts` (must reach the TS code) or skipped with a reason; an unlisted test stops the run.",
+  "files": {
+    "tests/test_chunking.py": {
+      "default": "ts",
+      "skip": { "test_decode_preserves_content": "checks the test file's own tokenizer, no lightrag code" }
+    },
+    "tests/test_remove_think_tags.py": { "default": "ts" },
+    "tests/test_extract_entities.py": { "default": "ts" },
+    "tests/test_description_api_validation.py": {
+      "ts": [
+        "test_merge_nodes_then_upsert_handles_missing_legacy_description",
+        "test_handle_single_relationship_extraction_ignores_empty_description"
+      ],
+      "skip": {
+        "test_acreate_entity_rejects_empty_description": "utils_graph is ported in B4",
+        "test_acreate_relation_rejects_empty_description": "utils_graph is ported in B4",
+        "test_aedit_entity_rejects_empty_description": "utils_graph is ported in B4",
+        "test_aedit_relation_rejects_empty_description": "utils_graph is ported in B4",
+        "test_aedit_entity_allows_updates_without_description": "utils_graph is ported in B4",
+        "test_merge_entities_preserves_file_path_in_vector_updates": "utils_graph is ported in B4"
+      }
+    }
+  }
+}

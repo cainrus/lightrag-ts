@@ -1,0 +1,282 @@
+{
+  "doc-000": {
+    "relation_pairs": [
+      [
+        "Global Tech Index",
+        "Market Selloff"
+      ]
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-000"
+  },
+  "doc-001": {
+    "relation_pairs": [
+      [
+        "Cruz",
+        "Jordan"
+      ],
+      [
+        "Global Tech Index",
+        "Nexon Technologies"
+      ],
+      [
+        "Global Tech Index",
+        "Market Selloff"
+      ],
+      [
+        "100m Sprint Record",
+        "Noah Carter"
+      ],
+      [
+        "Alex",
+        "Jor<think>x</think>dan"
+      ],
+      [
+        "Alex",
+        "Jordan"
+      ],
+      [
+        "Carbon-Fiber Spikes",
+        "Noah Carter"
+      ],
+      [
+        "Tokyo",
+        "World Athletics Championship"
+      ],
+      [
+        "Gold Futures",
+        "Market Selloff"
+      ],
+      [
+        "Noah Carter",
+        "World Athletics Championship"
+      ],
+      [
+        "Taylor",
+        "The Device"
+      ],
+      [
+        "Alex",
+        "Taylor"
+      ]
+    ],
+    "count": 12,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-001"
+  },
+  "doc-003": {
+    "relation_pairs": [
+      [
+        "Jordan",
+        "Taylor"
+      ],
+      [
+        "Alex",
+        "Jordan"
+      ],
+      [
+        "Cruz",
+        "Jordan"
+      ]
+    ],
+    "count": 3,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-003"
+  },
+  "doc-004": {
+    "relation_pairs": [
+      [
+        "Tokyo",
+        "World Athleticqs Championship"
+      ],
+      [
+        "Carbon-Fibe《书》r Spikes",
+        "Noah Carter"
+      ],
+      [
+        "0100m Sprint Record",
+        "Noah Carter"
+      ],
+      [
+        "Tokyo",
+        "World Athletics Championship"
+      ],
+      [
+        "Noah Carter",
+        "World Athletics Championship"
+      ]
+    ],
+    "count": 5,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-004"
+  },
+  "doc-005": {
+    "relation_pairs": [
+      [
+        "Taylor",
+        "The Device"
+      ],
+      [
+        "Jordan",
+        "Taylor"
+      ]
+    ],
+    "count": 2,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-005"
+  },
+  "doc-007": {
+    "relation_pairs": [
+      [
+        "Carbon-Fiber Spikes",
+        "Noah Carter"
+      ],
+      [
+        "100m Sprint Record",
+        "Noah Carter"
+      ]
+    ],
+    "count": 2,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-007"
+  },
+  "doc-009": {
+    "relation_pairs": [
+      [
+        "Global Tech Index",
+        "Nexon Technologies"
+      ],
+      [
+        "Gold Futures",
+        "Market Selloff"
+      ]
+    ],
+    "count": 2,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-009"
+  },
+  "doc-011": {
+    "relation_pairs": [
+      [
+        "Cruz",
+        "entity"
+      ]
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-011"
+  },
+  "doc-012": {
+    "relation_pairs": [
+      [
+        "Cruz",
+        "Jord123an"
+      ]
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-012"
+  },
+  "doc-013": {
+    "relation_pairs": [
+      [
+        "Taylor",
+        "the dynamics among other characters.entity"
+      ]
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-013"
+  },
+  "doc-017": {
+    "relation_pairs": [
+      [
+        "Federal Reserve Policy Announcement",
+        "Market Selloff"
+      ]
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-017"
+  },
+  "doc-024": {
+    "relation_pairs": [
+      [
+        "Alex",
+        "Tay)lor"
+      ],
+      [
+        "Federal Reserve Policy Announcement",
+        "Market Selloff"
+      ]
+    ],
+    "count": 2,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-024"
+  },
+  "doc-026": {
+    "relation_pairs": [
+      [
+        "Global Tech Indßex",
+        "Nexon Technologies"
+      ]
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-026"
+  },
+  "doc-029": {
+    "relation_pairs": [
+      [
+        "Carbon-Fiber S123pikes",
+        "Noah Carter"
+      ]
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-029"
+  },
+  "doc-034": {
+    "relation_pairs": [
+      [
+        "Alex<1",
+        "Taylor"
+      ],
+      [
+        "Ale《书》x",
+        "Jordan"
+      ]
+    ],
+    "count": 2,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-034"
+  },
+  "doc-036": {
+    "relation_pairs": [
+      [
+        "100m Spri&nt Record",
+        "Noah Carter"
+      ]
+    ],
+    "count": 1,
+    "create_time": 1760000000,
+    "update_time": 1760000000,
+    "_id": "doc-036"
+  }
+}

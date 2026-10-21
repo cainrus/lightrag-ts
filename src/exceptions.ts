@@ -20,6 +20,17 @@ export class ChunkTokenLimitExceededError extends Error {
   }
 }
 
+/**
+ * An error named after the Python exception upstream raises at the same spot
+ * (ValueError, IndexError, ...), so callers and the upstream-test adapter can
+ * tell them apart the way Python code does.
+ */
+export function pyError(type: 'ValueError' | 'IndexError' | 'KeyError' | 'TypeError', message: string): Error {
+  const e = new Error(message);
+  e.name = type;
+  return e;
+}
+
 /** exceptions.PipelineCancelledException */
 export class PipelineCancelledException extends Error {
   constructor(message = 'User cancelled') {

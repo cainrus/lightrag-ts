@@ -23,6 +23,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "node --test 'test/**/*.test.ts'",
+    "test:upstream": "node tools/upstream/run-upstream-tests.ts",
     "store:stats": "node scripts/store-stats.ts",
     "parity:extract": "node parity/replay-extract.ts",
     "parity:storages": "node parity/storages.ts",
@@ -40,12 +41,14 @@
   ],
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "@types/pako": "^2.0.4",
     "graphology-types": "^0.24.8",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "graphology": "^0.26.0",
     "js-tiktoken": "1.0.21",
+    "pako": "2.1.0",
     "saxes": "^6.0.0"
   }
 }

@@ -1,0 +1,784 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d13" for="edge" attr.name="truncate" attr.type="string" />
+  <key id="d12" for="edge" attr.name="created_at" attr.type="long" />
+  <key id="d11" for="edge" attr.name="file_path" attr.type="string" />
+  <key id="d10" for="edge" attr.name="source_id" attr.type="string" />
+  <key id="d9" for="edge" attr.name="keywords" attr.type="string" />
+  <key id="d8" for="edge" attr.name="description" attr.type="string" />
+  <key id="d7" for="edge" attr.name="weight" attr.type="double" />
+  <key id="d6" for="node" attr.name="truncate" attr.type="string" />
+  <key id="d5" for="node" attr.name="created_at" attr.type="long" />
+  <key id="d4" for="node" attr.name="file_path" attr.type="string" />
+  <key id="d3" for="node" attr.name="source_id" attr.type="string" />
+  <key id="d2" for="node" attr.name="description" attr.type="string" />
+  <key id="d1" for="node" attr.name="entity_type" attr.type="string" />
+  <key id="d0" for="node" attr.name="entity_id" attr.type="string" />
+  <graph edgedefault="undirected">
+    <node id="Global Tech Index">
+      <data key="d0">Global Tech Index</data>
+      <data key="d1">category</data>
+      <data key="d2">Stub summary 54676a63612d831a1d836dc1c584a4c5&lt;SEP&gt;The Global Tech Index tracks the performance of major technology stocks and experienced a 3.4% decline today.&lt;SEP&gt;The Global Tech Index tracks the performance of major technology stocks and experienced a )3.4% decline today.&lt;SEP&gt;The Global Tech Index tracks the performance of major technology stocks and experienced a 3.4% decline today.&lt;SEP&gt;The Global Tech Index tracks the performan.5ce of major technology stocks and experienced a 3.4% decline today.&lt;SEP&gt;The Global Tech Index tracks the performance of major technology stocks and experienced a 3.4% decline tod(ay.&lt;SEP&gt;The Global Tech Index tracks the performance of major technology stocks and experienced a 3.4% decline today.</data>
+      <data key="d3">chunk-0000&lt;SEP&gt;chunk-0006&lt;SEP&gt;chunk-0008&lt;SEP&gt;chunk-0011&lt;SEP&gt;chunk-0013&lt;SEP&gt;chunk-0020&lt;SEP&gt;chunk-0035&lt;SEP&gt;chunk-0036&lt;SEP&gt;chunk-0040&lt;SEP&gt;chunk-0043&lt;SEP&gt;chunk-0048&lt;SEP&gt;chunk-0056&lt;SEP&gt;chunk-0057&lt;SEP&gt;chunk-0059&lt;SEP&gt;chunk-0060&lt;SEP&gt;chunk-0062&lt;SEP&gt;chunk-0065&lt;SEP&gt;chunk-0066&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0075&lt;SEP&gt;chunk-0078&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0081&lt;SEP&gt;chunk-0087&lt;SEP&gt;chunk-0090&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0108&lt;SEP&gt;chunk-0112&lt;SEP&gt;chunk-0114&lt;SEP&gt;chunk-0119&lt;SEP&gt;chunk-0120&lt;SEP&gt;chunk-0121&lt;SEP&gt;chunk-0124&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0128&lt;SEP&gt;chunk-0132&lt;SEP&gt;chunk-0133&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0136&lt;SEP&gt;chunk-0142&lt;SEP&gt;chunk-0143&lt;SEP&gt;chunk-0153&lt;SEP&gt;chunk-0156&lt;SEP&gt;chunk-0157&lt;SEP&gt;chunk-0159</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-002.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-015.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-020.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-038.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Nexon Technologies">
+      <data key="d0">Nexon Technologies</data>
+      <data key="d1">organization</data>
+      <data key="d2">Stub summary aaab14fb8cb749263484278baeca3e95&lt;SEP&gt;Nexon Technologies is a tech company that saw its stock decline by 7.8% after disappointing earnings.&lt;SEP&gt;Nexon Technologies is a tech company that saw its stock decline by 7.8% after disappointing earnings.&lt;SEP&gt;Nexon Technologies is a tech company that saw its stock decline by 7.8% after disappointing earnings.</data>
+      <data key="d3">chunk-0000&lt;SEP&gt;chunk-0006&lt;SEP&gt;chunk-0013&lt;SEP&gt;chunk-0035&lt;SEP&gt;chunk-0036&lt;SEP&gt;chunk-0043&lt;SEP&gt;chunk-0048&lt;SEP&gt;chunk-0056&lt;SEP&gt;chunk-0059&lt;SEP&gt;chunk-0060&lt;SEP&gt;chunk-0064&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0075&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0081&lt;SEP&gt;chunk-0087&lt;SEP&gt;chunk-0090&lt;SEP&gt;chunk-0093&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0114&lt;SEP&gt;chunk-0119&lt;SEP&gt;chunk-0120&lt;SEP&gt;chunk-0124&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0143&lt;SEP&gt;chunk-0142&lt;SEP&gt;chunk-0153&lt;SEP&gt;chunk-0156&lt;SEP&gt;chunk-0159</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-015.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-020.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-038.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Omega Energy">
+      <data key="d0">Omega Energy</data>
+      <data key="d1">organization</data>
+      <data key="d2">Stub summary c62cc49755402eb89569399cd863513e&lt;SEP&gt;Omega Energy is an energy company that gained 2.1% in stock value due to rising oil prices.&lt;SEP&gt;Omega Energy is an energy company that gained 2.1% in stock value due to rising oil prices.&lt;SEP&gt;Omega Ener\gy is an energy company that gained 2.1% in stock value due to rising oil prices.&lt;SEP&gt;Omega Energy is an energy company that gained 2.1% in stock value due to rising oil prices.&lt;SEP&gt;Omega Energy is an energy company that gained 2.1% in stock value due to rising oil prices.</data>
+      <data key="d3">chunk-0000&lt;SEP&gt;chunk-0035&lt;SEP&gt;chunk-0043&lt;SEP&gt;chunk-0048&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0087&lt;SEP&gt;chunk-0090&lt;SEP&gt;chunk-0093&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0114&lt;SEP&gt;chunk-0119&lt;SEP&gt;chunk-0120&lt;SEP&gt;chunk-0124&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0128&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0143&lt;SEP&gt;chunk-0153&lt;SEP&gt;chunk-0156</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-038.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Gold Futures">
+      <data key="d0">Gold Futures</data>
+      <data key="d1">product</data>
+      <data key="d2">Stub summary 51b1ab6164c8ff93b6f2b969953b7db9&lt;SEP&gt;Gold futures rose by 1.5%, indicating increased investor interest in safe-haven assets.&lt;SEP&gt;Gold futures rose by 1.5%, indicating increased investor interest in safe-haven assets.</data>
+      <data key="d3">chunk-0000&lt;SEP&gt;chunk-0006&lt;SEP&gt;chunk-0020&lt;SEP&gt;chunk-0035&lt;SEP&gt;chunk-0036&lt;SEP&gt;chunk-0043&lt;SEP&gt;chunk-0048&lt;SEP&gt;chunk-0060&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0081&lt;SEP&gt;chunk-0087&lt;SEP&gt;chunk-0090&lt;SEP&gt;chunk-0093&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0114&lt;SEP&gt;chunk-0119&lt;SEP&gt;chunk-0120&lt;SEP&gt;chunk-0124&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0128&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0136&lt;SEP&gt;chunk-0143&lt;SEP&gt;chunk-0142&lt;SEP&gt;chunk-0153&lt;SEP&gt;chunk-0156&lt;SEP&gt;chunk-0159</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-015.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-020.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-038.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Crude Oil">
+      <data key="d0">Crude Oil</data>
+      <data key="d1">product</data>
+      <data key="d2">Stub summary 2a7c98f6c93ef0f8b570b2c934109a40&lt;SEP&gt;Crude oil prices rose to $87.60 per barrel due to supply constraints and strong demand.</data>
+      <data key="d3">chunk-0000&lt;SEP&gt;chunk-0035&lt;SEP&gt;chunk-0060&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0081&lt;SEP&gt;chunk-0087&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0114&lt;SEP&gt;chunk-0119&lt;SEP&gt;chunk-0124&lt;SEP&gt;chunk-0128&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0143&lt;SEP&gt;chunk-0156</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-015.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-020.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Market Selloff">
+      <data key="d0">Market Selloff</data>
+      <data key="d1">category</data>
+      <data key="d2">Stub summary 5e2fcec09be3944d0c9454303fe6fffb&lt;SEP&gt;Market selloff refers to the significant decline in stock values due to investor concerns over interest rates and regulations.&lt;SEP&gt;Market selloff refer1 s to the significant decline in stock values due to investor concerns over interest rates and regulations.</data>
+      <data key="d3">chunk-0000&lt;SEP&gt;chunk-0006&lt;SEP&gt;chunk-0035&lt;SEP&gt;chunk-0036&lt;SEP&gt;chunk-0043&lt;SEP&gt;chunk-0059&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0081&lt;SEP&gt;chunk-0087&lt;SEP&gt;chunk-0090&lt;SEP&gt;chunk-0093&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0114&lt;SEP&gt;chunk-0119&lt;SEP&gt;chunk-0120&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0128&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0143&lt;SEP&gt;chunk-0142&lt;SEP&gt;chunk-0159</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-020.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Federal Reserve Policy Announcement">
+      <data key="d0">Federal Reserve Policy Announcement</data>
+      <data key="d1">category</data>
+      <data key="d2">Stub summary 29a0f00e3e824d7ac26bb8c69416cc17</data>
+      <data key="d3">chunk-0000&lt;SEP&gt;chunk-0035&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0087&lt;SEP&gt;chunk-0090&lt;SEP&gt;chunk-0093&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0114&lt;SEP&gt;chunk-0120&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0128&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0143&lt;SEP&gt;chunk-0142</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="3.4% Decline">
+      <data key="d0">3.4% Decline</data>
+      <data key="d1">category</data>
+      <data key="d2">Stub summary 6e0f185479c44e29b3af309d324e81c1&lt;SEP&gt;The Global Tech Index experienced a 3.4% decline in mid&lt;SEP&gt;The Global Tech Index experienced a 3.4% decline in midday trading.&lt;SEP&gt;The Global Tech Index experienced a 3.4% decline in midday trading.</data>
+      <data key="d3">chunk-0000&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0090&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0119&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0128&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0143</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="World Athletics Championship">
+      <data key="d0">World Athletics Championship</data>
+      <data key="d1">event</data>
+      <data key="d2">Stub summary f3b6affa71eefc86e12890ef7e5514e1&lt;SEP&gt;The World Athletics Champio</data>
+      <data key="d3">chunk-0001&lt;SEP&gt;chunk-0005&lt;SEP&gt;chunk-0010&lt;SEP&gt;chunk-0015&lt;SEP&gt;chunk-0017&lt;SEP&gt;chunk-0019&lt;SEP&gt;chunk-0024&lt;SEP&gt;chunk-0029&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0033&lt;SEP&gt;chunk-0037&lt;SEP&gt;chunk-0046&lt;SEP&gt;chunk-0058&lt;SEP&gt;chunk-0061&lt;SEP&gt;chunk-0070&lt;SEP&gt;chunk-0077&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0089&lt;SEP&gt;chunk-0092&lt;SEP&gt;chunk-0094&lt;SEP&gt;chunk-0095&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0101&lt;SEP&gt;chunk-0106&lt;SEP&gt;chunk-0110&lt;SEP&gt;chunk-0113&lt;SEP&gt;chunk-0117&lt;SEP&gt;chunk-0127&lt;SEP&gt;chunk-0129&lt;SEP&gt;chunk-0137&lt;SEP&gt;chunk-0140&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0144&lt;SEP&gt;chunk-0145&lt;SEP&gt;chunk-0146&lt;SEP&gt;chunk-0147&lt;SEP&gt;chunk-0149</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-002.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-004.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-015.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md&lt;SEP&gt;doc-037.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="World Athletics Champi,onship">
+      <data key="d0">World Athletics Champi,onship</data>
+      <data key="d1">event</data>
+      <data key="d2">The World Athletics Championship is a global sports competition featuring top athletes in track and field.</data>
+      <data key="d3">chunk-0002</data>
+      <data key="d4">doc-000.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Tokyo">
+      <data key="d0">Tokyo</data>
+      <data key="d1">location</data>
+      <data key="d2">Stub summary 08cb4f692bc11acc4e055ed045a4a709&lt;SEP&gt;Tokyo is the host city of the World Athletics Championship.&lt;SEP&gt;Tokyo is the host city of the World Athletics Championship.</data>
+      <data key="d3">chunk-0002&lt;SEP&gt;chunk-0005&lt;SEP&gt;chunk-0015&lt;SEP&gt;chunk-0017&lt;SEP&gt;chunk-0019&lt;SEP&gt;chunk-0024&lt;SEP&gt;chunk-0026&lt;SEP&gt;chunk-0029&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0033&lt;SEP&gt;chunk-0037&lt;SEP&gt;chunk-0046&lt;SEP&gt;chunk-0058&lt;SEP&gt;chunk-0083&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0089&lt;SEP&gt;chunk-0092&lt;SEP&gt;chunk-0094&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0101&lt;SEP&gt;chunk-0106&lt;SEP&gt;chunk-0110&lt;SEP&gt;chunk-0113&lt;SEP&gt;chunk-0117&lt;SEP&gt;chunk-0127&lt;SEP&gt;chunk-0137&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0144&lt;SEP&gt;chunk-0146&lt;SEP&gt;chunk-0147&lt;SEP&gt;chunk-0145&lt;SEP&gt;chunk-0154&lt;SEP&gt;chunk-0158</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-004.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-020.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md&lt;SEP&gt;doc-038.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Noah Carter">
+      <data key="d0">Noah Carter</data>
+      <data key="d1">person</data>
+      <data key="d2">Stub summary 3cbcd14ebff13777d8d1cc00c1ef4254&lt;SEP&gt;Noah Carter is a sprinter who set a new record in the 100m sprint at the World Athletics Championship.&lt;SEP&gt;Noah Carter is a sprinter who set a new record in the 100m sprint at the World Athletics Championship.&lt;SEP&gt;Noah Carter is a sprinter who set a new record in the 100m sprint at the World Athletics Championship.&lt;SEP&gt;Noah Carter is a sprinter who set a new record in the 100m sprint at the World Athletics Championship.&lt;SEP&gt;Noah Carter is a sprinter who set a new record in the 100m sprint at the World Athletics Championship.</data>
+      <data key="d3">chunk-0002&lt;SEP&gt;chunk-0005&lt;SEP&gt;chunk-0015&lt;SEP&gt;chunk-0017&lt;SEP&gt;chunk-0019&lt;SEP&gt;chunk-0024&lt;SEP&gt;chunk-0026&lt;SEP&gt;chunk-0029&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0033&lt;SEP&gt;chunk-0037&lt;SEP&gt;chunk-0058&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0089&lt;SEP&gt;chunk-0092&lt;SEP&gt;chunk-0094&lt;SEP&gt;chunk-0095&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0101&lt;SEP&gt;chunk-0106&lt;SEP&gt;chunk-0110&lt;SEP&gt;chunk-0117&lt;SEP&gt;chunk-0127&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0146&lt;SEP&gt;chunk-0147&lt;SEP&gt;chunk-0144&lt;SEP&gt;chunk-0145&lt;SEP&gt;chunk-0149&lt;SEP&gt;chunk-0154&lt;SEP&gt;chunk-0158</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md&lt;SEP&gt;doc-037.md&lt;SEP&gt;doc-038.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="100m Sprint Record">
+      <data key="d0">100m Sprint Record</data>
+      <data key="d1">category</data>
+      <data key="d2">Stub summary 57af7656aedb6c9c92ebe96d7cbc4ad4&lt;SEP&gt;The 100m sprint record is a benchmark in athletics, recently broken by Noah Carter.&lt;SEP&gt;The 100m sprint record is a benchmark in athletics, recently broken by Noah Carter.&lt;SEP&gt;The 100m sprint record is a benchmark in athletics, recently broken by Noah Carter.&lt;SEP&gt;The 100m sprint record is a	 benchmark in athletics, recently broken by Noah Carter.&lt;SEP&gt;The 100m sprint record is a benchmark in athletics, recently broken by( Noah Carter.</data>
+      <data key="d3">chunk-0002&lt;SEP&gt;chunk-0005&lt;SEP&gt;chunk-0015&lt;SEP&gt;chunk-0017&lt;SEP&gt;chunk-0026&lt;SEP&gt;chunk-0029&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0033&lt;SEP&gt;chunk-0037&lt;SEP&gt;chunk-0046&lt;SEP&gt;chunk-0058&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0089&lt;SEP&gt;chunk-0094&lt;SEP&gt;chunk-0095&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0101&lt;SEP&gt;chunk-0106&lt;SEP&gt;chunk-0113&lt;SEP&gt;chunk-0117&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0146&lt;SEP&gt;chunk-0147&lt;SEP&gt;chunk-0144&lt;SEP&gt;chunk-0154&lt;SEP&gt;chunk-0158</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-004.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md&lt;SEP&gt;doc-038.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Carbon-Fiber Spikes">
+      <data key="d0">Carbon-Fiber Spikes</data>
+      <data key="d1">equipment</data>
+      <data key="d2">Stub summary 24f33356ea780759853ee3676c90a834&lt;SEP&gt;Carbon-fiber spikes are advanced sprinting shoes that provide enhanced speed and traction.&lt;SEP&gt;Carbon-fiber spikes are advanced sprinting shoes that provide enhanced speed and traction.&lt;SEP&gt;Carbon-fiber spikes are advanced sprinting shoes that provide enhanced speed and traction.&lt;SEP&gt;Carbon-fiber spikes are advanced sprinting shoes that provide enhanced speed and traction.</data>
+      <data key="d3">chunk-0002&lt;SEP&gt;chunk-0005&lt;SEP&gt;chunk-0015&lt;SEP&gt;chunk-0017&lt;SEP&gt;chunk-0029&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0033&lt;SEP&gt;chunk-0037&lt;SEP&gt;chunk-0058&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0089&lt;SEP&gt;chunk-0094&lt;SEP&gt;chunk-0095&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0101&lt;SEP&gt;chunk-0106&lt;SEP&gt;chunk-0110&lt;SEP&gt;chunk-0113&lt;SEP&gt;chunk-0127&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0146&lt;SEP&gt;chunk-0147&lt;SEP&gt;chunk-0144&lt;SEP&gt;chunk-0154&lt;SEP&gt;chunk-0158</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-004.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md&lt;SEP&gt;doc-038.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Alex">
+      <data key="d0">Alex</data>
+      <data key="d1">person</data>
+      <data key="d2">Stub summary 6ce3652fdd56d4022a0f41b3b4a2d321&lt;SEP&gt;Alex is a character who experiences frustration and is observant of the dynamics among other characters.&lt;SEP&gt;Alex is a character who experiences frustration and is observant of the dynamics among other characters.&lt;SEP&gt;Alex is a character who experiences frustration and is observant of the dynamics among other charac'中'ters.&lt;SEP&gt;Alex is a character who experiences frustration and is observant of the dynamics among o(ther characters.&lt;SEP&gt;Alex is a character who experiences frustration and is observant of the dynamics among other characters.&lt;SEP&gt;Alex is a character who experiences frustration and is observant of the dynamics among other characters.</data>
+      <data key="d3">chunk-0003&lt;SEP&gt;chunk-0004&lt;SEP&gt;chunk-0007&lt;SEP&gt;chunk-0009&lt;SEP&gt;chunk-0012&lt;SEP&gt;chunk-0016&lt;SEP&gt;chunk-0018&lt;SEP&gt;chunk-0021&lt;SEP&gt;chunk-0022&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0025&lt;SEP&gt;chunk-0027&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0032&lt;SEP&gt;chunk-0038&lt;SEP&gt;chunk-0039&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0042&lt;SEP&gt;chunk-0044&lt;SEP&gt;chunk-0047&lt;SEP&gt;chunk-0050&lt;SEP&gt;chunk-0051&lt;SEP&gt;chunk-0049&lt;SEP&gt;chunk-0053&lt;SEP&gt;chunk-0054&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0063&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0068&lt;SEP&gt;chunk-0069&lt;SEP&gt;chunk-0072&lt;SEP&gt;chunk-0073&lt;SEP&gt;chunk-0076&lt;SEP&gt;chunk-0080&lt;SEP&gt;chunk-0085&lt;SEP&gt;chunk-0086&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0091&lt;SEP&gt;chunk-0096&lt;SEP&gt;chunk-0100&lt;SEP&gt;chunk-0102&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0104&lt;SEP&gt;chunk-0109&lt;SEP&gt;chunk-0111&lt;SEP&gt;chunk-0115&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0118&lt;SEP&gt;chunk-0122&lt;SEP&gt;chunk-0123&lt;SEP&gt;chunk-0126&lt;SEP&gt;chunk-0130&lt;SEP&gt;chunk-0131&lt;SEP&gt;chunk-0138&lt;SEP&gt;chunk-0139&lt;SEP&gt;chunk-0148&lt;SEP&gt;chunk-0150&lt;SEP&gt;chunk-0151&lt;SEP&gt;chunk-0152&lt;SEP&gt;chunk-0155</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-002.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-004.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-015.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-020.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-037.md&lt;SEP&gt;doc-038.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Taylor">
+      <data key="d0">Taylor</data>
+      <data key="d1">person</data>
+      <data key="d2">Stub summary 31d23b64fbf338cff02fc51c4fdc5070&lt;SEP&gt;Taylor is portrayed with authoritarian certainty and shows a moment of reverence towards a device, indicating a change in perspective.&lt;SEP&gt;Taylor is portrayed with authoritarian certainty and shows a moment of reverence towards a device, indicatΣing a change in perspective.&lt;SEP&gt;Taylor is portrayed with authoritarian certainty and shows a moment of reverence towards a device, indicating a change in perspective.</data>
+      <data key="d3">chunk-0003&lt;SEP&gt;chunk-0004&lt;SEP&gt;chunk-0007&lt;SEP&gt;chunk-0012&lt;SEP&gt;chunk-0022&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0025&lt;SEP&gt;chunk-0027&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0032&lt;SEP&gt;chunk-0038&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0044&lt;SEP&gt;chunk-0047&lt;SEP&gt;chunk-0049&lt;SEP&gt;chunk-0051&lt;SEP&gt;chunk-0054&lt;SEP&gt;chunk-0053&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0063&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0068&lt;SEP&gt;chunk-0069&lt;SEP&gt;chunk-0072&lt;SEP&gt;chunk-0073&lt;SEP&gt;chunk-0076&lt;SEP&gt;chunk-0085&lt;SEP&gt;chunk-0086&lt;SEP&gt;chunk-0091&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0096&lt;SEP&gt;chunk-0100&lt;SEP&gt;chunk-0102&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0104&lt;SEP&gt;chunk-0109&lt;SEP&gt;chunk-0111&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0118&lt;SEP&gt;chunk-0123&lt;SEP&gt;chunk-0126&lt;SEP&gt;chunk-0130&lt;SEP&gt;chunk-0131&lt;SEP&gt;chunk-0138&lt;SEP&gt;chunk-0139&lt;SEP&gt;chunk-0151&lt;SEP&gt;chunk-0152&lt;SEP&gt;chunk-0155</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-015.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-037.md&lt;SEP&gt;doc-038.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Jordan">
+      <data key="d0">Jordan</data>
+      <data key="d1">person</data>
+      <data key="d2">Stub summary fef51d0ae4c6ee4357682624944abded&lt;SEP&gt;Jordan shares a commitment to discovery and has a significant interaction with Taylor regarding a device.</data>
+      <data key="d3">chunk-0003&lt;SEP&gt;chunk-0004&lt;SEP&gt;chunk-0012&lt;SEP&gt;chunk-0022&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0025&lt;SEP&gt;chunk-0027&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0038&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0044&lt;SEP&gt;chunk-0047&lt;SEP&gt;chunk-0049&lt;SEP&gt;chunk-0051&lt;SEP&gt;chunk-0054&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0068&lt;SEP&gt;chunk-0069&lt;SEP&gt;chunk-0072&lt;SEP&gt;chunk-0073&lt;SEP&gt;chunk-0076&lt;SEP&gt;chunk-0085&lt;SEP&gt;chunk-0086&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0096&lt;SEP&gt;chunk-0102&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0104&lt;SEP&gt;chunk-0111&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0118&lt;SEP&gt;chunk-0123&lt;SEP&gt;chunk-0126&lt;SEP&gt;chunk-0131&lt;SEP&gt;chunk-0138&lt;SEP&gt;chunk-0139&lt;SEP&gt;chunk-0151&lt;SEP&gt;chunk-0155</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-037.md&lt;SEP&gt;doc-038.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Cruz">
+      <data key="d0">Cruz</data>
+      <data key="d1">person</data>
+      <data key="d2">Stub summary d8100c9536e29061009a378c441b9388&lt;SEP&gt;Cruz  is associ&lt;SEP&gt;Cruz is associated with a vision of control and order, influencing the dynamics amongß other characters.&lt;SEP&gt;Cruz is associated with a vision of control and order, influencing the dynamics among other characters.&lt;SEP&gt;Cruz is associated with a visiHelloon of control and order, influencing the dynamics among other characters.&lt;SEP&gt;Cruz is associated with a vision of control and order, influe12ncing the dynamics among other characte²rs.&lt;SEP&gt;Cruz is associated with a vision of control and order, influencing the dynamics among other characters.</data>
+      <data key="d3">chunk-0003&lt;SEP&gt;chunk-0004&lt;SEP&gt;chunk-0012&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0025&lt;SEP&gt;chunk-0027&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0038&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0044&lt;SEP&gt;chunk-0047&lt;SEP&gt;chunk-0045&lt;SEP&gt;chunk-0049&lt;SEP&gt;chunk-0051&lt;SEP&gt;chunk-0054&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0068&lt;SEP&gt;chunk-0069&lt;SEP&gt;chunk-0073&lt;SEP&gt;chunk-0076&lt;SEP&gt;chunk-0082&lt;SEP&gt;chunk-0086&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0096&lt;SEP&gt;chunk-0102&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0111&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0118&lt;SEP&gt;chunk-0123&lt;SEP&gt;chunk-0126&lt;SEP&gt;chunk-0130&lt;SEP&gt;chunk-0131&lt;SEP&gt;chunk-0138&lt;SEP&gt;chunk-0151&lt;SEP&gt;chunk-0155</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-020.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-037.md&lt;SEP&gt;doc-038.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="The Device">
+      <data key="d0">The Device</data>
+      <data key="d1">equipment</data>
+      <data key="d2">Stub summary 6655ef254e75095bed59f9d388d9597e&lt;SEP&gt;The Device is central to the story, with potential game-changing implications, and is revered by Taylor.&lt;SEP&gt;The Device is central to the story, with potential game-changing implications, and is revered by Taylor.&lt;SEP&gt;The Device is central to the story, with potential game-changing implications, and is revered by Taylor.&lt;SEP&gt;The Device is central to the story, with potential game-changing implications, and is revered by Taylor.&lt;SEP&gt;The Device is central to the story, with potential game-changing implications, and is revered by Taylor.&lt;SEP&gt;The Device is central to the story, with potential game-changing implications, and is revered by Taylor.</data>
+      <data key="d3">chunk-0003&lt;SEP&gt;chunk-0004&lt;SEP&gt;chunk-0012&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0027&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0038&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0044&lt;SEP&gt;chunk-0047&lt;SEP&gt;chunk-0049&lt;SEP&gt;chunk-0051&lt;SEP&gt;chunk-0054&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0068&lt;SEP&gt;chunk-0069&lt;SEP&gt;chunk-0073&lt;SEP&gt;chunk-0076&lt;SEP&gt;chunk-0086&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0096&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0111&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0118&lt;SEP&gt;chunk-0123&lt;SEP&gt;chunk-0126&lt;SEP&gt;chunk-0131&lt;SEP&gt;chunk-0138&lt;SEP&gt;chunk-0151&lt;SEP&gt;chunk-0155</data>
+      <data key="d4">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-037.md&lt;SEP&gt;doc-038.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="World Athletics Federation">
+      <data key="d0">World Athletics Federation</data>
+      <data key="d1">organization</data>
+      <data key="d2">Stub summary 9d69bf2f80000971466bfd14049313b9</data>
+      <data key="d3">chunk-0005&lt;SEP&gt;chunk-0015&lt;SEP&gt;chunk-0017&lt;SEP&gt;chunk-0029&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0033&lt;SEP&gt;chunk-0037&lt;SEP&gt;chunk-0058&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0089&lt;SEP&gt;chunk-0094&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0101&lt;SEP&gt;chunk-0113&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0146&lt;SEP&gt;chunk-0147</data>
+      <data key="d4">doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-004.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-008.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Jor&lt;think&gt;x&lt;/think&gt;dan">
+      <data key="d0">Jor&lt;think&gt;x&lt;/think&gt;dan</data>
+      <data key="d3">chunk-0007</data>
+      <data key="d2">Alex and Jordan share a commitment to discovery, which contrasts with Cruz's vision.)</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-001.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="World Athletics Cha²mpionshipHello">
+      <data key="d0">World Athletics Cha²mpionshipHello</data>
+      <data key="d1">event</data>
+      <data key="d2">The World  Athletics Championship is a global sports competiti٣.٤on featuring top athletes in track and field.</data>
+      <data key="d3">chunk-0014</data>
+      <data key="d4">doc-003.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="NoaA中h Carter">
+      <data key="d0">NoaA中h Carter</data>
+      <data key="d1">person</data>
+      <data key="d2">Noah Carter is a sprinter who set a new record in the 100m sprint at the World Athletics Championship.</data>
+      <data key="d3">chunk-0017</data>
+      <data key="d4">doc-004.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="World Athleticqs Championship">
+      <data key="d0">World Athleticqs Championship</data>
+      <data key="d3">chunk-0017</data>
+      <data key="d2">The World Athletics Championship is being hosted in Tokyo.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-004.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="0100m Sprint Record">
+      <data key="d0">0100m Sprint Record</data>
+      <data key="d3">chunk-0017</data>
+      <data key="d2">Noah Carter set a new 100m sprint record at the championship.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-004.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Carbon-Fibe《书》r Spikes">
+      <data key="d0">Carbon-Fibe《书》r Spikes</data>
+      <data key="d3">chunk-0017</data>
+      <data key="d2">Noah Carter used carbon-fiber spikes to enhance performance during the race.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-004.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="�&gt;Omega Energy">
+      <data key="d0">�&gt;Omega Energy</data>
+      <data key="d1">organization</data>
+      <data key="d2">Omega Energy is an ٣.٤energy company that gained 2.1% in stock value due to rising oil prices.</data>
+      <data key="d3">chunk-0020</data>
+      <data key="d4">doc-005.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="100m Sp123rint Record">
+      <data key="d0">100m Sp123rint Record</data>
+      <data key="d1">category</data>
+      <data key="d2">The 100m sprint record is a benchmark in athletics, recently broken by Noah Carter.</data>
+      <data key="d3">chunk-0024</data>
+      <data key="d4">doc-006.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Carbon-Fiber Spqikes">
+      <data key="d0">Carbon-Fiber Spqikes</data>
+      <data key="d1">equipment</data>
+      <data key="d2">Carbon-fiber spikes are advanced sprinting shoes that provide enhanced speed and traction.</data>
+      <data key="d3">chunk-0024</data>
+      <data key="d4">doc-006.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="World Athletics Championship">
+      <data key="d0">World Athletics Championship</data>
+      <data key="d1">event</data>
+      <data key="d2">The World Athletics Championship is a global sports competition featuring top athletes in track and field.</data>
+      <data key="d3">chunk-0026</data>
+      <data key="d4">doc-006.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Global&quot; Tech Index">
+      <data key="d0">Global" Tech Index</data>
+      <data key="d1">category</data>
+      <data key="d2">The Global Tech In中文dex tracks the performance of major technology stocks and experienced a 3.4% de"cline toßday.</data>
+      <data key="d3">chunk-0031</data>
+      <data key="d4">doc-007.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Glob﻿al Tech Index">
+      <data key="d0">Glob﻿al Tech Index</data>
+      <data key="d1">category</data>
+      <data key="d2">The Global《书》 Tech Index tracks the perf</data>
+      <data key="d3">chunk-0034</data>
+      <data key="d4">doc-008.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="entity">
+      <data key="d0">entity</data>
+      <data key="d3">chunk-0045</data>
+      <data key="d2">Cruz is) associated with a vision of control and order, influencing the dynamics among other characters.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-011.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Jord123an">
+      <data key="d0">Jord123an</data>
+      <data key="d3">chunk-0051</data>
+      <data key="d2">Jordan's commitment to discovery is in rebellion against Cruz's vision of control and order.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-012.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Alex&lt;|COMPL1 ETE|&gt;">
+      <data key="d0">Alex&lt;|COMPL1 ETE|&gt;</data>
+      <data key="d1">person</data>
+      <data key="d2">Alex is a charac1.2ter who experiences frustration  and is observant of the dynamics among other characters.</data>
+      <data key="d3">chunk-0052</data>
+      <data key="d4">doc-013.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="the dynamics among other characters.entity">
+      <data key="d0">the dynamics among other characters.entity</data>
+      <data key="d3">chunk-0053</data>
+      <data key="d2">Taylor is portrayed with authoritarian certainty and shows a moment of reverence towards a device, indicating a change in perspective.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-013.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="G|lobal Tech Index">
+      <data key="d0">G|lobal Tech Index</data>
+      <data key="d1">category</data>
+      <data key="d2">The Global Tech Index tracks the performance of major technology stocks and experienced a 3.4% decline today.</data>
+      <data key="d3">chunk-0059</data>
+      <data key="d4">doc-014.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="GlΑΣobal TechΑΣ Index">
+      <data key="d0">GlΑΣobal TechΑΣ Index</data>
+      <data key="d1">category</data>
+      <data key="d2">The Global Tech Index tracks the performance of major technology stocks and experienced a 3.4% dec中Ali《书》ne today.</data>
+      <data key="d3">chunk-0074</data>
+      <data key="d4">doc-018.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Omega EnergyΑΣ">
+      <data key="d0">Omega EnergyΑΣ</data>
+      <data key="d1">organization</data>
+      <data key="d2">Omega Energy is an energy company that gained 2.1% in stock value due to rising oil prices.</data>
+      <data key="d3">chunk-0081</data>
+      <data key="d4">doc-020.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Crude +3.5Oil">
+      <data key="d0">Crude +3.5Oil</data>
+      <data key="d1">product</data>
+      <data key="d2">Crude oil prices rose to $87.60 per barrel due to supply constraints and strong demand.</data>
+      <data key="d3">chunk-0090</data>
+      <data key="d4">doc-022.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Global Tech Index0">
+      <data key="d0">Global Tech Index0</data>
+      <data key="d1">category</data>
+      <data key="d2">The Global Tec h Index tracks the performance of major technology stocks and experienced a 3.4% decline today.</data>
+      <data key="d3">chunk-0093</data>
+      <data key="d4">doc-023.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Tay)lor">
+      <data key="d0">Tay)lor</data>
+      <data key="d3">chunk-0096</data>
+      <data key="d2">Alex observes Taylor's authoritarian behavior and notes changes in Taylor's attitude toward the device.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-024.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="T he Device">
+      <data key="d0">T he Device</data>
+      <data key="d1">equipment</data>
+      <data key="d2">The Device is (central to the story, with potential game-changing implications, and is revered by Taylor.</data>
+      <data key="d3">chunk-0102</data>
+      <data key="d4">doc-025.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Al(ex">
+      <data key="d0">Al(ex</data>
+      <data key="d1">person</data>
+      <data key="d2">Alex is a character who experiences frustration an中Ad is observant of the dynamics among other characters.</data>
+      <data key="d3">chunk-0105</data>
+      <data key="d4">doc-026.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Global Tech Indßex">
+      <data key="d0">Global Tech Indßex</data>
+      <data key="d3">chunk-0107</data>
+      <data key="d2">Nexon Technologies' stock decline contributed to the overall drop in the Global Tech Index.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-026.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="World Ath1.2letics Championship">
+      <data key="d0">World Ath1.2letics Championship</data>
+      <data key="d1">event</data>
+      <data key="d2">The World Athletics Champio nship is a global sports competition featuring top athletes in track and field.</data>
+      <data key="d3">chunk-0113</data>
+      <data key="d4">doc-028.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="(Noah Carter">
+      <data key="d0">(Noah Carter</data>
+      <data key="d1">person</data>
+      <data key="d2">Noah Carter is a sprinter who set a new record in the 100m sprint at the World Athletics Championship.</data>
+      <data key="d3">chunk-0113</data>
+      <data key="d4">doc-028.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Taylxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+      <data key="d0">Taylxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</data>
+      <data key="d1">person</data>
+      <data key="d2">Taylor is portrayed with authoritarian cer tainty and shows a moment of reverence towards a device, indicating a change in perspective.</data>
+      <data key="d3">chunk-0118</data>
+      <data key="d4">doc-029.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Federal Reserve Policy Ann12ouncement">
+      <data key="d0">Federal Reserve Policy Ann12ouncement</data>
+      <data key="d1">category</data>
+      <data key="d2">The Federal Reserve's upcoming policy announcement is expected to impact investor confidence and market stability.</data>
+      <data key="d3">chunk-0119</data>
+      <data key="d4">doc-029.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Carbon-Fiber S123pikes">
+      <data key="d0">Carbon-Fiber S123pikes</data>
+      <data key="d3">chunk-0117</data>
+      <data key="d2">Noah Carter used carbon-fiber spikes to enhance performance during the race.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-029.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Crude  Oil">
+      <data key="d0">Crude  Oil</data>
+      <data key="d1">product123</data>
+      <data key="d2">Crude oil prices rose to $87.60 per barrel due to supply constraints and strong demand.</data>
+      <data key="d3">chunk-0120</data>
+      <data key="d4">doc-030.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Alex﻿">
+      <data key="d0">Alex﻿</data>
+      <data key="d1">person</data>
+      <data key="d2">Alex is a character who experiences frustration and is observant of the dynamics among other characters.</data>
+      <data key="d3">chunk-0123</data>
+      <data key="d4">doc-030.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Jor﻿dan">
+      <data key="d0">Jor﻿dan</data>
+      <data key="d1">person</data>
+      <data key="d2">Jordan shares a commitment to discovery and has a significant interaction with Taylor regarding a device.</data>
+      <data key="d3">chunk-0130</data>
+      <data key="d4">doc-032.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="World Athletics� Championship">
+      <data key="d0">World Athletics� Championship</data>
+      <data key="d1">event</data>
+      <data key="d2">The World Athletics Championship is a global sports competition featuring top athletes in track and field.</data>
+      <data key="d3">chunk-0134</data>
+      <data key="d4">doc-033.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Alex&lt;1">
+      <data key="d0">Alex&lt;1</data>
+      <data key="d3">chunk-0139</data>
+      <data key="d2">Alex observes Tayl²or's authoritarian behavior and notes changes in Taylor's attitude toward the device.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-034.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Ale《书》x">
+      <data key="d0">Ale《书》x</data>
+      <data key="d3">chunk-0139</data>
+      <data key="d2">Alex and Jordan share a commitment to discovery, which contrasts with Cruz's vision.)</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-034.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="Global12 Tech Index">
+      <data key="d0">Global12 Tech Index</data>
+      <data key="d1">category</data>
+      <data key="d2">The Global Tech Index tracks the performance of major technology stocks and experienced a 3.4% decline today.</data>
+      <data key="d3">chunk-0143</data>
+      <data key="d4">doc-035.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="W+3.5orld Athletics Championship">
+      <data key="d0">W+3.5orld Athletics Championship</data>
+      <data key="d1">event</data>
+      <data key="d2">The World Athletics Championship is a global sports competition featuring top athletes in track and field.</data>
+      <data key="d3">chunk-0147</data>
+      <data key="d4">doc-036.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <node id="100m Spri&amp;nt Record">
+      <data key="d0">100m Spri&amp;nt Record</data>
+      <data key="d3">chunk-0145</data>
+      <data key="d2">Noah Carter set a new 100m sprint record at the championship.</data>
+      <data key="d1">UNKNOWN</data>
+      <data key="d4">doc-036.md</data>
+      <data key="d5">1760000000</data>
+      <data key="d6" />
+    </node>
+    <edge source="Global Tech Index" target="Market Selloff">
+      <data key="d7">12.0</data>
+      <data key="d8">Stub summary 7c41976c556ce010ae465eb62532c235&lt;SEP&gt;The decline in the Global Tech Index is part of the broader market selloff driven by investor concerns.&lt;SEP&gt;The decline in the Global Tech Index is part of the broader market selloff driven by investor concerns.&lt;SEP&gt;The decline in the Global Tech Index is part of the broader market selloff driven by investor concerns.&lt;SEP&gt;The decline in the Global Tech Index is part of the broader market selloff driven by investor concerns.</data>
+      <data key="d9">+3.5 investor sentiment,investor sentiment,market performance</data>
+      <data key="d10">chunk-0000&lt;SEP&gt;chunk-0006&lt;SEP&gt;chunk-0036&lt;SEP&gt;chunk-0059&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0143&lt;SEP&gt;chunk-0159</data>
+      <data key="d11">doc-000.md&lt;SEP&gt;doc-001.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Global Tech Index" target="Nexon Technologies">
+      <data key="d7">11.0</data>
+      <data key="d8">Stub summary 5e89589ddc99c04e7e24ed7c8ebfc876&lt;SEP&gt;Nexon Technologies' stock decline contributed to the overall drop in the Global Tech Index.&lt;SEP&gt;Nexon Technologies' stock decline contributed to the overall drop in the Global Tech Index.</data>
+      <data key="d9">company impact,index movement</data>
+      <data key="d10">chunk-0006&lt;SEP&gt;chunk-0036&lt;SEP&gt;chunk-0059&lt;SEP&gt;chunk-0071&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0142&lt;SEP&gt;chunk-0159</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Nexon Technologies" target="Global Tech Indßex">
+      <data key="d7">1.0</data>
+      <data key="d8">Nexon Technologies' stock decline contributed to the overall drop in the Global Tech Index.</data>
+      <data key="d9">company impact,index movement</data>
+      <data key="d10">chunk-0107</data>
+      <data key="d11">doc-026.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Gold Futures" target="Market Selloff">
+      <data key="d7">10.0</data>
+      <data key="d8">Stub summary 8565a7e3d55efd5fcf2c4dfc9e8d191e&lt;SEP&gt;Gold prices rose as investors sought safe-haven assets during the market selloff.</data>
+      <data key="d9">market reaction,safe-haven investment</data>
+      <data key="d10">chunk-0006&lt;SEP&gt;chunk-0036&lt;SEP&gt;chunk-0079&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0099&lt;SEP&gt;chunk-0107&lt;SEP&gt;chunk-0125&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0142&lt;SEP&gt;chunk-0159</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-039.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Market Selloff" target="Federal Reserve Policy Announcement">
+      <data key="d7">4.0</data>
+      <data key="d8">Speculation over Federal Reserve policy changes contributed to market volatility and investor selloff.&lt;SEP&gt;Speculation over Federal Reserve policy changes contributed to market volatility and investor selloff.&lt;SEP&gt;Speculation over Federal Reserve policy changes contributed to market volatility and investor selloff.&lt;SEP&gt;Speculation over Federal Reserve policy changes contributed to market volatility and investor selloff.</data>
+      <data key="d9">financial regulation,interest rate impact</data>
+      <data key="d10">chunk-0071&lt;SEP&gt;chunk-0097&lt;SEP&gt;chunk-0135&lt;SEP&gt;chunk-0142</data>
+      <data key="d11">doc-017.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-033.md&lt;SEP&gt;doc-035.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="World Athletics Championship" target="Tokyo">
+      <data key="d7">19.0</data>
+      <data key="d8">Stub summary 2ca4ba7c21bd71552687b26c3b809c34&lt;SEP&gt;The World Athletics Champi😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀onship is being hosted in Tokyo.&lt;SEP&gt;The World Athletics Championship is being hosted in Tokyo.</data>
+      <data key="d9">event location,international competition,internati中onal competition,interna١٢tional competition,�international competition</data>
+      <data key="d10">chunk-0005&lt;SEP&gt;chunk-0019&lt;SEP&gt;chunk-0029&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0037&lt;SEP&gt;chunk-0058&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0094&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0101&lt;SEP&gt;chunk-0106&lt;SEP&gt;chunk-0113&lt;SEP&gt;chunk-0117&lt;SEP&gt;chunk-0127&lt;SEP&gt;chunk-0137&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0145&lt;SEP&gt;chunk-0146&lt;SEP&gt;chunk-0147</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-004.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-028.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="World Athletics Championship" target="Noah Carter">
+      <data key="d7">12.0</data>
+      <data key="d8">Stub summary b8ccf4f70cb777c293c541a3e63d01d0&lt;SEP&gt;Noah Carter is competing at the World Athletics Championship.&lt;SEP&gt;Noah Carter is competing at the World Athletics Championship.&lt;SEP&gt;Noah Carter is competing at the World Athletics Championship.</data>
+      <data key="d9">( competition,athlete participation,athlete participationq,competition</data>
+      <data key="d10">chunk-0005&lt;SEP&gt;chunk-0019&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0095&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0106&lt;SEP&gt;chunk-0117&lt;SEP&gt;chunk-0127&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0144&lt;SEP&gt;chunk-0146</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-004.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Tokyo" target="World Athleticqs Championship">
+      <data key="d7">1.0</data>
+      <data key="d8">The World Athletics Championship is being hosted in Tokyo.</data>
+      <data key="d9">event location,international competition</data>
+      <data key="d10">chunk-0017</data>
+      <data key="d11">doc-004.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Noah Carter" target="100m Sprint Record">
+      <data key="d7">13.0</data>
+      <data key="d8">Stub summary a534f2de8d8881fdb01f25933a42386a&lt;SEP&gt;Noah Carter set a new 100m sprint record at the championship.&lt;SEP&gt;Noah Carter set a new 100m sprint record at the championship.&lt;SEP&gt;Noah Carter set a new 100m sprint record at the championship.&lt;SEP&gt;Noah Carter set a new 100m sprint record at the champions1.2hip.</data>
+      <data key="d9">athlete achievement,record-brea-0.25king,record-breaking</data>
+      <data key="d10">chunk-0005&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0058&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0094&lt;SEP&gt;chunk-0095&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0106&lt;SEP&gt;chunk-0117&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0144&lt;SEP&gt;chunk-0146&lt;SEP&gt;chunk-0147</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Noah Carter" target="Carbon-Fiber Spikes">
+      <data key="d7">11.0</data>
+      <data key="d8">Stub summary 6b6fc8c6f3cd11a9bcb82f52e7a83ad2&lt;SEP&gt;Noah Carter used carbon-fiber spikes to enhance performance during the race.&lt;SEP&gt;Noah Carter used carbon-fiber spikes to enhance performance duri&lt;SEP&gt;Noah Carter used carbon-fiber spikes to enhance performance during the race.</data>
+      <data key="d9">athletic equipment,performance boost</data>
+      <data key="d10">chunk-0005&lt;SEP&gt;chunk-0030&lt;SEP&gt;chunk-0058&lt;SEP&gt;chunk-0084&lt;SEP&gt;chunk-0095&lt;SEP&gt;chunk-0098&lt;SEP&gt;chunk-0106&lt;SEP&gt;chunk-0127&lt;SEP&gt;chunk-0141&lt;SEP&gt;chunk-0144&lt;SEP&gt;chunk-0146</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-014.md&lt;SEP&gt;doc-021.md&lt;SEP&gt;doc-023.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-026.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-035.md&lt;SEP&gt;doc-036.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Noah Carter" target="0100m Sprint Record">
+      <data key="d7">1.0</data>
+      <data key="d8">Noah Carter set a new 100m sprint record at the championship.</data>
+      <data key="d9">athlete achievement,record-breaking</data>
+      <data key="d10">chunk-0017</data>
+      <data key="d11">doc-004.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Noah Carter" target="Carbon-Fibe《书》r Spikes">
+      <data key="d7">1.0</data>
+      <data key="d8">Noah Carter used carbon-fiber spikes to enhance performance during the race.</data>
+      <data key="d9">athletic equipment,performance boost</data>
+      <data key="d10">chunk-0017</data>
+      <data key="d11">doc-004.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Noah Carter" target="Carbon-Fiber S123pikes">
+      <data key="d7">1.0</data>
+      <data key="d8">Noah Carter used carbon-fiber spikes to enhance performance during the race.</data>
+      <data key="d9">athletic equipment,performance boost</data>
+      <data key="d10">chunk-0117</data>
+      <data key="d11">doc-029.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Noah Carter" target="100m Spri&amp;nt Record">
+      <data key="d7">1.0</data>
+      <data key="d8">Noah Carter set a new 100m sprint record at the championship.</data>
+      <data key="d9">athlete achievement,record-breaking</data>
+      <data key="d10">chunk-0145</data>
+      <data key="d11">doc-036.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Alex" target="Taylor">
+      <data key="d7">29.0</data>
+      <data key="d8">Stub summary 8ae60a6c027708f004bf9e294381ba92&lt;SEP&gt;Alex observes Taylor's authoritarian behavior and notes changes in Taylor's attitude toward the device.&lt;SEP&gt;Alex observes Taylor's autho)ritarian behavior and notes changes in Taylor's attitude toward the device.</data>
+      <data key="d9">-0.25observation,observation,obser😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀-😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀vation,power dynamics,pow😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀er dynamics</data>
+      <data key="d10">chunk-0004&lt;SEP&gt;chunk-0007&lt;SEP&gt;chunk-0012&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0027&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0038&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0047&lt;SEP&gt;chunk-0049&lt;SEP&gt;chunk-0051&lt;SEP&gt;chunk-0054&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0068&lt;SEP&gt;chunk-0069&lt;SEP&gt;chunk-0073&lt;SEP&gt;chunk-0076&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0102&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0111&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0118&lt;SEP&gt;chunk-0126&lt;SEP&gt;chunk-0131&lt;SEP&gt;chunk-0138&lt;SEP&gt;chunk-0151&lt;SEP&gt;chunk-0155</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-019.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-037.md&lt;SEP&gt;doc-038.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Alex" target="Jordan">
+      <data key="d7">24.0</data>
+      <data key="d8">Stub summary 507aa06dedd26c8354942a1f014a8dcf</data>
+      <data key="d9">rebellion,shared goals</data>
+      <data key="d10">chunk-0004&lt;SEP&gt;chunk-0012&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0038&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0047&lt;SEP&gt;chunk-0051&lt;SEP&gt;chunk-0054&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0069&lt;SEP&gt;chunk-0073&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0096&lt;SEP&gt;chunk-0102&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0111&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0123&lt;SEP&gt;chunk-0126&lt;SEP&gt;chunk-0131&lt;SEP&gt;chunk-0138&lt;SEP&gt;chunk-0155</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-011.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-017.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-027.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-032.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-038.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Alex" target="Jor&lt;think&gt;x&lt;/think&gt;dan">
+      <data key="d7">1.0</data>
+      <data key="d8">Alex and Jordan share a commitment to discovery, which contrasts with Cruz's vision.)</data>
+      <data key="d9">rebellion,shared goals</data>
+      <data key="d10">chunk-0007</data>
+      <data key="d11">doc-001.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Alex" target="Tay)lor">
+      <data key="d7">1.0</data>
+      <data key="d8">Alex observes Taylor's authoritarian behavior and notes changes in Taylor's attitude toward the device.</data>
+      <data key="d9">observation,power dynamics</data>
+      <data key="d10">chunk-0096</data>
+      <data key="d11">doc-024.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Taylor" target="The Device">
+      <data key="d7">12.0</data>
+      <data key="d8">Stub summary 89bb152d92c519d230d2021c34d47d62&lt;SEP&gt;Taylor shows reverence towards the device, indicating its importance and potential impact.&lt;SEP&gt;Taylor shows reverence towards the device, indicating its importance and potential impact.&lt;SEP&gt;Taylor shows reverence towards the device, indicating its importance and potential impact.&lt;SEP&gt;Taylor shows reverence towards the device, indicating its importance and potential impact.</data>
+      <data key="d9">reverence,technological significance,technologicΑΣal significance</data>
+      <data key="d10">chunk-0004&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0051&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0123&lt;SEP&gt;chunk-0126</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Taylor" target="Jordan">
+      <data key="d7">19.0</data>
+      <data key="d8">Stub summary 8263da861d675aefbcca533218c8c451&lt;SEP&gt;Taylor and Jordan interact directly regarding the device, leading to a moment of mutual respect and an uneasy truce.&lt;SEP&gt;Taylor and Jordan interact directly regarding the device, leading to a moment of mutual respect and an uneasy truce.&lt;SEP&gt;Taylor and Jordan interact directly regarding the device, leading to a moment of mutual respect and an uneasy truce.</data>
+      <data key="d9">conflict resolution,mutual respect,mutual1.2 respect</data>
+      <data key="d10">chunk-0012&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0027&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0038&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0051&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0073&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0096&lt;SEP&gt;chunk-0102&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0123&lt;SEP&gt;chunk-0126&lt;SEP&gt;chunk-0138&lt;SEP&gt;chunk-0155</data>
+      <data key="d11">doc-003.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-006.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-012.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-024.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-038.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Taylor" target="the dynamics among other characters.entity">
+      <data key="d7">1.0</data>
+      <data key="d8">Taylor is portrayed with authoritarian certainty and shows a moment of reverence towards a device, indicating a change in perspective.</data>
+      <data key="d9">person&lt;٣.٤</data>
+      <data key="d10">chunk-0053</data>
+      <data key="d11">doc-013.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Taylor" target="Alex&lt;1">
+      <data key="d7">1.0</data>
+      <data key="d8">Alex observes Tayl²or's authoritarian behavior and notes changes in Taylor's attitude toward the device.</data>
+      <data key="d9">observation,power dynamics</data>
+      <data key="d10">chunk-0139</data>
+      <data key="d11">doc-034.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Jordan" target="Cruz">
+      <data key="d7">16.0</data>
+      <data key="d8">Stub summary 392d5da4b495a1ac060837951878a75d&lt;SEP&gt;Jordan's commitment to discovery is in rebellion against Cruz's vision of control and order.</data>
+      <data key="d9">ideological conflict,rebellion</data>
+      <data key="d10">chunk-0004&lt;SEP&gt;chunk-0012&lt;SEP&gt;chunk-0023&lt;SEP&gt;chunk-0028&lt;SEP&gt;chunk-0038&lt;SEP&gt;chunk-0041&lt;SEP&gt;chunk-0055&lt;SEP&gt;chunk-0067&lt;SEP&gt;chunk-0073&lt;SEP&gt;chunk-0088&lt;SEP&gt;chunk-0103&lt;SEP&gt;chunk-0116&lt;SEP&gt;chunk-0123&lt;SEP&gt;chunk-0126&lt;SEP&gt;chunk-0138&lt;SEP&gt;chunk-0155</data>
+      <data key="d11">doc-001.md&lt;SEP&gt;doc-003.md&lt;SEP&gt;doc-005.md&lt;SEP&gt;doc-007.md&lt;SEP&gt;doc-009.md&lt;SEP&gt;doc-010.md&lt;SEP&gt;doc-013.md&lt;SEP&gt;doc-016.md&lt;SEP&gt;doc-018.md&lt;SEP&gt;doc-022.md&lt;SEP&gt;doc-025.md&lt;SEP&gt;doc-029.md&lt;SEP&gt;doc-030.md&lt;SEP&gt;doc-031.md&lt;SEP&gt;doc-034.md&lt;SEP&gt;doc-038.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Jordan" target="Ale《书》x">
+      <data key="d7">1.0</data>
+      <data key="d8">Alex and Jordan share a commitment to discovery, which contrasts with Cruz's vision.)</data>
+      <data key="d9">rebellion,shared goals</data>
+      <data key="d10">chunk-0139</data>
+      <data key="d11">doc-034.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Cruz" target="entity">
+      <data key="d7">1.0</data>
+      <data key="d8">Cruz is) associated with a vision of control and order, influencing the dynamics among other characters.</data>
+      <data key="d9">person</data>
+      <data key="d10">chunk-0045</data>
+      <data key="d11">doc-011.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+    <edge source="Cruz" target="Jord123an">
+      <data key="d7">1.0</data>
+      <data key="d8">Jordan's commitment to discovery is in rebellion against Cruz's vision of control and order.</data>
+      <data key="d9">ideological conflict,rebellion</data>
+      <data key="d10">chunk-0051</data>
+      <data key="d11">doc-012.md</data>
+      <data key="d12">1760000000</data>
+      <data key="d13" />
+    </edge>
+  </graph>
+</graphml>

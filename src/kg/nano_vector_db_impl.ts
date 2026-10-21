@@ -9,7 +9,8 @@
 // Single process: upstream's cross-process reload flags are not ported (SCOPE.md).
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { deflateSync, inflateSync } from 'node:zlib';
+import { inflateSync } from 'node:zlib';
+import { deflate } from 'pako';
 import type { BaseVectorStorage, DropResult, EmbeddingFunc, GlobalConfig, KvRecord, StorageOptions, VectorQueryResult } from '../base.ts';
 import { workspaceDir } from '../base.ts';
 import { ByteReader } from '../internal/json_stream.ts';
@@ -94,11 +95,18 @@ export function decodeVectorField(field: string | Buffer): Float32Array {
   return out;
 }
 
-/** LightRAG's encoding: float16 (round to nearest even, as numpy astype) -> zlib level 6 -> bytes. */
+/**
+ * LightRAG's encoding: float16 (round to nearest even, as numpy astype) -> zlib level 6 -> bytes.
+ * Deflate is pako's (a port of vanilla zlib), not node:zlib: Node bundles
+ * Chromium's zlib fork, whose match finder picks different matches, so its
+ * stream differs from CPython's `zlib.compress` for ~99% of real embeddings
+ * (104 of 8944 equal on the live store; pako: 8944 of 8944).
+ */
 export function encodeVectorField(embedding: ArrayLike<number>): Buffer {
   const raw = Buffer.allocUnsafe(embedding.length * 2);
   for (let i = 0; i < embedding.length; i++) raw.writeUInt16LE(floatToHalf(embedding[i]!), i * 2);
-  return deflateSync(raw);
+  const z = deflate(raw);
+  return Buffer.from(z.buffer, z.byteOffset, z.byteLength);
 }
 
 export function halfToFloat(h: number): number {
@@ -426,7 +434,12 @@ export class NanoVectorDBStorage implements BaseVectorStorage {
     return this.client;
   }
 
-  async upsert(data: Record<string, KvRecord>): Promise<UpsertReport | undefined> {
+  /**
+   * `opts.embeddings` (port-only): vectors already computed for `data`'s
+   * contents, in entry order; the embedding function is not called. The merge
+   * uses it to embed a whole batch of queued writes at once.
+   */
+  async upsert(data: Record<string, KvRecord>, opts: { embeddings?: ArrayLike<ArrayLike<number>> } = {}): Promise<UpsertReport | undefined> {
     const entries = Object.entries(data);
     if (entries.length === 0) return undefined;
     const now = this.clock();
@@ -435,12 +448,16 @@ export class NanoVectorDBStorage implements BaseVectorStorage {
       for (const [k1, v1] of Object.entries(v)) if (this.meta_fields.has(k1)) d[k1] = v1;
       return d;
     });
-    const contents = entries.map(([, v]) => v.content as string);
-    const batches: string[][] = [];
-    for (let i = 0; i < contents.length; i += this.maxBatch) batches.push(contents.slice(i, i + this.maxBatch));
-    const results = await Promise.all(batches.map((b) => this.embedding_func(b, { context: 'document' })));
     const embeddings: ArrayLike<number>[] = [];
-    for (const r of results) for (let i = 0; i < r.length; i++) embeddings.push(r[i]!);
+    if (opts.embeddings) {
+      for (let i = 0; i < opts.embeddings.length; i++) embeddings.push(opts.embeddings[i]!);
+    } else {
+      const contents = entries.map(([, v]) => v.content as string);
+      const batches: string[][] = [];
+      for (let i = 0; i < contents.length; i += this.maxBatch) batches.push(contents.slice(i, i + this.maxBatch));
+      const results = await Promise.all(batches.map((b) => this.embedding_func(b, { context: 'document' })));
+      for (const r of results) for (let i = 0; i < r.length; i++) embeddings.push(r[i]!);
+    }
     if (embeddings.length !== list.length) {
       this.log('error', `[${this.workspace}] embedding is not 1-1 with data, ${embeddings.length} != ${list.length}`);
       return undefined;
