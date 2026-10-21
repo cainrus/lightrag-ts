@@ -23,6 +23,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "node --test 'test/**/*.test.ts'",
+    "test:upstream": "node tools/upstream/run-upstream-tests.ts",
     "store:stats": "node scripts/store-stats.ts",
     "parity:extract": "node parity/replay-extract.ts",
     "parity:storages": "node parity/storages.ts",

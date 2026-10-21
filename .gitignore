@@ -5,3 +5,4 @@ dist/
 reports/
 # slices of a private store (tools/upstream/slice_store.py) - personal data, never commit
 fixtures/private/
+__pycache__/
