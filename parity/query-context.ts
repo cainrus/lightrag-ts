@@ -17,7 +17,7 @@ import { parseArgs } from 'node:util';
 import { forEachJsonKv, kvStorePath } from '../src/kg/json_kv_impl.ts';
 import { NameSpace } from '../src/namespace.ts';
 import type { Dict, QueryMode } from '../src/query.ts';
-import { describeProbe, diffRecords, openQueryStore, type Probe, readRecords, runProbe } from './query-runner.ts';
+import { describeProbe, diffRecords, expectedViaLightRAG, openLightRAGStore, openQueryStore, type Probe, type ProbeRecord, readRecords, runProbe, runProbeViaLightRAG } from './query-runner.ts';
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
@@ -32,6 +32,8 @@ const { positionals, values } = parseArgs({
     py: { type: 'string' },
     json: { type: 'string' },
     'show-diffs': { type: 'string', default: '5' },
+    // B4: run the probes through LightRAG.aquery_llm instead of kg_query / naive_query
+    via: { type: 'string', default: 'functions' },
   },
 });
 const [cmd, dir] = positionals;
@@ -76,7 +78,11 @@ if (cmd === 'probes' && dir && values.out) {
   const t0 = performance.now();
   const { probes } = JSON.parse(readFileSync(values.probes, 'utf8')) as { probes: Probe[] };
   const py = new Map(readRecords(values.py).map((r) => [r.id, r]));
-  const store = await openQueryStore(dir, values.workspace, JSON.parse(readFileSync(values.emb, 'utf8')) as Record<string, number[]>);
+  const vectors = JSON.parse(readFileSync(values.emb, 'utf8')) as Record<string, number[]>;
+  const viaRag = values.via === 'lightrag';
+  const store = viaRag ? await openLightRAGStore(dir, values.workspace, vectors) : await openQueryStore(dir, values.workspace, vectors);
+  const run1 = (p: Probe): Promise<ProbeRecord> =>
+    viaRag ? runProbeViaLightRAG(store as Awaited<ReturnType<typeof openLightRAGStore>>, p) : runProbe(store as Awaited<ReturnType<typeof openQueryStore>>, p);
   const loadSeconds = (performance.now() - t0) / 1000;
   const diffs: { id: string; probe: string; diff: string[] }[] = [];
   const tally = { probes: 0, match: 0, noUpstreamRecord: 0, contextNone: 0, errors: 0, llmCalls: 0, cacheHitAnswers: 0, byMode: {} as Record<string, { n: number; match: number }> };
@@ -87,8 +93,9 @@ if (cmd === 'probes' && dir && values.out) {
       continue;
     }
     tally.probes++;
-    const rec = await runProbe(store, p);
-    const d = diffRecords(rec, want);
+    const rec = await run1(p);
+    // through LightRAG the priority limiter takes `_priority`; upstream's records come from kg_query directly
+    const d = diffRecords(rec, viaRag ? expectedViaLightRAG(want) : want);
     const m = (tally.byMode[p.mode] ??= { n: 0, match: 0 });
     m.n++;
     if (!d.length) {

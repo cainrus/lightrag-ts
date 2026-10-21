@@ -57,7 +57,7 @@ const META_FIELDS = {
 
 const md5 = (s: string) => createHash('md5').update(s, 'utf8').digest('hex');
 
-type State = { probe: Probe | null; calls: Dict[]; writes: Dict[] };
+export type State = { probe: Probe | null; calls: Dict[]; writes: Dict[] };
 
 export type QueryStore = {
   gc: QueryGlobalConfig & GlobalConfig;
@@ -74,7 +74,7 @@ export type QueryStore = {
 };
 
 /** The stub upstream's harness installs as llm_model_func; same answers byte for byte. */
-function stubLlm(state: State) {
+export function stubLlm(state: State) {
   return async (prompt: string, o: QueryLlmOptions = {}): Promise<string | AsyncIterable<string>> => {
     const call = {
       prompt,
@@ -244,3 +244,109 @@ export function readRecords(file: string): ProbeRecord[] {
 
 /** For a record that diverged: the probe in a form a reader can rerun upstream. */
 export const describeProbe = (p: Probe): string => pyJsonDumps({ id: p.id, mode: p.mode, variant: p.variant, query: p.query, param: p.param, gc: p.gc });
+
+// ---------------------------------------------------------------- the same probes through LightRAG (B4)
+
+/**
+ * A LightRAG over the store at `dir` with the probes' stub LLM and the
+ * fixture vectors: what `aquery_llm` builds must equal what kg_query /
+ * naive_query built for upstream (B3's records). The cache is not written
+ * back (the 300 MB file once per probe would be the whole run).
+ */
+export async function openLightRAGStore(dir: string, workspace: string, vectors: Record<string, number[]>) {
+  const { LightRAG } = await import('../src/lightrag.ts');
+  const state: State = { probe: null, calls: [], writes: [] };
+  const missingVectors = new Set<string>();
+  const head = Buffer.alloc(256);
+  const fd = openSync(vdbPath(dir, NameSpace.VECTOR_STORE_CHUNKS, workspace), 'r');
+  readSync(fd, head, 0, 256, 0);
+  closeSync(fd);
+  const dim = Number(/"embedding_dim":\s*(\d+)/.exec(head.toString('latin1'))?.[1]);
+  const embed = Object.assign(
+    async (texts: string[]) =>
+      texts.map((t) => {
+        const v = vectors[t];
+        if (!v) {
+          missingVectors.add(t);
+          throw new Error(`no fixture vector for ${JSON.stringify(t)}`);
+        }
+        return Float32Array.from(v);
+      }),
+    { embedding_dim: dim },
+  ) as EmbeddingFunc;
+  const llm = stubLlm(state);
+  const rag = new LightRAG({
+    working_dir: dir,
+    workspace,
+    embedding_func: embed,
+    llm_model_func: (p: string, o?: Record<string, unknown>) => llm(p, o as QueryLlmOptions),
+    now: () => PINNED_TIME,
+  });
+  await rag.initialize_storages();
+  const cache = rag.llm_response_cache;
+  cache.index_done_callback = async () => false;
+  const upsert = cache.upsert.bind(cache);
+  cache.upsert = async (d) => {
+    state.writes.push(JSON.parse(JSON.stringify(d)) as Dict);
+    await upsert(d);
+  };
+  return { rag, state, missingVectors };
+}
+
+/** Probe config a LightRAG can carry: its fields (rerank as rerank_model_func), not kg_query-only keys like system_prompt_template. */
+export const LIGHTRAG_PROBE_KEYS = new Set(['rerank', 'min_rerank_score', 'kg_chunk_pick_method', 'related_chunk_number', 'top_k', 'chunk_top_k']);
+export const probeFitsLightRAG = (p: Probe) => Object.keys(p.gc).every((k) => LIGHTRAG_PROBE_KEYS.has(k));
+
+export async function runProbeViaLightRAG(s: Awaited<ReturnType<typeof openLightRAGStore>>, p: Probe): Promise<ProbeRecord> {
+  s.state.probe = p;
+  s.state.calls = [];
+  s.state.writes = [];
+  const rec: ProbeRecord = { id: p.id, result: null, error: null, llm_calls: [], cache_writes: [] };
+  // the probe's config as LightRAG fields, and in the snapshot the storages carry (upstream's harness mutates one dict)
+  const rag = s.rag as unknown as Record<string, unknown> & { initConfig: Record<string, unknown> };
+  const saved: [string, unknown, unknown][] = [];
+  for (const [k0, v0] of Object.entries(p.gc)) {
+    const [k, v] = k0 === 'rerank' ? ['rerank_model_func', v0 === 'reverse' ? stubRerank : null] : [k0, v0];
+    saved.push([k, rag[k], rag.initConfig[k]]);
+    rag[k] = v;
+    rag.initConfig[k] = v;
+  }
+  let r: Dict;
+  try {
+    r = await s.rag.aquery_llm(p.query, paramOf(p), p.system_prompt);
+  } finally {
+    for (const [k, a, b] of saved.reverse()) {
+      rag[k] = a;
+      rag.initConfig[k] = b;
+    }
+  }
+  const { llm_response, ...raw } = r as Dict & { llm_response: { content: string | null; is_streaming: boolean; response_iterator: AsyncIterable<string> | null } };
+  const meta = (raw.metadata ?? {}) as Dict;
+  if (raw.status === 'failure' && typeof raw.message === 'string' && raw.message.startsWith('Query failed: ')) {
+    rec.error = raw.message.slice('Query failed: '.length);
+  } else if (!(raw.status === 'failure' && meta.failure_reason === 'no_results')) {
+    let streamed: string | null = null;
+    if (llm_response.is_streaming) {
+      streamed = '';
+      for await (const c of llm_response.response_iterator!) streamed += c;
+    }
+    rec.result = { content: llm_response.content, is_streaming: llm_response.is_streaming, streamed, raw_data: Object.keys(raw).length ? raw : null };
+  }
+  // the priority limiter in front of LightRAG's LLM function takes `_priority` (upstream's too)
+  rec.llm_calls = s.state.calls.map((c) => ({ ...c, _priority: null }));
+  rec.cache_writes = s.state.writes;
+  return rec;
+}
+
+/**
+ * Upstream's record of a probe as aquery_llm would report it: the priority
+ * limiter takes `_priority`, and an exception becomes "Query failed: {str(e)}"
+ * (the message, without the exception's type).
+ */
+export function expectedViaLightRAG(want: ProbeRecord): ProbeRecord {
+  return {
+    ...want,
+    error: want.error === null ? null : want.error.replace(/^[A-Za-z_][\w.]*: /, ''),
+    llm_calls: want.llm_calls.map((c) => ({ ...c, _priority: null })),
+  };
+}

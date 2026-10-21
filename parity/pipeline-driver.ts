@@ -84,10 +84,8 @@ export function synthKeywords(prompt: string): string {
 export function makeLlm(kind: 'synthetic' | 'cache'): LightRAGLlmFunc {
   return async (prompt, o = {}) => {
     if (prompt.startsWith(SUMMARY_HEAD)) return `Stub summary ${md5Hex(prompt)}`;
-    if (o.keyword_extraction) {
-      if (kind === 'synthetic') return synthKeywords(prompt);
-      throw new CacheMiss('cache miss: keywords');
-    }
+    // a store's keyword entries exist for the modes and params it was asked with; the rest get stand-ins
+    if (o.keyword_extraction) return synthKeywords(prompt);
     const system = (o.system_prompt as string | null | undefined) ?? null;
     if (system && system.includes('<|#|>')) {
       if (kind === 'synthetic') return synthExtraction(prompt, Array.isArray(o.history_messages) && o.history_messages.length > 0);
@@ -417,7 +415,8 @@ export function fixtureDigest(storeDir: string, records: StepRecord[]): FixtureD
       op: r.op,
       error: r.error,
       result: sha256(canonJson(r.result)),
-      history: sha256(canonJson(r.history.filter((m) => !isTraceback(m)))),
+      // "(async: N)": a run made sequential through llm_model_max_async prints its own limit
+      history: sha256(canonJson(r.history.filter((m) => !isTraceback(m)).map((m) => m.replace(/\(async: \d+\)/, '(async: N)')))),
     })),
   };
 }

@@ -55,7 +55,7 @@
    "op": "insert",
    "error": null,
    "result": "dbc81436bbc9421c64641e1acdf9a4dfbddc5029f45d51c00d8fdb1c8d5b897a",
-   "history": "5601d5fd12af1d847e777c33cf6a7ac7bf29abf465d55203e9f8405f69630bce"
+   "history": "17376b96f6608f4810d9826bb20d962aa449c9b67fa045eb528f9fb343c6d317"
   },
   {
    "op": "counts",
@@ -67,13 +67,13 @@
    "op": "insert",
    "error": null,
    "result": "8219afe0b43802e6003b5ac206d8fdbb21d6342b22b9a12f4afe8e612edd87b5",
-   "history": "795ddac536931d670b118128dfd71d1c3d694edb7420e8e7473e85d818c39f8e"
+   "history": "5c49b61e7baa042bcc3265dfde96527a72be9b511d47aec2590d4a188b75c68c"
   },
   {
    "op": "insert",
    "error": null,
    "result": "6fd99f43e35d68d0f49b9eed078ddb62bd0681c0450ecb9968e69afc6820d1c9",
-   "history": "17975975cb31afbecb2614aede291fbea281bd102d94cdf4bf78416cb9499e71"
+   "history": "986813d39ac11f453ff612be7b34cd5f6eeb75362ef78ad68add54aa07414074"
   },
   {
    "op": "enqueue",
@@ -85,7 +85,7 @@
    "op": "insert",
    "error": null,
    "result": "ff96f1111f9c938cf86775c0e42d2da9510932922b1fc020bc02f65be98df63f",
-   "history": "7c5baccb72c0c80f72da3a533883ee1999553b87cb5de13598e31e2a56c8dafa"
+   "history": "c1d3419cfedf4a7919c6bc4487c19fbc46424bfde4500299f65123ab5ed7c67c"
   },
   {
    "op": "error_docs",
@@ -181,13 +181,13 @@
    "op": "delete",
    "error": null,
    "result": "1459764cec0fad50a39e45b898df7dc0604fe95bfcade10e6a4ee85ae9d4d9ff",
-   "history": "5061fdb1dd106424c8a3210dba520624b878fd2e77e3e0dd69bd37f179918c82"
+   "history": "fc12952155a4fd456275ff356f6e297491bc77994d83477a5b2a5452dae8d83e"
   },
   {
    "op": "delete",
    "error": null,
    "result": "b9b0bd6667755396c2d8afaf0f138fbfd68fcc2b1c0b949a5245f0dfc49eec61",
-   "history": "521e4c291573db01f369144125817b9a6656ac8cf3c6654676633ae20745fa64"
+   "history": "ed6900a4283ba9d0a135750cd701e9ee6b7477495d4e7fb5423938df6d9cfc4f"
   },
   {
    "op": "delete",
@@ -199,7 +199,7 @@
    "op": "delete",
    "error": null,
    "result": "b57e465dcc2ad61db4f1ed8641905af476741a242edd82272a216a70d15cfa99",
-   "history": "8480d0effe59d86819057b7b0c32986ae55a94b71a0776534023d1175191a836"
+   "history": "d0553a4afd40470fe943846d7d92f07d8dc69582d7b8f280337fa1e24ed06e6f"
   },
   {
    "op": "query",
@@ -385,13 +385,13 @@
    "op": "delete",
    "error": null,
    "result": "033a6207fbd00b200931b06fa55e64dcfbd0280ceeb5a3ec7c13656898638ac5",
-   "history": "00ff3511cb9d25e732c8d888fd42aff241b71c10545a9729861c4fba7a3ace55"
+   "history": "5898a44734670036be56113a9341273d8c65b6c642c510fa8bf7ca4e2d6a5895"
   },
   {
    "op": "insert",
    "error": null,
    "result": "a4377cd0941e2230c6eff23fe9f12f3988fb23991672b7000352ca31db293bab",
-   "history": "a2809b385d93e6383f24022bd725b444bb74b73b1ad45a4e15986cedb973a521"
+   "history": "6f9503db8867c86cef99c27ca3747a7b34de4881937ca8a481583eebda3d75bc"
   },
   {
    "op": "query",

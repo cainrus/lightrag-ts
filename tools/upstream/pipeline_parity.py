@@ -236,9 +236,8 @@ def make_llm(kind):
         if prompt.startswith(SUMMARY_PROMPT_HEAD):
             return "Stub summary " + md5_hex(prompt)
         if keyword_extraction:
-            if kind == "synthetic":
-                return synth_keywords(prompt)
-            raise CacheMiss("cache miss: keywords")
+            # a store's keyword entries exist for the modes and params it was asked with; the rest get stand-ins
+            return synth_keywords(prompt)
         if system_prompt and "<|#|>" in system_prompt:
             if kind == "synthetic":
                 return synth_extraction(prompt, bool(history_messages))

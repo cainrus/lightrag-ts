@@ -44,3 +44,18 @@ export { NetworkXStorage, NxGraph, graphmlPath, loadNxGraph, readGraphml, writeN
 export type { GraphmlGraph } from './kg/networkx_impl.ts';
 export { storeStats } from './store.ts';
 export type { StoreStats } from './store.ts';
+export { getPipelineStatus, initializePipelineStatus, LightRAG, StoragesStatus } from './lightrag.ts';
+export type { ChunkingFunc, LightRAGEmbeddingFunc, LightRAGFields, LightRAGInit, LightRAGLlmFunc, LightRAGLog, PipelineStatusData } from './lightrag.ts';
+export { rebuildKnowledgeFromChunks } from './operate.ts';
+export {
+  acreateEntity,
+  acreateRelation,
+  adeleteByEntity,
+  adeleteByRelation,
+  aeditEntity,
+  aeditRelation,
+  amergeEntities,
+  getEntityInfo,
+  getRelationInfo,
+  utilsGraphHooks,
+} from './utils_graph.ts';

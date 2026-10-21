@@ -28,13 +28,7 @@ describe('LightRAG pipeline vs upstream (synthetic scenario)', () => {
     try {
       const spec = syntheticSpec(dir);
       const records = await runSpecTs({ ...spec, config: { ...spec.config, llm_model_max_async: 1 } }, { maxParallelInsert: 1 });
-      // the sequential run prints its own async limit in two status lines; the rest is upstream's
-      const digest = fixtureDigest(dir, records);
-      for (const [f, d] of Object.entries(digest.files)) assert.deepEqual(d, FIXTURE.files[f], `${f} differs from upstream`);
-      digest.steps.forEach((s, i) => {
-        assert.equal(s.result, FIXTURE.steps[i]!.result, `step ${i} (${s.op}) result`);
-        assert.equal(s.error, FIXTURE.steps[i]!.error, `step ${i} (${s.op}) error`);
-      });
+      assertDigest(dir, records);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -71,7 +65,6 @@ describe('LightRAG pipeline vs upstream (synthetic scenario)', () => {
       rmSync(b, { recursive: true, force: true });
     }
   });
-  void assertDigest;
 });
 
 describe('LightRAG class', () => {
@@ -239,5 +232,34 @@ describe('lightrag.py helpers', () => {
     assert.equal(pyIsoformatUtc(1760000000), '2025-10-09T08:53:20+00:00');
     assert.equal(pyIsoformatUtc(1760000000.25), '2025-10-09T08:53:20.250000+00:00');
     assert.equal(createHash('md5').update('').digest('hex').length, 32);
+  });
+});
+
+describe('LightRAG.aquery_llm vs upstream kg_query / naive_query (B3 probes)', () => {
+  it('every probe a LightRAG can express builds what upstream built', async (t) => {
+    const { cpSync } = await import('node:fs');
+    const { describeProbe, diffRecords, expectedViaLightRAG, openLightRAGStore, probeFitsLightRAG, readRecords, runProbeViaLightRAG } = await import('../parity/query-runner.ts');
+    const q = new URL('./fixtures/query/', import.meta.url);
+    const read = <T>(f: string): T => JSON.parse(readFileSync(new URL(f, q), 'utf8')) as T;
+    const dir = tmp();
+    try {
+      cpSync(new URL('store', q), dir, { recursive: true });
+      const { probes } = read<{ probes: import('../parity/query-runner.ts').Probe[] }>('probes.json');
+      const upstream = new Map(readRecords(new URL('upstream.jsonl', q).pathname).map((r) => [r.id, r]));
+      const store = await openLightRAGStore(dir, '', read<Record<string, number[]>>('emb.json'));
+      const fit = probes.filter(probeFitsLightRAG);
+      assert.ok(fit.length >= 130, `${fit.length} probes`);
+      for (const p of fit) {
+        const rec = await runProbeViaLightRAG(store, p);
+        const want = upstream.get(p.id)!;
+        await t.test(p.id, () => {
+          const d = diffRecords(rec, expectedViaLightRAG(want));
+          assert.deepEqual(d, [], `${describeProbe(p)}\n${d.join('\n')}`);
+        });
+      }
+      assert.deepEqual([...store.missingVectors], []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

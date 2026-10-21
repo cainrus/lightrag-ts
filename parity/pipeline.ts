@@ -84,7 +84,9 @@ async function compare(spec: Omit<PipelineSpec, 'working_dir'>, seed: string | n
   const seconds: Record<string, number> = {};
   const fresh = (d: string) => {
     rmSync(d, { recursive: true, force: true });
-    if (seed) cpSync(seed, d, { recursive: true });
+    // an APFS clone where there is one: a full store copy is 2 GB
+    if (seed && process.platform === 'darwin') execFileSync('cp', ['-c', '-R', seed, d]);
+    else if (seed) cpSync(seed, d, { recursive: true });
     else mkdirSync(d, { recursive: true });
   };
   const pyOut = join(WORK, 'py.jsonl');
@@ -149,6 +151,8 @@ if (cmd === 'synthetic') {
   }
 } else if (cmd === 'store' && src) {
   await storeReplay(src);
+} else if (cmd === 'store-delete' && src) {
+  await storeDelete(src);
 } else {
   console.error('usage: pipeline.ts synthetic [--work DIR] [--write-fixture DIR] | store <store-dir> --workspace W --work DIR [--docs N]');
   process.exit(2);
@@ -173,12 +177,14 @@ async function storeReplay(storeDir: string): Promise<void> {
     steps.push({
       op: 'insert',
       docs: part.map((d) => fullDocs.get(d)!.content),
+      // the store's own ids (the vault names documents by path, not by md5)
+      ids: part,
       file_paths: part.map((d) => status.get(d)!.file_path ?? fullDocs.get(d)!.file_path ?? 'unknown_source'),
       track_id: `replay-${i / batch}`,
     });
   }
   // a re-insert of the first document: the duplicate path
-  if (picked.length) steps.push({ op: 'insert', docs: [fullDocs.get(picked[0]!)!.content], file_paths: ['again.md'], track_id: 'replay-dup' });
+  if (picked.length) steps.push({ op: 'insert', docs: [fullDocs.get(picked[0]!)!.content], ids: [picked[0]!], file_paths: ['again.md'], track_id: 'replay-dup' });
   // queries from the store's own keyword cache entries
   const kw: string[] = [];
   forEachJsonKv<{ original_prompt?: string }>(kvStorePath(storeDir, NameSpace.KV_STORE_LLM_RESPONSE_CACHE, ws), (k, e) => {
@@ -236,5 +242,31 @@ async function storeReplay(storeDir: string): Promise<void> {
   }
   const r = await compare(spec, seed);
   report(r);
-  void readFileSync;
+}
+
+// ---------------------------------------------------------------- deletions on a full store copy
+
+/**
+ * adelete_by_doc_id on a copy of the whole store (its real graph, chunk
+ * tracking, vectors and LLM cache): --deletes documents picked from the
+ * processed ones (every --stride-th from --offset), every other one with its
+ * LLM cache; rebuilt descriptions come from the cache or the summary stand-in,
+ * new vectors from the hash stand-in at the store's dimension.
+ */
+async function storeDelete(storeDir: string): Promise<void> {
+  const ws = values.workspace!;
+  type Status = { status: string };
+  const ids: string[] = [];
+  forEachJsonKv<Status>(kvStorePath(storeDir, NameSpace.DOC_STATUS, ws), (k, v) => void (v.status === 'processed' && ids.push(k)));
+  const head = readFileSync(join(storeDir, ws, 'vdb_chunks.json')).subarray(0, 64).toString('latin1');
+  const dim = Number(/"embedding_dim":\s*(\d+)/.exec(head)?.[1]);
+  const n = Number(values.deletes);
+  const stride = Math.max(1, Math.floor((ids.length - Number(values.offset)) / Math.max(1, n)));
+  const steps: Step[] = [];
+  for (let k = 0; k < n; k++) steps.push({ op: 'delete', doc_id: ids[Number(values.offset) + k * stride]!, delete_llm_cache: k % 2 === 1 });
+  steps.push({ op: 'counts' });
+  const spec: Omit<PipelineSpec, 'working_dir'> = { workspace: ws, dim, llm: 'cache', config: {}, steps };
+  writeFileSync(join(WORK, 'spec.json'), JSON.stringify(spec));
+  log(`${n} deletions on a full copy (${ids.length} processed documents, dim ${dim})`);
+  report(await compare(spec, storeDir));
 }
