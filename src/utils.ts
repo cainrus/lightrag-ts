@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { getEncodingNameForModel, Tiktoken, type TiktokenBPE, type TiktokenModel } from 'js-tiktoken/lite';
 import { HTML5, INVALID_CHARREFS, INVALID_CODEPOINTS } from './internal/html5_entities.ts';
+import { PY_ISDIGIT, PY_RE_DIGIT, PY_RE_SPACE } from './internal/py_unicode.ts';
 
 /** Lone UTF-16 surrogates; Python's `encode('utf-8', errors='replace')` turns each into '?'. */
 const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
@@ -251,4 +252,265 @@ export function pyJsonDumps(v: unknown): string {
     return '{' + Object.entries(v).map(([k, x]) => `${JSON.stringify(k)}: ${pyJsonDumps(x)}`).join(', ') + '}';
   }
   throw new Error(`pyJsonDumps: unsupported ${typeof v}`);
+}
+
+// ---------------------------------------------------------------------------
+// Extraction-output helpers. Python regex semantics differ from JS in `.`
+// (Python matches \r and U+2028), `\s` and `\d` (Unicode tables of CPython's
+// Unicode version) and `$` (also before a final \n); each pattern below spells
+// those out instead of relying on the JS meaning.
+// ---------------------------------------------------------------------------
+
+const PY_S = `[${PY_RE_SPACE}]`;
+const isPyDigit = (c: string) => PY_ISDIGIT_RE.test(c);
+const PY_ISDIGIT_RE = new RegExp(`^[${PY_ISDIGIT}]$`, 'u');
+
+/** re.escape for the characters a `u`-flag RegExp accepts escaped. */
+function reEscape(s: string): string {
+  return s.replace(/[\\^$.*+?()[\]{}|/]/g, '\\$&');
+}
+
+/** utils.split_string_by_multi_markers */
+export function splitStringByMultiMarkers(content: string | null | undefined, markers: readonly string[]): string[] {
+  if (!markers.length) return [content as string];
+  const results = (content ?? '').split(new RegExp(markers.map(reEscape).join('|'), 'u'));
+  return results.map(pyStrip).filter((r) => r);
+}
+
+/** utils.is_float_regex: `re.match(r"^[-+]?[0-9]*\.?[0-9]+$")` */
+export function isFloatRegex(value: string): boolean {
+  return /^[-+]?[0-9]*\.?[0-9]+\n?$/.test(value);
+}
+
+/** Python `len()`: code points, not UTF-16 units. */
+export const pyLen = (s: string): number => {
+  let n = 0;
+  for (const _ of s) n++;
+  return n;
+};
+
+/** Python `s[:n]` by code point. */
+export const pySliceTo = (s: string, n: number): string => (s.length <= n ? s : Array.from(s).slice(0, n).join(''));
+
+const FULLWIDTH: Record<string, string> = {};
+for (let i = 0; i < 26; i++) {
+  FULLWIDTH[String.fromCharCode(0xff21 + i)] = String.fromCharCode(0x41 + i);
+  FULLWIDTH[String.fromCharCode(0xff41 + i)] = String.fromCharCode(0x61 + i);
+}
+for (let i = 0; i < 10; i++) FULLWIDTH[String.fromCharCode(0xff10 + i)] = String.fromCharCode(0x30 + i);
+const FULLWIDTH_RE = /[Ａ-Ｚａ-ｚ０-９]/g;
+const HAN = '[\\u4e00-\\u9fa5]';
+const ASCIIISH = '[a-zA-Z0-9\\(\\)\\[\\]@#$%!&\\*\\-=+_]';
+const RE_P_TAGS = new RegExp(`</p${PY_S}*>|<p${PY_S}*>|<p/>`, 'giu');
+const RE_BR_TAGS = new RegExp(`</br${PY_S}*>|<br${PY_S}*>|<br/>`, 'giu');
+const RE_HAN_HAN = new RegExp(`(?<=${HAN})${PY_S}+(?=${HAN})`, 'gu');
+const RE_HAN_ASCII = new RegExp(`(?<=${HAN})${PY_S}+(?=${ASCIIISH})`, 'gu');
+const RE_ASCII_HAN = new RegExp(`(?<=${ASCIIISH})${PY_S}+(?=${HAN})`, 'gu');
+const RE_QUOTES_BEFORE_HAN = new RegExp(`['"]+(?=${HAN})`, 'gu');
+const RE_QUOTES_AFTER_HAN = new RegExp(`(?<=${HAN})['"]+`, 'gu');
+const RE_NNBSP_AFTER_NON_DIGIT = new RegExp(`(?<=[^${PY_RE_DIGIT}])\\u202F`, 'gu');
+
+function stripOuter(name: string, open: string, close: string, forbidden: readonly string[]): string {
+  if (name.startsWith(open) && name.endsWith(close)) {
+    const inner = name.slice(open.length, -close.length);
+    if (!forbidden.some((q) => inner.includes(q))) return inner;
+  }
+  return name;
+}
+
+/** utils.normalize_extracted_info */
+export function normalizeExtractedInfo(name: string, removeInnerQuotes = false): string {
+  name = name.replace(RE_P_TAGS, '').replace(RE_BR_TAGS, '');
+  name = name.replace(FULLWIDTH_RE, (c) => FULLWIDTH[c]!);
+  name = name.replaceAll('－', '-').replaceAll('＋', '+').replaceAll('／', '/').replaceAll('＊', '*');
+  name = name.replaceAll('（', '(').replaceAll('）', ')');
+  name = name.replaceAll('—', '-').replaceAll('－', '-');
+  name = name.replaceAll('　', ' ');
+  name = name.replace(RE_HAN_HAN, '').replace(RE_HAN_ASCII, '').replace(RE_ASCII_HAN, '');
+  if (pyLen(name) >= 2) {
+    name = stripOuter(name, '"', '"', ['"']);
+    name = stripOuter(name, "'", "'", ["'"]);
+    name = stripOuter(name, '“', '”', ['“', '”']);
+    name = stripOuter(name, '‘', '’', ['‘', '’']);
+    name = stripOuter(name, '《', '》', ['《', '》']);
+  }
+  if (removeInnerQuotes) {
+    name = name.replaceAll('“', '').replaceAll('”', '').replaceAll('‘', '').replaceAll('’', '');
+    name = name.replace(RE_QUOTES_BEFORE_HAN, '').replace(RE_QUOTES_AFTER_HAN, '');
+    name = name.replaceAll(' ', ' ');
+    name = name.replace(RE_NNBSP_AFTER_NON_DIGIT, ' ');
+  }
+  name = pyStrip(name);
+  const len = pyLen(name);
+  if (len < 3 && /^[0-9]+\n?$/.test(name)) return '';
+  if (len < 6 && name.includes('.') && Array.from(name).every((c) => c === '.' || isPyDigit(c))) return '';
+  return name;
+}
+
+/** utils.sanitize_and_normalize_extracted_text */
+export function sanitizeAndNormalizeExtractedText(inputText: string, removeInnerQuotes = false): string {
+  const safe = sanitizeTextForEncoding(inputText);
+  return safe ? normalizeExtractedInfo(safe, removeInnerQuotes) : '';
+}
+
+/** utils.fix_tuple_delimiter_corruption */
+export function fixTupleDelimiterCorruption(record: string, delimiterCore: string, tupleDelimiter: string): string {
+  if (!record || !delimiterCore || !tupleDelimiter) return record;
+  const d = reEscape(delimiterCore);
+  const subs: string[] = [
+    `<\\|${d}\\|*?${d}\\|>`,
+    `<\\|\\\\${d}\\|>`,
+    `<\\|+>`,
+    `<[^\\n]?\\|${d}\\|[^\\n]?>`,
+    `<\\|?${d}\\|?>`,
+    `<[^|]${d}\\|>|<\\|${d}[^|]>`,
+    `<\\|${d}\\|+(?!>)`,
+    `<\\|${d}:(?!>)`,
+    `<\\|+${d}>`,
+    `<\\|\\|(?!>)`,
+    `(?<!<)\\|${d}\\|>`,
+    `<\\|${d}\\|>\\|`,
+    `\\|\\|${d}\\|\\|`,
+  ];
+  // replace() with a function: a `$` in the delimiter must stay literal
+  for (const p of subs) record = record.replace(new RegExp(p, 'gu'), () => tupleDelimiter);
+  return record;
+}
+
+/** utils.remove_think_tags */
+export function removeThinkTags(text: string): string {
+  // Python's `.` with DOTALL is any code point; [\s\S] is the JS spelling
+  text = text.replace(/^(?:(?!<think>)[\s\S])*?<\/think>/u, '');
+  text = text.replace(/<think>[\s\S]*?<\/think>/gu, '');
+  return pyStrip(text);
+}
+
+/** The slice of BaseKVStorage the LLM cache path uses. */
+export type LlmResponseCache = {
+  global_config: { enable_llm_cache?: boolean; enable_llm_cache_for_entity_extract?: boolean };
+  get_by_id(id: string): Promise<Record<string, unknown> | null>;
+  upsert(data: Record<string, Record<string, unknown>>): Promise<void>;
+};
+
+export type LlmFunc = (
+  prompt: string,
+  opts: { system_prompt?: string | null; history_messages?: ChatMessage[]; max_tokens?: number },
+) => Promise<string>;
+
+/** utils.handle_cache */
+export async function handleCache(
+  hashingKv: LlmResponseCache | null | undefined,
+  argsHash: string,
+  _prompt: string,
+  mode = 'default',
+  cacheType = 'unknown',
+): Promise<[string, number] | null> {
+  if (!hashingKv) return null;
+  if (mode !== 'default' ? !hashingKv.global_config.enable_llm_cache : !hashingKv.global_config.enable_llm_cache_for_entity_extract) return null;
+  const entry = await hashingKv.get_by_id(generateCacheKey(mode, cacheType, argsHash));
+  if (entry) return [entry.return as string, (entry.create_time as number | undefined) ?? 0];
+  return null;
+}
+
+/** utils.save_to_cache (CacheData flattened into arguments) */
+export async function saveToCache(
+  hashingKv: LlmResponseCache | null | undefined,
+  d: { argsHash: string; content: string; prompt: string; mode?: string; cacheType?: string; chunkId?: string | null; queryparam?: Record<string, unknown> | null },
+): Promise<void> {
+  if (!hashingKv || !d.content) return;
+  const key = generateCacheKey(d.mode ?? 'default', d.cacheType ?? 'query', d.argsHash);
+  const existing = await hashingKv.get_by_id(key);
+  if (existing && existing.return === d.content) return;
+  await hashingKv.upsert({
+    [key]: {
+      return: d.content,
+      cache_type: d.cacheType ?? 'query',
+      chunk_id: d.chunkId ?? null,
+      original_prompt: d.prompt,
+      queryparam: d.queryparam ?? null,
+    },
+  });
+}
+
+/**
+ * utils.use_llm_func_with_cache. Returns [response, timestamp]: the entry's
+ * create_time on a hit, now (seconds) after a call.
+ */
+export async function useLlmFuncWithCache(
+  userPrompt: string,
+  useLlmFunc: LlmFunc,
+  opts: {
+    llmResponseCache?: LlmResponseCache | null;
+    systemPrompt?: string | null;
+    maxTokens?: number;
+    historyMessages?: ChatMessage[] | null;
+    cacheType?: string;
+    chunkId?: string | null;
+    cacheKeysCollector?: string[];
+    now?: () => number;
+  } = {},
+): Promise<[string, number]> {
+  const cacheType = opts.cacheType ?? 'extract';
+  const now = opts.now ?? (() => Math.floor(Date.now() / 1000));
+  const safeUser = sanitizeTextForEncoding(userPrompt);
+  const safeSystem = opts.systemPrompt ? sanitizeTextForEncoding(opts.systemPrompt) : null;
+  const safeHistory = opts.historyMessages?.length
+    ? opts.historyMessages.map((m) => ({ ...m, content: sanitizeTextForEncoding(m.content) }))
+    : null;
+  const kwargs: { history_messages?: ChatMessage[]; max_tokens?: number } = {};
+  if (safeHistory) kwargs.history_messages = safeHistory;
+  if (opts.maxTokens !== undefined) kwargs.max_tokens = opts.maxTokens;
+
+  const cache = opts.llmResponseCache;
+  if (cache) {
+    const { prompt, argsHash, cacheKey } = llmCacheLookup(userPrompt, {
+      systemPrompt: opts.systemPrompt ?? null,
+      historyMessages: opts.historyMessages ?? null,
+      cacheType,
+    });
+    const hit = await handleCache(cache, argsHash, prompt, 'default', cacheType);
+    if (hit) {
+      opts.cacheKeysCollector?.push(cacheKey);
+      return hit;
+    }
+    const res = removeThinkTags(await useLlmFunc(safeUser, { system_prompt: safeSystem, ...kwargs }));
+    const ts = now();
+    if (cache.global_config.enable_llm_cache_for_entity_extract) {
+      await saveToCache(cache, { argsHash, content: res, prompt, cacheType, chunkId: opts.chunkId ?? null });
+      opts.cacheKeysCollector?.push(cacheKey);
+    }
+    return [res, ts];
+  }
+  let res: string;
+  try {
+    res = await useLlmFunc(safeUser, { system_prompt: safeSystem, ...kwargs });
+  } catch (e) {
+    if (e instanceof Error) e.message = `[LLM func] ${e.message}`;
+    throw e;
+  }
+  return [removeThinkTags(res), now()];
+}
+
+/** The slice of BaseKVStorage update_chunk_cache_list uses. */
+export type ChunkKv = {
+  get_by_id(id: string): Promise<Record<string, unknown> | null>;
+  upsert(data: Record<string, Record<string, unknown>>): Promise<void>;
+};
+
+/** utils.update_chunk_cache_list (failures are logged upstream, swallowed here too) */
+export async function updateChunkCacheList(chunkId: string, textChunksStorage: ChunkKv, cacheKeys: string[]): Promise<void> {
+  if (!cacheKeys.length) return;
+  try {
+    const chunk = await textChunksStorage.get_by_id(chunkId);
+    if (!chunk) return;
+    const list = (chunk.llm_cache_list ??= []) as string[];
+    const existing = new Set(list);
+    const fresh = cacheKeys.filter((k) => !existing.has(k));
+    if (fresh.length) {
+      list.push(...fresh);
+      await textChunksStorage.upsert({ [chunkId]: chunk });
+    }
+  } catch {
+    // upstream: logger.warning and continue
+  }
 }

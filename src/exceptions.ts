@@ -19,3 +19,20 @@ export class ChunkTokenLimitExceededError extends Error {
     this.chunkPreview = truncated;
   }
 }
+
+/** exceptions.PipelineCancelledException */
+export class PipelineCancelledException extends Error {
+  constructor(message = 'User cancelled') {
+    super(message);
+    this.name = 'PipelineCancelledException';
+  }
+}
+
+/**
+ * utils.create_prefixed_exception: same class, message `${prefix}: ${message}`.
+ * JS errors carry one message, so this mutates and returns the original.
+ */
+export function createPrefixedException<E>(e: E, prefix: string): E {
+  if (e instanceof Error) e.message = `${prefix}: ${e.message}`;
+  return e;
+}
