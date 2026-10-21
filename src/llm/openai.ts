@@ -751,7 +751,7 @@ export type EmbeddingFunc = ((texts: string[], opts?: EmbedCallOptions) => Promi
   embedding_dim: number;
   max_token_size: number | null;
   send_dimensions: boolean;
-  model_name: string | undefined;
+  model_name?: string;
   supports_asymmetric: boolean;
   func: RawEmbedFunc;
 };
@@ -801,7 +801,7 @@ export function makeEmbeddingFunc(cfg: {
     embedding_dim: cfg.embedding_dim,
     max_token_size: cfg.max_token_size ?? null,
     send_dimensions: cfg.send_dimensions ?? false,
-    model_name: cfg.model_name,
+    ...(cfg.model_name !== undefined ? { model_name: cfg.model_name } : {}),
     supports_asymmetric: cfg.supports_asymmetric ?? false,
     func,
   });

@@ -13,6 +13,9 @@
       "default": "./dist/index.js"
     }
   },
+  "bin": {
+    "lightrag-ts": "./dist/cli.js"
+  },
   "files": [
     "dist",
     "LICENSE",
@@ -30,7 +33,8 @@
     "parity:operate": "node parity/operate.ts",
     "parity:query": "node parity/query.ts keys",
     "parity:query-context": "node parity/query-context.ts",
-    "smoke:live": "node parity/live-smoke.ts"
+    "smoke:live": "node parity/live-smoke.ts",
+    "cli": "node src/cli.ts"
   },
   "keywords": [
     "rag",
