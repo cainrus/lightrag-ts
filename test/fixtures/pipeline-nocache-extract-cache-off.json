@@ -1,0 +1,105 @@
+{
+ "note": "Upstream LightRAG 1.4.16 on parity/pipeline-driver.ts noCacheRebuildSpec('extract-cache-off') (node parity/pipeline.ts nocache --write-fixture <dir>): file and record digests.",
+ "files": {
+  "ws/graph_chunk_entity_relation.graphml": {
+   "bytes": 28305,
+   "sha256": "451e5f1857e61fb6d49bd70245b70d1d9cb90c4670ccb29da85a2c7a5f3cf9aa"
+  },
+  "ws/kv_store_doc_status.json": {
+   "bytes": 3676,
+   "sha256": "0ead36cf907135e11f42061733a0e8a3eab7b1b6fa5afb0265f81ea63ac07793"
+  },
+  "ws/kv_store_entity_chunks.json": {
+   "bytes": 5288,
+   "sha256": "6d13d6786a97187e9c16a3cbfdde4936978ed1c666ba3e82e8d353506be885be"
+  },
+  "ws/kv_store_full_docs.json": {
+   "bytes": 5586,
+   "sha256": "d07c39ac8991cef895fc51f121a2018d75d69f21b40662d08ccd9bb3364cad05"
+  },
+  "ws/kv_store_full_entities.json": {
+   "bytes": 1514,
+   "sha256": "0f79ae22a35888f82b453bff0277dfae27764e495a519a30dd68e5b0155636da"
+  },
+  "ws/kv_store_full_relations.json": {
+   "bytes": 3161,
+   "sha256": "574c9227517dc27913727da318ed8f0168efb64e68515c02c3dd5c64a835ee32"
+  },
+  "ws/kv_store_relation_chunks.json": {
+   "bytes": 7554,
+   "sha256": "f33d5b1faa69046e3675a7bd65d8338f3ffd05636251a2c2e212988e0d7cd825"
+  },
+  "ws/kv_store_text_chunks.json": {
+   "bytes": 11942,
+   "sha256": "7adbb5b319ff5c3fd6f6f24374e7e6bcc7e8fa839df1b3316df4d26b5cc29263"
+  },
+  "ws/vdb_chunks.json": {
+   "bytes": 10583,
+   "sha256": "30aeaada8b04565e9e05a11676a364866a4d41e86019b31494d4b11125de38cf"
+  },
+  "ws/vdb_entities.json": {
+   "bytes": 9885,
+   "sha256": "bba7d5c4fdf8509c872c1b172b0c6e86a284566014e51e090ef13bd3f52899ff"
+  },
+  "ws/vdb_relationships.json": {
+   "bytes": 15213,
+   "sha256": "9b5721d5093af7b08115925516af310b086d3a24f684dde4bb1a123e101f00c6"
+  }
+ },
+ "steps": [
+  {
+   "op": "insert",
+   "error": null,
+   "result": "7ba359962a073c2ba5ad02fc82c772307d812d328c5817c4af8d6cc0d2e743cf",
+   "history": "380593ea206b6a6f66e4a5b4e0bd7b538eea8c3d6c1c5ff988ae0ceb6b646d88"
+  },
+  {
+   "op": "entity_info",
+   "error": null,
+   "result": "22bfd88e86f8f52ce670f4260e985c998f43eab7618a5b41c79ca47e616182ec",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "relation_info",
+   "error": null,
+   "result": "fcfbeefaa5755fc97361ff7e934188d05117bf9a6d8a9e500c851831609d442c",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "counts",
+   "error": null,
+   "result": "61b491757af4b16d1b89f22619a3a30fac50e7abd15c7a2eb831ac05cbf84ef4",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "delete",
+   "error": null,
+   "result": "64923bcbd86e33c9d9c43ea645cbb9fb235bd1df54aa394aa60b16ff847657bc",
+   "history": "fe129e1c33ca3ea1d1553cd60d593e067e113c606104b13173a87b509f7a3467"
+  },
+  {
+   "op": "delete",
+   "error": null,
+   "result": "acbb1af5b0a004a7d32241b320a8a99ed887a887b061ad0f99c5193abb7fdc57",
+   "history": "b31a4d53efe97d2ab04096572a47c07f2145c75f79b63942d542b7cb3f06bba8"
+  },
+  {
+   "op": "entity_info",
+   "error": null,
+   "result": "f61cce7d73ead15bae676a67839fdf5fb58555e93df871592148463f6ca7d594",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "relation_info",
+   "error": null,
+   "result": "fcfbeefaa5755fc97361ff7e934188d05117bf9a6d8a9e500c851831609d442c",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "counts",
+   "error": null,
+   "result": "87b99afe57ddc0ffb2eb017247f6efe4f3d014aeb33631bc5901cb38f9a9965c",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+ ]
+}

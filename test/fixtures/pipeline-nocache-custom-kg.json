@@ -1,0 +1,127 @@
+{
+ "note": "Upstream LightRAG 1.4.16 on parity/pipeline-driver.ts noCacheRebuildSpec('custom-kg') (node parity/pipeline.ts nocache --write-fixture <dir>): file and record digests.",
+ "files": {
+  "ws/graph_chunk_entity_relation.graphml": {
+   "bytes": 8695,
+   "sha256": "6c6f3c653b0bb79191ce6f897fa3c9944511bc12826e910749adbbf60c6b258c"
+  },
+  "ws/kv_store_doc_status.json": {
+   "bytes": 2,
+   "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "ws/kv_store_entity_chunks.json": {
+   "bytes": 2298,
+   "sha256": "570a14ae6361de63761f08630488ed57d63493b19cc0b94d3b38326359503e96"
+  },
+  "ws/kv_store_full_docs.json": {
+   "bytes": 2,
+   "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "ws/kv_store_full_entities.json": {
+   "bytes": 2,
+   "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "ws/kv_store_full_relations.json": {
+   "bytes": 2,
+   "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "ws/kv_store_llm_response_cache.json": {
+   "bytes": 637600,
+   "sha256": "965fe3d070db7d7ee3b454e1ea1b5e4cbd777bbdb0b8f685fa4939d29ca7c049"
+  },
+  "ws/kv_store_relation_chunks.json": {
+   "bytes": 233,
+   "sha256": "ae98b9c39da5d8ddb59c8f0a0a86adae1d630419d1d32dfa2f6eecf6b363e1d1"
+  },
+  "ws/kv_store_text_chunks.json": {
+   "bytes": 436,
+   "sha256": "86299133fab0be20a16db49a8c38106b7d303f11fec9466a671b32e0506e45fe"
+  },
+  "ws/vdb_chunks.json": {
+   "bytes": 355,
+   "sha256": "69c15215f2c3121f02c4eacd36f69f36fa16fa0959396008da7e5e1ed44ca363"
+  },
+  "ws/vdb_entities.json": {
+   "bytes": 5934,
+   "sha256": "7b29c0f1ffcf72d54f5b44748538e8c3a8b8b8905d4410e5bf2020caf10cd7d2"
+  },
+  "ws/vdb_relationships.json": {
+   "bytes": 553,
+   "sha256": "95c7c1ba783cdf59de4264391f13c8ca287c1a218049d9f71a5f82573a1a5bc1"
+  }
+ },
+ "steps": [
+  {
+   "op": "custom_kg",
+   "error": null,
+   "result": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "insert",
+   "error": null,
+   "result": "7ba359962a073c2ba5ad02fc82c772307d812d328c5817c4af8d6cc0d2e743cf",
+   "history": "29e65b93d09a75e5d93f594b14f94240230a4166e3e8e5e8bcbd8d9d1776304e"
+  },
+  {
+   "op": "entity_info",
+   "error": null,
+   "result": "e77ea4a0a96b5a6550abf994a110a2851188197cec4d31a3f1940baad325ed1a",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "relation_info",
+   "error": null,
+   "result": "6cf7fe75dcdee08f60e0a24df890fc4f7746d8ba37e64592410bbc56d7d1a8a5",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "counts",
+   "error": null,
+   "result": "87b99afe57ddc0ffb2eb017247f6efe4f3d014aeb33631bc5901cb38f9a9965c",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "delete",
+   "error": null,
+   "result": "82cf3dff72319f6650f72b99eb0d6a13e7ba9635e872b09b68ab505bb9806fce",
+   "history": "c8db98b5993cbe872b6fff411f520dfb7e90508939d3faeb5840c96d03c85401"
+  },
+  {
+   "op": "delete",
+   "error": null,
+   "result": "aeba71790bdda5142080c53dbd5cdf1268d94dbe22594cefa8d980f1ad1deb90",
+   "history": "75369739ca9444c45e67141385cc5ef8cb05a92a8326cdbce8a1a59f89f16ae2"
+  },
+  {
+   "op": "delete",
+   "error": null,
+   "result": "30bd14fd28cba6db3b2ea4f71adde61308c97c833b1716c6810fe57b08383b25",
+   "history": "937fa85191599de9d38d693d99cb23ac2ac9505ba7aa963e0fd0afcc6656127b"
+  },
+  {
+   "op": "delete",
+   "error": null,
+   "result": "3e14aa1217eb13870c37e2b6120ab15a7a28d923e83b303a00032813b738606a",
+   "history": "aeee86eab3b8e0d66c268da821421f75cca980ce0a31bd9b0b054e07f26a148d"
+  },
+  {
+   "op": "entity_info",
+   "error": null,
+   "result": "da8239205f833d16d3e7e1b823e9268f88126dae3dabdf6d0c9643c6c2a9e4f9",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "relation_info",
+   "error": null,
+   "result": "ab46e25609b97574d5f9431af859fc37cb60838b5c686d605b52fdf917e86312",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+   "op": "counts",
+   "error": null,
+   "result": "4b1c0e564a643d57cae5b4c8a17e100ead998f222e7e08ead6bbb1aab2827a25",
+   "history": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+ ]
+}

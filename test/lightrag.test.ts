@@ -9,7 +9,19 @@ import { describe, it } from 'node:test';
 import { makeQueryParam } from '../src/base.ts';
 import { chunkFieldsFromStatusDoc, getPipelineStatus, LightRAG, normalizeStringList, resolveDocFilePath } from '../src/lightrag.ts';
 import { computeIncrementalChunkIds, getContentSummary, getEnvValue, pyFloatParse, pyIntParse, pyIsoformatUtc, subtractSourceIds } from '../src/utils.ts';
-import { dirDiffs, FIXED_NOW, type FixtureDigest, fixtureDigest, makeLlm, runSpecTs, stubEmbedding, syntheticDoc, syntheticSpec } from '../parity/pipeline-driver.ts';
+import {
+  dirDiffs,
+  FIXED_NOW,
+  type FixtureDigest,
+  fixtureDigest,
+  makeLlm,
+  NO_CACHE_VARIANTS,
+  noCacheRebuildSpec,
+  runSpecTs,
+  stubEmbedding,
+  syntheticDoc,
+  syntheticSpec,
+} from '../parity/pipeline-driver.ts';
 
 const FIXTURE = JSON.parse(readFileSync(new URL('./fixtures/pipeline-synthetic.json', import.meta.url), 'utf8')) as FixtureDigest;
 const tmp = () => mkdtempSync(join(tmpdir(), 'lightrag-b4-'));
@@ -93,6 +105,39 @@ describe('LightRAG pipeline vs upstream (synthetic scenario)', () => {
       rmSync(b, { recursive: true, force: true });
     }
   });
+});
+
+describe('rebuild without cached extractions vs upstream', () => {
+  for (const variant of NO_CACHE_VARIANTS) {
+    it(`${variant}: every record and file equal upstream, one at a time and at default concurrency`, async () => {
+      const want = JSON.parse(readFileSync(new URL(`./fixtures/pipeline-nocache-${variant}.json`, import.meta.url), 'utf8')) as FixtureDigest;
+      for (const sequential of [true, false]) {
+        const dir = tmp();
+        try {
+          const spec = noCacheRebuildSpec(dir, variant);
+          const records = sequential
+            ? await runSpecTs({ ...spec, config: { ...spec.config, llm_model_max_async: 1 } }, { maxParallelInsert: 1 })
+            : await runSpecTs(spec, { jitter: { seed: variant, maxMs: 3 } });
+          assert.ok(
+            records.some((r) => r.history.includes('No cached extraction results found, cannot rebuild')),
+            'the scenario must reach the no-cache branch',
+          );
+          const got = fixtureDigest(dir, records, want.note);
+          for (const [f, d] of Object.entries(got.files)) {
+            if (!sequential && f.endsWith('kv_store_llm_response_cache.json')) continue;
+            assert.deepEqual(d, want.files[f], `${f} differs from upstream (${sequential ? 'sequential' : 'default'})`);
+          }
+          assert.deepEqual(Object.keys(got.files), Object.keys(want.files));
+          got.steps.forEach((s, i) => {
+            if (sequential) assert.deepEqual(s, want.steps[i], `step ${i} (${s.op})`);
+            else assert.equal(s.result, want.steps[i]!.result, `step ${i} (${s.op}) result`);
+          });
+        } finally {
+          rmSync(dir, { recursive: true, force: true });
+        }
+      }
+    });
+  }
 });
 
 describe('LightRAG class', () => {

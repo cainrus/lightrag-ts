@@ -413,6 +413,16 @@ Numbers:
   delete), a custom KG, custom chunks, a re-insert, track-id and id lookups.
   Every result and message equal, all 12
   files byte-identical, TS one task at a time and at its default concurrency.
+- **Rebuild without cached extractions** (`node parity/pipeline.ts nocache`,
+  public, fixtures `test/fixtures/pipeline-nocache-*.json` checked by
+  `test/lightrag.test.ts`): entities a custom KG created (its chunk has no
+  `llm_cache_list`) and documents then extended, the documents deleted until
+  only the custom chunk is left; and `enable_llm_cache_for_entity_extract=false`,
+  where no chunk records its extraction. Both reach upstream's "No LLM cache
+  IDs found" and "No cached extraction results found, cannot rebuild"
+  branches (1 and 2 rebuilds); 12 and 9 steps, every result and message
+  equal, all 12 / 11 files byte-identical, TS sequential and at default
+  concurrency.
 - **Store replay** (`node parity/pipeline.ts store <copy> ...`, a copy of the
   live personal-vault store, 21.10.2026): 300 processed documents (in
   doc-status order, the store's own ids) in 15 inserts of 20, a duplicate

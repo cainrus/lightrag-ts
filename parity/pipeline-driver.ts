@@ -432,6 +432,61 @@ export function syntheticSpec(workingDir: string, extra: Partial<PipelineSpec> =
 
 const computeDocId = (content: string) => `doc-${md5Hex(content)}`;
 
+export const NO_CACHE_VARIANTS = ['custom-kg', 'extract-cache-off'] as const;
+export type NoCacheVariant = (typeof NO_CACHE_VARIANTS)[number];
+
+/**
+ * A rebuild that finds no cached extraction for the chunks left behind
+ * (operate's "No LLM cache IDs found" and "No cached extraction results
+ * found, cannot rebuild"):
+ * - custom-kg: every vocabulary entity first comes from a custom KG (its chunk
+ *   has no llm_cache_list), then documents add their extractions to them;
+ *   deleting the documents leaves only the custom chunk to rebuild from;
+ * - extract-cache-off: enable_llm_cache_for_entity_extract=false, so no chunk
+ *   records its extraction; deleting one document rebuilds what others share.
+ */
+export function noCacheRebuildSpec(workingDir: string, variant: NoCacheVariant): PipelineSpec {
+  const docs = Array.from({ length: 6 }, (_, k) => syntheticDoc(k + 20));
+  const paths = docs.map((_, k) => `nc/doc-${k}.md`);
+  const config: Record<string, unknown> = { chunk_token_size: 80, chunk_overlap_token_size: 10, force_llm_summary_on_merge: 3, summary_max_tokens: 200, addon_params: { language: 'English' } };
+  const probe: Step[] = [
+    { op: 'entity_info', name: 'Alice Moreau' },
+    { op: 'relation_info', src: 'Alice Moreau', tgt: 'Bob Tanaka' },
+    { op: 'counts' },
+  ];
+  let steps: Step[];
+  if (variant === 'custom-kg') {
+    steps = [
+      {
+        op: 'custom_kg',
+        kg: {
+          chunks: [{ content: 'A hand-written note naming every person, place and thing of the corpus.', source_id: 'kg-1', file_path: 'kg.md' }],
+          entities: VOCAB.map((name, i) => ({ entity_name: name, entity_type: TYPES[i % TYPES.length]!, description: `${name}, as the custom KG describes it.`, source_id: 'kg-1' })),
+          relationships: [{ src_id: 'Alice Moreau', tgt_id: 'Bob Tanaka', description: 'Custom KG link.', keywords: 'custom', source_id: 'kg-1', weight: 1.0 }],
+        },
+        full_doc_id: 'kg-doc',
+      },
+      { op: 'insert', docs: docs.slice(0, 4), file_paths: paths.slice(0, 4), track_id: 'nc-1' },
+      ...probe,
+      { op: 'delete', doc_id: computeDocId(docs[0]!) },
+      { op: 'delete', doc_id: computeDocId(docs[1]!), delete_llm_cache: true },
+      { op: 'delete', doc_id: computeDocId(docs[2]!) },
+      { op: 'delete', doc_id: computeDocId(docs[3]!) },
+      ...probe,
+    ];
+  } else {
+    config.enable_llm_cache_for_entity_extract = false;
+    steps = [
+      { op: 'insert', docs, file_paths: paths, track_id: 'nc-1' },
+      ...probe,
+      { op: 'delete', doc_id: computeDocId(docs[1]!) },
+      { op: 'delete', doc_id: computeDocId(docs[4]!), delete_llm_cache: true },
+      ...probe,
+    ];
+  }
+  return { working_dir: workingDir, workspace: 'ws', dim: 8, llm: 'synthetic', config, steps };
+}
+
 /** What test/lightrag.test.ts checks a run against: sha256 of every file and of every step's record. */
 export type FixtureDigest = {
   note: string;
@@ -442,14 +497,14 @@ export type FixtureDigest = {
 const sha256 = (b: Buffer | string) => createHash('sha256').update(b).digest('hex');
 const canonJson = (v: unknown) => JSON.stringify(JSON.parse(JSON.stringify(v ?? null)));
 
-export function fixtureDigest(storeDir: string, records: StepRecord[]): FixtureDigest {
+export function fixtureDigest(storeDir: string, records: StepRecord[], note = 'Upstream LightRAG 1.4.16 on parity/pipeline-driver.ts syntheticSpec (node parity/pipeline.ts synthetic --write-fixture <this file>): file and record digests.'): FixtureDigest {
   const files: FixtureDigest['files'] = {};
   for (const [f] of dirDiffs(storeDir, storeDir)) {
     const b = readFileSync(join(storeDir, f));
     files[f] = { bytes: b.length, sha256: sha256(b) };
   }
   return {
-    note: 'Upstream LightRAG 1.4.16 on parity/pipeline-driver.ts syntheticSpec (node parity/pipeline.ts synthetic --write-fixture <this file>): file and record digests.',
+    note,
     files,
     steps: records.map((r) => ({
       op: r.op,

@@ -7,6 +7,11 @@
 //       duplicates, queries in every mode, deletions with rebuild, the editing
 //       API, a custom KG. --write-fixture stores upstream's records and files
 //       for test/lightrag.test.ts.
+//   node parity/pipeline.ts nocache [--work DIR] [--write-fixture test/fixtures]
+//       rebuilds that find no cached extraction for the chunks left: a custom
+//       KG chunk, and enable_llm_cache_for_entity_extract=false
+//       (pipeline-driver.ts noCacheRebuildSpec); fixtures
+//       pipeline-nocache-<variant>.json for test/lightrag.test.ts.
 //   node parity/pipeline.ts store <store-dir> --workspace W --work DIR [--docs N] [--batch B] [--deletes M]
 //       a COPY-based replay of a real store (private data, nothing committed):
 //       N processed documents, B per ainsert call, inserted into an empty store
@@ -28,7 +33,18 @@ import { forEachJsonKv, kvStorePath } from '../src/kg/json_kv_impl.ts';
 import { writeJsonPy } from '../src/internal/py_json.ts';
 import { NameSpace } from '../src/namespace.ts';
 import { isDeepStrictEqual } from 'node:util';
-import { dirDiffs, diffStepRecords, fixtureDigest, type PipelineSpec, readStepRecords, runSpecTs, type Step, syntheticSpec } from './pipeline-driver.ts';
+import {
+  dirDiffs,
+  diffStepRecords,
+  fixtureDigest,
+  NO_CACHE_VARIANTS,
+  noCacheRebuildSpec,
+  type PipelineSpec,
+  readStepRecords,
+  runSpecTs,
+  type Step,
+  syntheticSpec,
+} from './pipeline-driver.ts';
 
 const PY = process.env.LIGHTRAG_PY ?? join(homedir(), '.cache/lightrag-ts/upstream-venv/bin/python');
 const PY_TOOL = resolve(import.meta.dirname, '../tools/upstream/pipeline_parity.py');
@@ -156,6 +172,27 @@ if (cmd === 'synthetic') {
     writeFileSync(fixture, JSON.stringify(fixtureDigest(join(WORK, 'py'), readStepRecords(join(WORK, 'py.jsonl'))), null, 1) + '\n');
     log(`fixture written to ${fixture}`);
   }
+} else if (cmd === 'nocache') {
+  // rebuilds that find no cached extraction (pipeline-driver.ts noCacheRebuildSpec)
+  const out = values['write-fixture'];
+  let bad = false;
+  for (const variant of NO_CACHE_VARIANTS) {
+    log(`-- ${variant}`);
+    const r = await compare(noCacheRebuildSpec('', variant), null);
+    report(r);
+    const differs = r.variants.some((v) => v.recordDiffs.length || v.fileDiffs.length);
+    bad ||= differs;
+    const records = readStepRecords(join(WORK, 'py.jsonl'));
+    const hist = records.flatMap((x) => x.history);
+    log(`${variant}: "No cached extraction results found" in upstream's history ${hist.filter((m) => m.startsWith('No cached extraction results found')).length}x`);
+    if (out && !differs) {
+      const f = join(out, `pipeline-nocache-${variant}.json`);
+      const note = `Upstream LightRAG 1.4.16 on parity/pipeline-driver.ts noCacheRebuildSpec('${variant}') (node parity/pipeline.ts nocache --write-fixture <dir>): file and record digests.`;
+      writeFileSync(f, JSON.stringify(fixtureDigest(join(WORK, 'py'), records, note), null, 1) + '\n');
+      log(`fixture written to ${f}`);
+    }
+  }
+  process.exitCode = bad ? 1 : 0;
 } else if (cmd === 'store' && src) {
   await storeReplay(src);
 } else if (cmd === 'store-delete' && src) {
