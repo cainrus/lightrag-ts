@@ -50,6 +50,34 @@ describe('LightRAG pipeline vs upstream (synthetic scenario)', () => {
     }
   });
 
+  it('default concurrency, answers finishing out of order (seeded delays): the same files', async () => {
+    const dir = tmp();
+    const seq = tmp();
+    try {
+      const started: string[] = [];
+      const ended: string[] = [];
+      const records = await runSpecTs(syntheticSpec(dir), {
+        jitter: { seed: 'b4f', maxMs: 4, onCall: (kind, ev, key) => (ev === 'start' ? started : ended).push(`${kind}:${key}`) },
+      });
+      assert.notDeepEqual(ended, started, 'the delays must reorder completions, or this test checks nothing');
+      const digest = fixtureDigest(dir, records);
+      for (const [f, d] of Object.entries(digest.files)) {
+        if (f.endsWith('kv_store_llm_response_cache.json')) continue;
+        assert.deepEqual(d, FIXTURE.files[f], `${f} differs from upstream`);
+      }
+      digest.steps.forEach((s, i) => assert.equal(s.result, FIXTURE.steps[i]!.result, `step ${i} (${s.op}) result`));
+      // the cache: the same entries as the one-at-a-time run (which equals upstream byte for byte)
+      const spec = syntheticSpec(seq);
+      await runSpecTs({ ...spec, config: { ...spec.config, llm_model_max_async: 1 } }, { maxParallelInsert: 1 });
+      const cacheFile = Object.keys(digest.files).find((f) => f.endsWith('kv_store_llm_response_cache.json'))!;
+      const cache = (d: string) => new Map(Object.entries(JSON.parse(readFileSync(join(d, cacheFile), 'utf8')) as object));
+      assert.deepEqual(cache(dir), cache(seq));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      rmSync(seq, { recursive: true, force: true });
+    }
+  });
+
   it('a second run on the same scenario is deterministic (incl. the cache bytes)', async () => {
     const a = tmp();
     const b = tmp();

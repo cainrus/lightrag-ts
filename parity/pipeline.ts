@@ -45,6 +45,8 @@ const { positionals, values } = parseArgs({
     deletes: { type: 'string', default: '10' },
     queries: { type: 'string', default: '4' },
     'ts-mode': { type: 'string', default: 'both' },
+    // the default-concurrency TS run delays each stub answer by 0..N ms (seeded), so calls finish out of order
+    'jitter-ms': { type: 'string', default: '4' },
     'reuse-py': { type: 'boolean', default: false },
     json: { type: 'string' },
   },
@@ -76,8 +78,9 @@ function cacheAsMapDiff(a: string, b: string): string | null {
 /**
  * Run `spec` on both sides from the same seed dir and compare. TS runs twice:
  * "sequential" (llm_model_max_async=1, max_parallel_insert=1) must match
- * upstream byte for byte; "default" (the spec's concurrency) too, except the
- * LLM cache, whose new keys follow completion order there (compared as a map).
+ * upstream byte for byte; "default" (the spec's concurrency, stub answers
+ * delayed by a seeded 0..--jitter-ms so they finish out of order) too, except
+ * the LLM cache, whose new keys follow completion order there (compared as a map).
  */
 async function compare(spec: Omit<PipelineSpec, 'working_dir'>, seed: string | null): Promise<Report> {
   const pyDir = join(WORK, 'py');
@@ -107,7 +110,11 @@ async function compare(spec: Omit<PipelineSpec, 'working_dir'>, seed: string | n
     fresh(dir);
     const t = Date.now();
     const config = name === 'sequential' ? { ...(spec.config ?? {}), llm_model_max_async: 1 } : spec.config;
-    const records = await runSpecTs({ ...spec, config, working_dir: dir } as PipelineSpec, name === 'sequential' ? { maxParallelInsert: 1 } : {});
+    const jitterMs = Number(values['jitter-ms']);
+    const records = await runSpecTs(
+      { ...spec, config, working_dir: dir } as PipelineSpec,
+      name === 'sequential' ? { maxParallelInsert: 1 } : jitterMs > 0 ? { jitter: { seed: 'pipeline', maxMs: jitterMs } } : {},
+    );
     seconds[`ts-${name}`] = (Date.now() - t) / 1000;
     log(`ts ${name} done in ${seconds[`ts-${name}`]}s`);
     writeFileSync(join(WORK, `ts-${name}.jsonl`), records.map((r) => JSON.stringify(r)).join('\n') + '\n');

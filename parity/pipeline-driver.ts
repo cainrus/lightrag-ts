@@ -117,9 +117,27 @@ const pyErr = (e: unknown) => {
 export type RunOptions = {
   /** override of max_parallel_insert (upstream's side always runs with 1) */
   maxParallelInsert?: number;
+  /**
+   * Delay every LLM and embedding answer by 0..maxMs, chosen per call from
+   * md5(seed + input): concurrent calls then finish out of call order, the
+   * way a real provider's latency makes them, and the same on every run.
+   */
+  jitter?: { seed: string; maxMs: number; onCall?: (kind: 'llm' | 'embed', event: 'start' | 'end', key: string) => void };
   /** wrap the rag right after construction (cache-hit recording, persistence stubs) */
   onRag?: (rag: LightRAG) => void | Promise<void>;
 };
+
+async function withJitter<T>(j: NonNullable<RunOptions['jitter']>, kind: 'llm' | 'embed', input: string, call: () => Promise<T>): Promise<T> {
+  const key = md5Hex(input);
+  j.onCall?.(kind, 'start', key);
+  const ms = (md5Bytes(j.seed + input).readUInt16BE(0) / 65536) * j.maxMs;
+  await new Promise((r) => setTimeout(r, ms));
+  try {
+    return await call();
+  } finally {
+    j.onCall?.(kind, 'end', key);
+  }
+}
 
 /** Run a spec through the TS LightRAG; one record per step. */
 export async function runSpecTs(spec: PipelineSpec, o: RunOptions = {}): Promise<StepRecord[]> {
@@ -131,6 +149,15 @@ export async function runSpecTs(spec: PipelineSpec, o: RunOptions = {}): Promise
     llm_model_func: makeLlm(spec.llm),
     now: () => FIXED_NOW,
   };
+  if (o.jitter) {
+    const j = o.jitter;
+    const llm = init.llm_model_func!;
+    const emb = init.embedding_func!;
+    init.llm_model_func = (prompt, opts) => withJitter(j, 'llm', `${(opts?.system_prompt as string | undefined) ?? ''}\n${prompt}`, () => llm(prompt, opts));
+    init.embedding_func = Object.assign((texts: string[], opts?: Parameters<typeof emb>[1]) => withJitter(j, 'embed', texts.join('\n'), () => emb(texts, opts)), {
+      embedding_dim: emb.embedding_dim,
+    });
+  }
   if (o.maxParallelInsert !== undefined) init.max_parallel_insert = o.maxParallelInsert;
   const rag = new LightRAG(init);
   await o.onRag?.(rag);
