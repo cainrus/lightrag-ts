@@ -105,8 +105,11 @@ variable names: `WORKING_DIR`, `WORKSPACE`, `LLM_BINDING` (`openai` or
 `EMBEDDING_MODEL`, `EMBEDDING_DIM`, `EMBEDDING_SEND_DIM`,
 `EMBEDDING_TOKEN_LIMIT` (unset: texts are still cut at 8192 tokens), `EMBEDDING_BINDING_HOST`, `EMBEDDING_BINDING_API_KEY`
 (keys fall back to `OPENAI_API_KEY`), and whatever the `LightRAG` class reads
-itself (`MAX_ASYNC`, `MAX_PARALLEL_INSERT`, `CHUNK_SIZE`, `TOP_K`, ...). For
-example, Claude for extraction and OpenAI for embeddings:
+itself (`MAX_ASYNC`, `MAX_PARALLEL_INSERT`, `CHUNK_SIZE`, `TOP_K`, ...).
+`CHUNKS_ONLY=true` (port-only, the `chunks_only` option of `LightRAG`) stops an
+insert after the chunks and their vectors: no entity extraction, no graph, no
+LLM call; such a store answers `--mode naive` (the default there; the graph
+modes are refused). For example, Claude for extraction and OpenAI for embeddings:
 
 ```sh
 WORKING_DIR=./rag_storage WORKSPACE=notes \

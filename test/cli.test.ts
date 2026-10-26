@@ -247,6 +247,34 @@ test('EMBEDDING_SEND_DIM comes from the passed environment, not process.env', ()
   }
 });
 
+test('CHUNKS_ONLY: insert without a chat call, no graph; query defaults to naive and refuses the graph modes', async () => {
+  const unset = envFor(join(tmp, 'co'));
+  delete unset.CHUNKS_ONLY;
+  assert.equal(lightragInitFromEnv(unset).chunks_only, false);
+
+  const env = envFor(join(tmp, 'co'), { CHUNKS_ONLY: 'true' });
+  assert.equal(lightragInitFromEnv(env).chunks_only, true);
+  const doc = join(tmp, 'co-notes.md');
+  writeFileSync(doc, 'Alice is an engineer. She works with Bob, a designer, on bridges.\n');
+  const chatBefore = srv.chat;
+  const ins = await run(['insert', doc, '--id', 'doc-co'], env);
+  assert.equal(ins.code, EXIT.ok, ins.err);
+  assert.equal(srv.chat, chatBefore, 'no chat call');
+  const status = JSON.parse((await run(['status'], env)).out) as { documents: Record<string, number>; graph: { nodes: number } };
+  assert.deepEqual(status.documents, { processed: 1 });
+  assert.equal(status.graph.nodes, 0);
+
+  const ctx = await run(['query', 'Who works with Bob?', '--only-context'], env);
+  assert.equal(ctx.code, EXIT.ok, ctx.err);
+  assert.match(ctx.out, /Document Chunks/);
+  assert.match(ctx.out, /works with Bob/);
+  assert.equal(srv.chat, chatBefore, 'naive context needs no keywords call');
+
+  const kg = await run(['query', 'Who works with Bob?', '--mode', 'mix'], env);
+  assert.equal(kg.code, EXIT.usage);
+  assert.match(kg.err, /naive only/);
+});
+
 test('B5f-3: the OpenAI key comes from the passed environment, never from process.env', async () => {
   const saved = process.env.OPENAI_API_KEY;
   process.env.OPENAI_API_KEY = 'sk-from-process';

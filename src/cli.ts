@@ -16,6 +16,9 @@
 //   EMBEDDING_SEND_DIM (false), EMBEDDING_TOKEN_LIMIT (unset: LightRAG's
 //   embedding_token_limit None, as the vault; texts are cut at 8192 tokens either way),
 //   EMBEDDING_BINDING_HOST, EMBEDDING_BINDING_API_KEY (else OPENAI_API_KEY)
+//   CHUNKS_ONLY (false; port-only): insert stores chunks and their vectors only,
+//   no entity extraction and no LLM call; query defaults to --mode naive and
+//   refuses the graph modes
 //
 // Everything else (MAX_ASYNC, MAX_PARALLEL_INSERT, CHUNK_SIZE, TOP_K,
 // SUMMARY_LANGUAGE, ...) is read by the LightRAG class itself, as upstream's
@@ -45,7 +48,7 @@ const USAGE = `usage: lightrag-ts <command> [options]
 
   insert [FILE...]          insert files (no FILE or "-": stdin); per input, in order: --id ID, --file-path P
                             (default: the path relative to the current directory; stdin: unknown_source)
-  query QUESTION            --mode local|global|hybrid|naive|mix|bypass (mix), --top-k N, --chunk-top-k N,
+  query QUESTION            --mode local|global|hybrid|naive|mix|bypass (mix; CHUNKS_ONLY: naive), --top-k N, --chunk-top-k N,
                             --only-context, --stream, --response-type T
   delete --doc-id ID        --delete-llm-cache to drop the document's cache entries too
   status                    documents by status, graph and vector counts (reads files only)
@@ -163,6 +166,7 @@ export function lightragInitFromEnv(env: NodeJS.ProcessEnv, over: { working_dir?
     llm_model_func,
     llm_model_name: llmModel,
     embedding_func,
+    chunks_only: getEnvValue<boolean>('CHUNKS_ONLY', false, 'bool', false, env) === true,
   };
 }
 
@@ -198,7 +202,7 @@ export async function main(argv: string[], io: CliIO = defaultIO): Promise<numbe
         workspace: { type: 'string' },
         id: { type: 'string', multiple: true },
         'file-path': { type: 'string', multiple: true },
-        mode: { type: 'string', default: 'mix' },
+        mode: { type: 'string' },
         'top-k': { type: 'string' },
         'chunk-top-k': { type: 'string' },
         'response-type': { type: 'string' },
@@ -269,8 +273,11 @@ export async function main(argv: string[], io: CliIO = defaultIO): Promise<numbe
       case 'query': {
         const question = positionals.join(' ');
         if (!question) return usage('query: a question is required');
-        const mode = v.mode as QueryMode;
+        const chunksOnly = getEnvValue<boolean>('CHUNKS_ONLY', false, 'bool', false, io.env) === true;
+        const mode = (v.mode ?? (chunksOnly ? 'naive' : 'mix')) as QueryMode;
         if (!MODES.includes(mode)) return usage(`query: unknown mode ${mode}`);
+        // a chunks-only store has no graph: a kg mode would spend an LLM call on keywords and find nothing
+        if (chunksOnly && mode !== 'naive' && mode !== 'bypass') return usage(`query: CHUNKS_ONLY store answers --mode naive only, got ${mode}`);
         const num = (k: 'top-k' | 'chunk-top-k') => {
           const x = v[k];
           if (x === undefined) return undefined;

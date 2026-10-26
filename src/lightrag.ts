@@ -202,6 +202,12 @@ export type LightRAGInit = Partial<LightRAGFields> & {
   now?: () => number;
   /** port-only: upstream's `lightrag` logger */
   log?: LightRAGLog;
+  /**
+   * port-only: a document is done once its chunks are stored (status, chunk
+   * vectors, chunk records): no entity extraction, no graph, no LLM call.
+   * Such a store answers `naive` queries only.
+   */
+  chunks_only?: boolean;
 };
 
 // ---------------------------------------------------------------- field defaults
@@ -505,11 +511,13 @@ export class LightRAG implements LightRAGFields {
   /** port-only: the clock and the logger */
   readonly now: () => number;
   readonly log: LightRAGLog;
+  /** port-only: see LightRAGInit.chunks_only */
+  readonly chunks_only: boolean;
   /** `asdict(self)` at construction, as the storages received it */
   private readonly initConfig: Record<string, unknown>;
 
   constructor(init: LightRAGInit = {}) {
-    const { log_level, log_file_path, now, log, ...fields } = init;
+    const { log_level, log_file_path, now, log, chunks_only, ...fields } = init;
     const f = factoryDefaults();
     this.workspace = f.workspace;
     this.source_ids_limit_method = f.source_ids_limit_method;
@@ -521,6 +529,7 @@ export class LightRAG implements LightRAGFields {
     }
     this.now = now ?? (() => Date.now() / 1000);
     this.log = log ?? (() => {});
+    this.chunks_only = chunks_only ?? false;
 
     // ---- __post_init__
     if (log_level !== undefined && log_level !== null) process.emitWarning('WARNING: log_level parameter is deprecated, use setup_logger in utils.py instead');
@@ -1291,7 +1300,7 @@ export class LightRAG implements LightRAGFields {
           b.stage1[index]!.resolve();
         }
         // stage 2: extraction (concurrent with other documents)
-        chunkResults = await this.processExtractEntities(chunkObj as never, status);
+        if (!this.chunks_only) chunkResults = await this.processExtractEntities(chunkObj as never, status);
         extractionOk = true;
       } catch (e) {
         b.stage1[index]!.resolve();
@@ -1312,7 +1321,7 @@ export class LightRAG implements LightRAGFields {
         await waitTurn(b.merged);
         try {
           if (status.cancellation_requested) throw new PipelineCancelledException('User cancelled');
-          await mergeNodesAndEdges(chunkResults, this.chunk_entity_relation_graph, this.entities_vdb, this.relationships_vdb, this.mergeConfig(), {
+          if (!this.chunks_only) await mergeNodesAndEdges(chunkResults, this.chunk_entity_relation_graph, this.entities_vdb, this.relationships_vdb, this.mergeConfig(), {
             fullEntitiesStorage: this.full_entities,
             fullRelationsStorage: this.full_relations,
             docId,

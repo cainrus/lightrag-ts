@@ -213,6 +213,41 @@ describe('LightRAG class', () => {
     }
   });
 
+  it('chunks_only stores chunks and vectors without an LLM call; naive finds them, delete removes them', async () => {
+    const dir = tmp();
+    try {
+      const rag = make(dir, {
+        chunks_only: true,
+        cosine_better_than_threshold: -1,
+        llm_model_func: async () => {
+          throw new Error('chunks_only must not call the LLM');
+        },
+      });
+      await rag.initialize_storages();
+      await rag.ainsert([syntheticDoc(1), syntheticDoc(2)], null, false, ['doc-a', 'doc-b'], ['a.md', 'b.md'], 'co');
+      const processed = await rag.get_docs_by_status('processed');
+      assert.deepEqual([...processed.keys()].sort(), ['doc-a', 'doc-b']);
+      const chunkIds = processed.get('doc-a')!.chunks_list!;
+      assert.ok(chunkIds.length > 0);
+      assert.ok((await rag.chunks_vdb.get_by_ids(chunkIds)).every((c) => c !== null));
+      assert.ok((await rag.text_chunks.get_by_ids(chunkIds)).every((c) => c !== null));
+      assert.equal((await rag.chunk_entity_relation_graph.get_all_nodes()).length, 0);
+      assert.equal(await rag.full_entities.get_by_id('doc-a'), null);
+
+      const ctx = await rag.aquery(syntheticDoc(1).slice(0, 200), makeQueryParam({ mode: 'naive', only_need_context: true }));
+      assert.match(String(ctx), /a\.md/);
+
+      const r = await rag.adelete_by_doc_id('doc-a');
+      assert.equal(r.status, 'success');
+      assert.ok((await rag.chunks_vdb.get_by_ids(chunkIds)).every((c) => c === null));
+      assert.ok((await rag.text_chunks.get_by_ids(chunkIds)).every((c) => c === null));
+      assert.equal((await rag.get_docs_by_status('processed')).size, 1);
+      await rag.finalize_storages();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('a deletion is refused while the pipeline runs another job', async () => {
     const dir = tmp();
     try {
