@@ -28,7 +28,7 @@ import { NetworkXStorage } from '../src/kg/networkx_impl.ts';
 import type { EmbeddingFunc, GlobalConfig, KvRecord } from '../src/base.ts';
 import { makeRelationVdbIds } from '../src/utils.ts';
 
-const PY = process.env.LIGHTRAG_PY ?? join(process.env.HOME!, '.claude-home/rag-venv/bin/python');
+const PY = process.env.LIGHTRAG_PY ?? 'python3';
 const PY_TOOL = resolve(import.meta.dirname, '../tools/upstream/storage_parity.py');
 const META_FIELDS: Record<string, string[]> = {
   entities: ['entity_name', 'source_id', 'content', 'file_path'],

@@ -2,7 +2,8 @@
 
   python tools/upstream/claude_prompts.py <vault_scripts_dir> <fake_bin> <out.json>
 
-Imports vault_rag_core (read only, from <vault_scripts_dir>), points
+Imports vault_rag_core (read only, from <vault_scripts_dir>; its _claude_call
+module from CLAUDE_CALL_DIR when it lives elsewhere), points
 _claude_call.CLI at <fake_bin> (test/fixtures/fake-claude-complete.ts, which
 logs argv and stdin and never calls a model) and runs
 _anthropic_complete_str on a few calls shaped like LightRAG's. Written per
@@ -47,7 +48,8 @@ async def main(scripts_dir, fake_bin, out):
     sys.path.insert(0, scripts_dir)
     import vault_rag_core as core  # noqa: E402
 
-    sys.path.insert(0, str(Path.home() / ".claude-home" / "scripts"))
+    if os.environ.get("CLAUDE_CALL_DIR"):
+        sys.path.insert(0, os.environ["CLAUDE_CALL_DIR"])
     import _claude_call  # noqa: E402  same module object core imports
 
     _claude_call.CLI = Path(fake_bin)

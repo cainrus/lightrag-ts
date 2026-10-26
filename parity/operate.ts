@@ -41,7 +41,7 @@ import { PROMPTS } from '../src/prompt.ts';
 import { computeMdhashId, pyFormat, TiktokenTokenizer } from '../src/utils.ts';
 import { CacheMiss, fileDiff, type MergeDoc, mergeDirDiffs, MERGE_FILES, type MergeRec, tsMergeDocs } from './merge-driver.ts';
 
-const PY = process.env.LIGHTRAG_PY ?? join(process.env.HOME!, '.claude-home/rag-venv/bin/python');
+const PY = process.env.LIGHTRAG_PY ?? 'python3';
 const PY_TOOL = resolve(import.meta.dirname, '../tools/upstream/operate_parity.py');
 
 const { positionals, values } = parseArgs({

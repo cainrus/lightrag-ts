@@ -3,7 +3,7 @@
 Node's ICU ships a newer Unicode than CPython 3.12 (15.0), so `\\p{Nd}` and a
 hand-written isdigit() would drift; the port uses these tables instead.
 
-  ~/.claude-home/rag-venv/bin/python -I tools/upstream/gen_unicode.py > src/internal/py_unicode.ts
+  python3 -I tools/upstream/gen_unicode.py > src/internal/py_unicode.ts
 """
 
 import re
